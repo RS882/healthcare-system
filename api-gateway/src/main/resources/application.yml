@@ -23,13 +23,14 @@ spring:
           predicates:
             - Path=/api/v1/appointments/**
 
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/v1/users/**
+
 eureka:
-  instance:
-    hostname: localhost
-    prefer-ip-address: true
   client:
     service-url:
-      defaultZone: http://localhost:8761/eureka/
-    register-with-eureka: true
-    fetch-registry: true
+      defaultZone: ${EUREKA}
+
 
