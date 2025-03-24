@@ -20,9 +20,13 @@ spring:
           ssl:
             protocols: TLSv1.2
             trust: smtp.gmail.com
+
 eureka:
   client:
     service-url:
       defaultZone: ${EUREKA}
     register-with-eureka: true
     fetch-registry: true
+  instance:
+    lease-renewal-interval-in-seconds: 10
+    lease-expiration-duration-in-seconds: 30
