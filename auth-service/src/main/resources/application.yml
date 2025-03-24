@@ -4,9 +4,3 @@ spring:
 
   config:
     import: optional:configserver:${CONFIG}
-
-
-    access-secret: ${ACCESS_SECRET} my-very-access_secret-key-which-is-long-enough-to-be-secure-123456!
-    refresh-secret: ${REFRESH_SECRET} my-very-refresh-secret-key-which-is-long-enough-to-be-secure-123456&
-    access-token-expiration: ${ACCESS_TOKEN_EXPIRATION}900000     # 15 минут
-    refresh-token-expiration: ${REFRESH_TOKEN_EXPIRATION}604800000 # 7 дней
