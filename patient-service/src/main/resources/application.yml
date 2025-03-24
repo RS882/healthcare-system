@@ -1,26 +1,6 @@
-server:
-  port: 8083
-
 spring:
   application:
     name: patient-service
 
-  datasource:
-    url: jdbc:mysql://${DB}?serverTimezone=UTC
-    username: ${DB_USERNAME}
-    password: ${DB_PASSWORD}
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-  jpa:
-    hibernate:
-      ddl-auto: update
-
-eureka:
-  client:
-    service-url:
-      defaultZone: ${EUREKA}
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    lease-renewal-interval-in-seconds: 10
-    lease-expiration-duration-in-seconds: 30
+  config:
+    import: optional:configserver:${CONFIG}

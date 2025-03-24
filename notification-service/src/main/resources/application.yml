@@ -1,32 +1,6 @@
-server:
-  port: 8086
-
 spring:
   application:
     name: notification-service
 
-  mail:
-    username: ${EMAIL}
-    password: ${EMAIL_PASSWORD}
-    host: smtp.gmail.com
-    port: 587
-    properties:
-      mail:
-        debug: true
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-          ssl:
-            protocols: TLSv1.2
-            trust: smtp.gmail.com
-
-eureka:
-  client:
-    service-url:
-      defaultZone: ${EUREKA}
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    lease-renewal-interval-in-seconds: 10
-    lease-expiration-duration-in-seconds: 30
+  config:
+    import: optional:configserver:${CONFIG}

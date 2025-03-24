@@ -1,44 +1,6 @@
-server:
-  port: 8080
-
 spring:
   application:
     name: api-gateway
 
-  cloud:
-    gateway:
-      routes:
-        - id: auth-service
-          uri: lb://auth-service
-          predicates:
-            - Path=/api/v1/auth/**
-
-        - id: patient-service
-          uri: lb://patient-service
-          predicates:
-            - Path=/api/v1/patients/**
-
-        - id: appointment-service
-          uri: lb://appointment-service
-          predicates:
-            - Path=/api/v1/appointments/**
-
-        - id: user-service
-          uri: lb://user-service
-          predicates:
-            - Path=/api/v1/users/**
-
-        - id: notification-service
-          uri: lb://notification-service
-          predicates:
-            - Path=/api/v1/notifications/**
-
-eureka:
-  client:
-    service-url:
-      defaultZone: ${EUREKA}
-    register-with-eureka: true
-    fetch-registry: true
-  instance:
-    lease-renewal-interval-in-seconds: 10
-    lease-expiration-duration-in-seconds: 30
+  config:
+    import: optional:configserver:${CONFIG}
