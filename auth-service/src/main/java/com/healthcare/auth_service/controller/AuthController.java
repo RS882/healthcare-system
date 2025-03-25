@@ -5,6 +5,7 @@ import com.healthcare.auth_service.domain.dto.LoginDto;
 import com.healthcare.auth_service.domain.dto.RegistrationDto;
 import com.healthcare.auth_service.service.CookieService;
 import com.healthcare.auth_service.service.interfacies.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,26 @@ public class AuthController {
         cookieService.setRefreshTokenToCookie(response, tokens.getRefreshToken());
 
         return ResponseEntity.ok().body(new AuthResponse(tokens.getAccessToken()));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<AuthResponse> refresh(
+            HttpServletRequest request,
+            HttpServletResponse response) {
+
+        var tokens = authService.refresh(request);
+        cookieService.setRefreshTokenToCookie(response, tokens.getRefreshToken());
+
+        return ResponseEntity.ok().body(new AuthResponse(tokens.getAccessToken()));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
+
+        authService.logout(request);
+        cookieService.removeRefreshTokenFromCookie(response);
+
+        return ResponseEntity.noContent().build();
     }
 
 }
