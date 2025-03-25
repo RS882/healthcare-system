@@ -1,10 +1,12 @@
 package com.healthcare.auth_service.service;
 
+import com.healthcare.auth_service.domain.dto.TokensDto;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -19,6 +21,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
+@Slf4j
 public class JwtService {
 
     @Value("${jwt.access-secret}")
@@ -47,7 +50,11 @@ public class JwtService {
         this.refreshKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(refreshSecret));
     }
 
-    public String generateAccessToken(UserDetails userDetails, Long userId) {
+    public TokensDto getTokens(UserDetails userDetails, Long userId) {
+        return new TokensDto(generateAccessToken(userDetails, userId), generateRefreshToken(userDetails));
+    }
+
+    private String generateAccessToken(UserDetails userDetails, Long userId) {
         Map<String, Object> claims = new HashMap<>();
         claims.put(ROLES, userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
@@ -57,7 +64,7 @@ public class JwtService {
         return buildToken(claims, userDetails.getUsername(), accessExpiration, accessKey);
     }
 
-    public String generateRefreshToken(UserDetails userDetails) {
+    private String generateRefreshToken(UserDetails userDetails) {
         return buildToken(new HashMap<>(), userDetails.getUsername(), refreshExpiration, refreshKey);
     }
 
@@ -92,17 +99,17 @@ public class JwtService {
                     .build()
                     .parseSignedClaims(token);
             final String username = extractUserEmail(token, key);
-            return username.equals(userDetails.getUsername()) ;
+            return username.equals(userDetails.getUsername());
         } catch (Exception e) {
             return false;
         }
     }
 
-    public String extractUserEmailFromAccessToken(String token){
+    public String extractUserEmailFromAccessToken(String token) {
         return extractUserEmail(token, accessKey);
     }
 
-    public String extractUserEmailFromRefreshToken(String token){
+    public String extractUserEmailFromRefreshToken(String token) {
         return extractUserEmail(token, refreshKey);
     }
 
