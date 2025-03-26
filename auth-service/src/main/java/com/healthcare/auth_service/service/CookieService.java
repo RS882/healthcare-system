@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 @Service
 public class CookieService {
@@ -14,17 +15,18 @@ public class CookieService {
     @Value("${jwt.refresh-token-expiration}")
     private long refreshExpiration;
 
+    @Value("${jwt.cookie-path}")
+    private String path;
+
     public static final String REFRESH_TOKEN = "Refresh-token";
 
-    public final String PATH = "/api/v1/auth/refresh";
-
     public void setRefreshTokenToCookie(HttpServletResponse response, String refreshToken) {
-        ResponseCookie cookie = makeCookie(REFRESH_TOKEN, refreshToken, refreshExpiration, PATH);
+        ResponseCookie cookie = makeCookie(REFRESH_TOKEN, refreshToken, refreshExpiration, path);
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     public void removeRefreshTokenFromCookie(HttpServletResponse response) {
-        ResponseCookie cookie = makeCookie(REFRESH_TOKEN, "", 0, PATH);
+        ResponseCookie cookie = makeCookie(REFRESH_TOKEN, "", 0, path);
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
@@ -33,10 +35,12 @@ public class CookieService {
 
         for (Cookie cookie : request.getCookies()) {
             if (cookie.getName().equals(REFRESH_TOKEN)) {
-                return cookie.getValue();
+                String value = cookie.getValue();
+                if (StringUtils.hasText(value)) {
+                    return value;
+                }
             }
         }
-
         return null;
     }
 

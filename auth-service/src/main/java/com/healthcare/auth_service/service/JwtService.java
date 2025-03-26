@@ -105,6 +105,17 @@ public class JwtService {
         }
     }
 
+    public long  getRemainingTTLAccessToken(String token) {
+        return getRemainingTTL(token, accessKey);
+    }
+
+    private long getRemainingTTL(String token, SecretKey key) {
+        Claims claims = extractAllClaims(token,key);
+        Date expiration = claims.getExpiration();
+        long now = System.currentTimeMillis();
+        return Math.max(expiration.getTime() - now, 0);
+    }
+
     public String extractUserEmailFromAccessToken(String token) {
         return extractUserEmail(token, accessKey);
     }

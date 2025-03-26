@@ -1,5 +1,6 @@
 package com.healthcare.auth_service.service;
 
+import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.service.interfacies.BlockService;
 import com.healthcare.auth_service.service.interfacies.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
@@ -61,14 +62,14 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
 
     private void enforceSessionLimit(Long userId){
         if (blockService.isBlocked(userId)) {
-            throw new RuntimeException("Превышен лимит сессий. Попробуйте позже.");
+            throw new AccessDeniedException("The limit of active sessions is exceeded. Try it later.");
         }
 
         Long count = redis.opsForSet().size(getSetKey(userId));
         if (count != null && count >= MAX_TOKENS) {
             deleteAll(userId);
             blockService.block(userId);
-            throw new RuntimeException("Слишком много активных сессий. Вы были временно заблокированы.");
+            throw new AccessDeniedException("Too many active sessions. You were temporarily blocked.");
         }
     }
 

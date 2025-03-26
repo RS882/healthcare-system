@@ -2,9 +2,9 @@ package com.healthcare.auth_service.service;
 
 import com.healthcare.auth_service.service.interfacies.TokenBlacklistService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.Duration;
 
@@ -12,22 +12,22 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class TokenBlacklistServiceImpl implements TokenBlacklistService {
 
-    @Value("${jwt.access-token-expiration}")
-    private long accessExpiration;
-
     private final StringRedisTemplate redis;
 
-    private static final String PREFIX = "blacklist:";
+    private static final String BLACKLIST_PREFIX = "blacklist:";
 
     @Override
-    public void blacklist(String accessToken) {
-        if (!accessToken.isEmpty()) {
-            redis.opsForValue().set(PREFIX + accessToken, "blacklisted", Duration.ofSeconds(accessExpiration));
+    public void blacklist(String accessToken, long ttl) {
+        if (StringUtils.hasText(accessToken) && ttl > 0) {
+            redis.opsForValue().set(
+                    BLACKLIST_PREFIX + accessToken,
+                    "blacklisted",
+                    Duration.ofMillis(ttl));
         }
     }
 
     @Override
     public boolean isBlacklisted(String accessToken) {
-        return Boolean.TRUE.equals(redis.hasKey(PREFIX + accessToken));
+        return Boolean.TRUE.equals(redis.hasKey(BLACKLIST_PREFIX + accessToken));
     }
 }

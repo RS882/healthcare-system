@@ -8,7 +8,10 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "user-service", path = "/api/v1/users")
+@FeignClient(
+        name = "user-service",
+        path = "/api/v1/users",
+        fallback = UserClientFallback.class)
 public interface UserClient {
 
     @GetMapping("/api/v1/users/email/{email}")

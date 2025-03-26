@@ -1,9 +1,12 @@
 package com.healthcare.auth_service.filter;
 
 
+import com.healthcare.auth_service.exception_handler.exception.NotFoundException;
+import com.healthcare.auth_service.exception_handler.exception.UnauthorizedException;
 import com.healthcare.auth_service.service.CustomUserDetailsService;
 import com.healthcare.auth_service.service.JwtService;
 import com.healthcare.auth_service.service.interfacies.TokenBlacklistService;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,8 +15,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -36,33 +41,37 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         final String jwt = extractJwtFromRequest(request);
 
-        if (jwt.isEmpty()) {
-            filterChain.doFilter(request, response);
-            return;
+        if (!StringUtils.hasText(jwt)) {
+            throw new UnauthorizedException("No JWT token provided");
         }
 
         if (tokenBlacklistService.isBlacklisted(jwt)) {
-            filterChain.doFilter(request, response);
-            return;
+            throw new UnauthorizedException("Access token is blacklisted");
         }
+        try {
+            final String userEmail = jwtService.extractUserEmailFromAccessToken(jwt);
 
-        final String userEmail = jwtService.extractUserEmailFromAccessToken(jwt);
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
 
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+                if (jwtService.validateAccessToken(jwt, userDetails)) {
+                    var authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails,
+                            null,
+                            userDetails.getAuthorities()
+                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-            if (jwtService.validateAccessToken(jwt, userDetails)) {
-                var authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails,
-                        null,
-                        userDetails.getAuthorities()
-                );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                }else {
+                    throw new UnauthorizedException("Invalid access token");
+                }
             }
+        } catch (JwtException | IllegalArgumentException e) {
+            throw new UnauthorizedException("Invalid or expired JWT token");
+        } catch (UsernameNotFoundException e) {
+            throw new NotFoundException("User not found");
         }
-
         filterChain.doFilter(request, response);
     }
 }

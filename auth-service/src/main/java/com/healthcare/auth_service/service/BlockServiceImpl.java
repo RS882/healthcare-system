@@ -2,6 +2,7 @@ package com.healthcare.auth_service.service;
 
 import com.healthcare.auth_service.service.interfacies.BlockService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -10,6 +11,7 @@ import java.time.Duration;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BlockServiceImpl implements BlockService {
 
     @Value("${jwt.access-token-expiration}")
@@ -21,13 +23,16 @@ public class BlockServiceImpl implements BlockService {
 
     @Override
     public void block(Long userId) {
-        String blockKey = BLOCKED_PREFIX + userId;
-        redis.opsForValue().set(blockKey, "blocked", Duration.ofSeconds(accessExpiration));
+        redis.opsForValue().set(getKey(userId), "blocked", Duration.ofSeconds(accessExpiration));
+        log.warn("User {} was blocked for {} seconds", userId, accessExpiration);
     }
 
     @Override
     public boolean isBlocked(Long userId) {
-        String blockKey = BLOCKED_PREFIX + userId;
-        return Boolean.TRUE.equals(redis.hasKey(blockKey));
+        return Boolean.TRUE.equals(redis.hasKey(getKey(userId)));
+    }
+
+    private String getKey(Long userId) {
+        return BLOCKED_PREFIX + userId;
     }
 }
