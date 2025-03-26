@@ -4,6 +4,7 @@ import com.healthcare.auth_service.domain.AuthUserDetails;
 import com.healthcare.auth_service.domain.dto.LoginDto;
 import com.healthcare.auth_service.domain.dto.RegistrationDto;
 import com.healthcare.auth_service.domain.dto.TokensDto;
+import com.healthcare.auth_service.domain.dto.UserInfoDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.exception_handler.exception.UnauthorizedException;
 import com.healthcare.auth_service.service.feignClient.UserClient;
@@ -22,6 +23,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+
+import static com.healthcare.auth_service.service.mapper.AuthUserMapper.toAuthUser;
 import static com.healthcare.auth_service.service.token_utilities.TokenUtilities.extractJwtFromRequest;
 
 @Service
@@ -43,15 +46,15 @@ public class AuthServiceImpl implements AuthService {
 
         dto.setPassword(passwordEncoder.encode(dto.getPassword()));
 
-        AuthUserDetails userDetails = userClient.registerUser(dto);
+        UserInfoDto userDetails = userClient.registerUser(dto);
 
-        return generateAndStoreTokens(userDetails);
+        return generateAndStoreTokens(toAuthUser(userDetails));
     }
 
     @Override
     public TokensDto login(LoginDto dto) {
 
-        AuthUserDetails userDetails = userClient.getUserByEmail(dto.getUserEmail());
+        AuthUserDetails userDetails = toAuthUser(userClient.getUserByEmail(dto.getUserEmail()));
 
         if (blockService.isBlocked(userDetails.getId())) {
             throw new AccessDeniedException("The limit of active sessions is exceeded. Try it later.");
@@ -116,7 +119,7 @@ public class AuthServiceImpl implements AuthService {
             throw new UnauthorizedException("Invalid refresh token");
         }
 
-        AuthUserDetails userDetails = userClient.getUserByEmail(email);
+        AuthUserDetails userDetails = toAuthUser(userClient.getUserByEmail(email));
 
         if (!jwtService.validateRefreshToken(refreshToken, userDetails)) {
             throw new UnauthorizedException("Invalid or expired token");

@@ -9,6 +9,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
+import static com.healthcare.auth_service.service.mapper.AuthUserMapper.toAuthUser;
+
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -20,8 +22,7 @@ public class CustomUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String email) {
 
         try {
-            AuthUserDetails user = userClient.getUserByEmail(email);
-            return user;
+            return toAuthUser(userClient.getUserByEmail(email));
         } catch (Exception e) {
             log.warn("User not found or error occurred for email {}: {}", email, e.getMessage());
             throw new NotFoundException("User not found: " + email);
