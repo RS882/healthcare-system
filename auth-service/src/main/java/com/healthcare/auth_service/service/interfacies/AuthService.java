@@ -7,9 +7,9 @@ import jakarta.servlet.http.HttpServletRequest;
 
 public interface AuthService {
 
-    TokensDto registerUser(RegistrationDto dto);
+    TokensDto registeration(RegistrationDto dto);
 
-    TokensDto loginUser(LoginDto dto);
+    TokensDto login(LoginDto dto);
 
     TokensDto refresh(HttpServletRequest request);
 

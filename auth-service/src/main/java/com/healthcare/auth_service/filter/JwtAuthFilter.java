@@ -3,6 +3,7 @@ package com.healthcare.auth_service.filter;
 
 import com.healthcare.auth_service.service.CustomUserDetailsService;
 import com.healthcare.auth_service.service.JwtService;
+import com.healthcare.auth_service.service.interfacies.TokenBlacklistService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -17,12 +18,15 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
+import static com.healthcare.auth_service.service.token_utilities.TokenUtilities.extractJwtFromRequest;
+
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService userDetailsService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -30,14 +34,18 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        final String authHeader = request.getHeader("Authorization");
+        final String jwt = extractJwtFromRequest(request);
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        if (jwt.isEmpty()) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        final String jwt = authHeader.substring(7);
+        if (tokenBlacklistService.isBlacklisted(jwt)) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         final String userEmail = jwtService.extractUserEmailFromAccessToken(jwt);
 
         if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {

@@ -6,13 +6,17 @@ import com.healthcare.auth_service.domain.dto.RegistrationDto;
 import com.healthcare.auth_service.domain.dto.TokensDto;
 import com.healthcare.auth_service.service.feignClient.UserClient;
 import com.healthcare.auth_service.service.interfacies.AuthService;
+import com.healthcare.auth_service.service.interfacies.BlockService;
 import com.healthcare.auth_service.service.interfacies.RefreshTokenService;
+import com.healthcare.auth_service.service.interfacies.TokenBlacklistService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import static com.healthcare.auth_service.service.token_utilities.TokenUtilities.extractJwtFromRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -24,9 +28,11 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authManager;
     private final RefreshTokenService refreshTokenService;
     private final CookieService cookieService;
+    private final BlockService blockService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     @Override
-    public TokensDto registerUser(RegistrationDto dto) {
+    public TokensDto registeration(RegistrationDto dto) {
 
         dto.setPassword(passwordEncoder.encode(dto.getPassword()));
 
@@ -36,12 +42,16 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public TokensDto loginUser(LoginDto dto) {
+    public TokensDto login(LoginDto dto) {
 
         var auth = new UsernamePasswordAuthenticationToken(dto.getUserEmail(), dto.getPassword());
         authManager.authenticate(auth);
 
         AuthUserDetails userDetails = userClient.getUserByEmail(dto.getUserEmail());
+
+        if (blockService.isBlocked(userDetails.getId())) {
+            throw new RuntimeException("Превышен лимит активных сессий. Попробуйте позже.");
+        }
 
         return generateAndStoreTokens(userDetails);
     }
@@ -63,6 +73,8 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public void logout(HttpServletRequest request) {
 
+        tokenBlacklistService.blacklist(extractJwtFromRequest(request));
+
         String refreshToken = cookieService.getRefreshTokenFromCookie(request);
 
         AuthUserDetails userDetails = validateRefreshTokenAndGetUser(refreshToken);
@@ -78,7 +90,7 @@ public class AuthServiceImpl implements AuthService {
         return tokens;
     }
 
-    public AuthUserDetails validateRefreshTokenAndGetUser(String refreshToken) {
+    private AuthUserDetails validateRefreshTokenAndGetUser(String refreshToken) {
 
         if (refreshToken == null || refreshToken.isBlank()) {
             throw new RuntimeException("No refresh token provided");

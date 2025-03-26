@@ -7,4 +7,6 @@ public interface RefreshTokenService {
     boolean isValid(String token, Long userId);
 
     void delete(String token, Long userId);
+
+    void deleteAll(Long userId);
 }

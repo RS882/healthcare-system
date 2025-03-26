@@ -30,7 +30,7 @@ public class AuthController {
             RegistrationDto dto,
             HttpServletResponse response) {
 
-        var tokens = authService.registerUser(dto);
+        var tokens = authService.registeration(dto);
         cookieService.setRefreshTokenToCookie(response, tokens.getRefreshToken());
 
         return ResponseEntity.ok().body(new AuthResponse(tokens.getAccessToken()));
@@ -43,7 +43,7 @@ public class AuthController {
             LoginDto dto,
             HttpServletResponse response) {
 
-        var tokens = authService.loginUser(dto);
+        var tokens = authService.login(dto);
         cookieService.setRefreshTokenToCookie(response, tokens.getRefreshToken());
 
         return ResponseEntity.ok().body(new AuthResponse(tokens.getAccessToken()));
