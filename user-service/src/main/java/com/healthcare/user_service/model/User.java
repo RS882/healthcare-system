@@ -1,9 +1,12 @@
 package com.healthcare.user_service.model;
 
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.healthcare.user_service.constant.Role;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.Set;
 
 @Entity
 @Table(name = "user")
@@ -20,11 +23,16 @@ public class User {
     private Long id;
 
     @Column(unique = true, nullable = false)
+    private String email;
+
     private String username;
 
     @Column(nullable = false)
     private String password;
 
-    @Enumerated(EnumType.STRING)
-    private Role role;
+    private boolean isActive;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @JsonManagedReference
+    private Set<UserRole> roles;
 }
