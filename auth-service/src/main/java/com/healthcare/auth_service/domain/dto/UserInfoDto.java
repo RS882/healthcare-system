@@ -11,7 +11,7 @@ import java.util.Set;
 @Builder
 public class UserInfoDto {
 
-    @NotNull(message = "user idd cannot be null")
+    @NotNull(message = "User id cannot be null")
     private Long id;
 
     @Email(

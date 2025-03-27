@@ -42,7 +42,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         final String jwt = extractJwtFromRequest(request);
 
         if (!StringUtils.hasText(jwt)) {
-            throw new UnauthorizedException("No JWT token provided");
+            filterChain.doFilter(request, response);
+            return;
         }
 
         if (tokenBlacklistService.isBlacklisted(jwt)) {

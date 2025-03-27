@@ -7,7 +7,6 @@ import com.healthcare.auth_service.domain.dto.TokensDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.exception_handler.exception.UnauthorizedException;
 import com.healthcare.auth_service.service.interfacies.*;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
@@ -17,8 +16,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-
-import static com.healthcare.auth_service.service.token_utilities.TokenUtilities.extractJwtFromRequest;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +32,7 @@ public class AuthServiceImpl implements AuthService {
     TokenBlacklistService tokenBlacklistService;
 
     @Override
-    public TokensDto registeration(RegistrationDto dto) {
+    public TokensDto registration(RegistrationDto dto) {
 
         dto.setPassword(passwordEncoder.encode(dto.getPassword()));
 
@@ -59,9 +56,8 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public TokensDto refresh(HttpServletRequest request) {
+    public TokensDto refresh(String refreshToken) {
 
-        String refreshToken = cookieService.getRefreshTokenFromCookie(request);
 
         AuthUserDetails userDetails = validateRefreshTokenAndGetUser(refreshToken);
 
@@ -71,16 +67,12 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public void logout(HttpServletRequest request) {
-
-        String accessToken = extractJwtFromRequest(request);
+    public void logout(String refreshToken, String accessToken) {
 
         if (StringUtils.hasText(accessToken)) {
             long ttl = jwtService.getRemainingTTLAccessToken(accessToken);
             tokenBlacklistService.blacklist(accessToken, ttl);
         }
-
-        String refreshToken = cookieService.getRefreshTokenFromCookie(request);
 
         if (StringUtils.hasText(refreshToken)) {
             AuthUserDetails userDetails = validateRefreshTokenAndGetUser(refreshToken);
