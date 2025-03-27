@@ -4,14 +4,9 @@ import com.healthcare.auth_service.domain.AuthUserDetails;
 import com.healthcare.auth_service.domain.dto.LoginDto;
 import com.healthcare.auth_service.domain.dto.RegistrationDto;
 import com.healthcare.auth_service.domain.dto.TokensDto;
-import com.healthcare.auth_service.domain.dto.UserInfoDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.exception_handler.exception.UnauthorizedException;
-import com.healthcare.auth_service.service.feignClient.UserClient;
-import com.healthcare.auth_service.service.interfacies.AuthService;
-import com.healthcare.auth_service.service.interfacies.BlockService;
-import com.healthcare.auth_service.service.interfacies.RefreshTokenService;
-import com.healthcare.auth_service.service.interfacies.TokenBlacklistService;
+import com.healthcare.auth_service.service.interfacies.*;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
@@ -23,8 +18,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-
-import static com.healthcare.auth_service.service.mapper.AuthUserMapper.toAuthUser;
 import static com.healthcare.auth_service.service.token_utilities.TokenUtilities.extractJwtFromRequest;
 
 @Service
@@ -32,7 +25,7 @@ import static com.healthcare.auth_service.service.token_utilities.TokenUtilities
 @FieldDefaults(level = AccessLevel.PRIVATE, makeFinal = true)
 public class AuthServiceImpl implements AuthService {
 
-    UserClient userClient;
+    UserClientService userClientService;
     PasswordEncoder passwordEncoder;
     JwtService jwtService;
     AuthenticationManager authManager;
@@ -46,15 +39,13 @@ public class AuthServiceImpl implements AuthService {
 
         dto.setPassword(passwordEncoder.encode(dto.getPassword()));
 
-        UserInfoDto userDetails = userClient.registerUser(dto);
-
-        return generateAndStoreTokens(toAuthUser(userDetails));
+        return generateAndStoreTokens(userClientService.registerUser(dto));
     }
 
     @Override
     public TokensDto login(LoginDto dto) {
 
-        AuthUserDetails userDetails = toAuthUser(userClient.getUserByEmail(dto.getUserEmail()));
+        AuthUserDetails userDetails = userClientService.getUserByEmail(dto.getUserEmail());
 
         if (blockService.isBlocked(userDetails.getId())) {
             throw new AccessDeniedException("The limit of active sessions is exceeded. Try it later.");
@@ -116,10 +107,10 @@ public class AuthServiceImpl implements AuthService {
         try {
             email = jwtService.extractUserEmailFromRefreshToken(refreshToken);
         } catch (Exception e) {
-            throw new UnauthorizedException("Invalid refresh token");
+            throw new UnauthorizedException("Invalid refresh token", e);
         }
 
-        AuthUserDetails userDetails = toAuthUser(userClient.getUserByEmail(email));
+        AuthUserDetails userDetails = userClientService.getUserByEmail(email);
 
         if (!jwtService.validateRefreshToken(refreshToken, userDetails)) {
             throw new UnauthorizedException("Invalid or expired token");

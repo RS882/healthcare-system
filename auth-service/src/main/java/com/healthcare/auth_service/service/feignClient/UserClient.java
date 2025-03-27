@@ -14,9 +14,9 @@ import org.springframework.web.bind.annotation.RequestBody;
         fallback = UserClientFallback.class)
 public interface UserClient {
 
-    @GetMapping("/api/v1/users/email/{email}")
+    @GetMapping("/email/{email}")
     UserInfoDto getUserByEmail(@PathVariable("email") String email);
 
-    @PostMapping("/api/v1/users/registration")
+    @PostMapping("/registration")
     UserInfoDto registerUser(@RequestBody RegistrationDto dto);
 }

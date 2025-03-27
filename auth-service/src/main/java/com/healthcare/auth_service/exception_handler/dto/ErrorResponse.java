@@ -6,6 +6,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
 @Data
 @Builder
@@ -15,5 +17,7 @@ public class ErrorResponse {
     private LocalDateTime timestamp;
     private int status;
     private String error;
-    private String message;
+    private Set<String> message = new HashSet<>();
+    private String path;
+    private Set<ValidationError> validationErrors;
 }

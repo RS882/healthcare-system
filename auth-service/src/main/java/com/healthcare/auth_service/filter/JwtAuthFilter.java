@@ -1,8 +1,8 @@
 package com.healthcare.auth_service.filter;
 
 
-import com.healthcare.auth_service.exception_handler.exception.NotFoundException;
 import com.healthcare.auth_service.exception_handler.exception.UnauthorizedException;
+import com.healthcare.auth_service.exception_handler.exception.UserNotFoundException;
 import com.healthcare.auth_service.service.CustomUserDetailsService;
 import com.healthcare.auth_service.service.JwtService;
 import com.healthcare.auth_service.service.interfacies.TokenBlacklistService;
@@ -48,6 +48,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (tokenBlacklistService.isBlacklisted(jwt)) {
             throw new UnauthorizedException("Access token is blacklisted");
         }
+
         try {
             final String userEmail = jwtService.extractUserEmailFromAccessToken(jwt);
 
@@ -68,9 +69,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 }
             }
         } catch (JwtException | IllegalArgumentException e) {
-            throw new UnauthorizedException("Invalid or expired JWT token");
+            throw new UnauthorizedException("Invalid or expired JWT token", e);
         } catch (UsernameNotFoundException e) {
-            throw new NotFoundException("User not found");
+            throw new UserNotFoundException(e);
         }
         filterChain.doFilter(request, response);
     }
