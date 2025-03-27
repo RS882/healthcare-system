@@ -1,5 +1,7 @@
 package com.healthcare.auth_service.config;
 
+import com.healthcare.auth_service.config.configs_components.CustomAccessDeniedHandler;
+import com.healthcare.auth_service.config.configs_components.CustomAuthenticationEntryPoint;
 import com.healthcare.auth_service.filter.JwtAuthFilter;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -35,6 +37,8 @@ public class SecurityConfig {
 
     JwtAuthFilter jwtAuthFilter;
     UserDetailsService userDetailsService;
+    CustomAccessDeniedHandler customAccessDeniedHandler;
+    CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain configureAuth(HttpSecurity http) throws Exception {
@@ -50,11 +54,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auth/logout").authenticated()
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex -> ex
+                        .authenticationEntryPoint(customAuthenticationEntryPoint)
+                        .accessDeniedHandler(customAccessDeniedHandler)
+                )
                 .build();
     }
 

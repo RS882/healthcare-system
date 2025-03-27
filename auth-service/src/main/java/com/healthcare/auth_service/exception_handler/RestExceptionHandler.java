@@ -39,7 +39,7 @@ public class RestExceptionHandler {
         ErrorResponse errorResponse = ex.getResponse();
 
         errorResponse.setPath(request.getRequestURI());
-//        log.error("REST Error: {}", errorResponse, ex);
+        log.error("REST Error: {}", errorResponse, ex);
 
         return new ResponseEntity<>(errorResponse, ex.getStatus());
     }

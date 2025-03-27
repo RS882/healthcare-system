@@ -45,12 +45,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
             return;
         }
-
         if (tokenBlacklistService.isBlacklisted(jwt)) {
-            throw new UnauthorizedException("Access token is blacklisted");
+            filterChain.doFilter(request, response);
+            return;
         }
 
-        try {
             final String userEmail = jwtService.extractUserEmailFromAccessToken(jwt);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
@@ -65,15 +64,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authToken);
-                }else {
-                    throw new UnauthorizedException("Invalid access token");
                 }
             }
-        } catch (JwtException | IllegalArgumentException e) {
-            throw new UnauthorizedException("Invalid or expired JWT token", e);
-        } catch (UsernameNotFoundException e) {
-            throw new UserNotFoundException(e);
-        }
+
         filterChain.doFilter(request, response);
     }
 }
