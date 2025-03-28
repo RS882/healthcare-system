@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import static com.healthcare.auth_service.service.CookieService.REFRESH_TOKEN;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -34,7 +35,7 @@ class CookieServiceTest {
     }
 
     @Test
-    void should_set_refresh_token_to_cookie() {
+    void positive_should_set_refresh_token_to_cookie() {
         HttpServletResponse response = mock(HttpServletResponse.class);
         ArgumentCaptor<String> headerCaptor = ArgumentCaptor.forClass(String.class);
 
@@ -43,7 +44,7 @@ class CookieServiceTest {
         verify(response).addHeader(eq(HttpHeaders.SET_COOKIE), headerCaptor.capture());
 
         String cookie = headerCaptor.getValue();
-        assertTrue(cookie.contains(CookieService.REFRESH_TOKEN));
+        assertTrue(cookie.contains(REFRESH_TOKEN));
         assertTrue(cookie.contains(tokenValue));
         assertTrue(cookie.contains("HttpOnly"));
         assertTrue(cookie.contains("Secure"));
@@ -61,7 +62,7 @@ class CookieServiceTest {
         verify(response).addHeader(eq(HttpHeaders.SET_COOKIE), headerCaptor.capture());
 
         String cookie = headerCaptor.getValue();
-        assertTrue(cookie.contains(CookieService.REFRESH_TOKEN));
+        assertTrue(cookie.contains(REFRESH_TOKEN));
         assertTrue(cookie.contains("Max-Age=0"));
         assertTrue(cookie.contains("Path=" + cookiePath));
     }
