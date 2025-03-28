@@ -6,6 +6,7 @@ import com.healthcare.user_service.constant.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -34,5 +35,5 @@ public class User {
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JsonManagedReference
-    private Set<UserRole> roles;
+    private Set<UserRole> roles =new HashSet<>();;
 }

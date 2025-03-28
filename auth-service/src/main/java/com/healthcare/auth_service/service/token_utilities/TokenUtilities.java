@@ -24,7 +24,6 @@ public class TokenUtilities {
                 return token;
             }
         }
-        log.warn("Authorization header is missing or malformed: {}", authHeader);
         return null;
     }
 }

@@ -18,7 +18,7 @@ public class UserController {
 
     private final UserService userService;
 
-    @PostMapping("/email/{email}")
+    @GetMapping("/email/{email}")
     public ResponseEntity<UserInfoDto> getUserInfoByEmail(
             @NotNull
             @Email
@@ -27,12 +27,12 @@ public class UserController {
         return ResponseEntity.ok(userService.getUserInfoByEmail(email));
     }
 
-    @GetMapping("/registration")
+    @PostMapping("/registration")
     public ResponseEntity<UserInfoDto> registration(
             @RequestBody
             RegistrationDto dto) {
 
-        return ResponseEntity.ok(null);
+        return ResponseEntity.ok(userService.registration(dto));
     }
 
 }

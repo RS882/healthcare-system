@@ -13,12 +13,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -164,6 +166,7 @@ public interface AuthAPI {
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
                     ))})
+    @PostMapping("/logout")
     ResponseEntity<Void> logout(
             @Parameter(hidden = true)
             HttpServletResponse response,
@@ -180,5 +183,6 @@ public interface AuthAPI {
             @BearerToken
             @Parameter(hidden = true)
             @NotNull
-            String accessToken);
+            String accessToken
+    );
 }

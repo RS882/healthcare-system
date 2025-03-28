@@ -32,7 +32,7 @@ public class UserClientServiceImpl implements UserClientService {
         UserInfoDto dto;
         try {
             dto = userClient.getUserByEmail(email);
-            if(!dto.isEnabled()){
+            if (!dto.isEnabled()) {
                 log.warn("User {} has been blocked.", email);
                 throw new AccessDeniedException("User " + email + " has been blocked.");
             }
@@ -51,6 +51,10 @@ public class UserClientServiceImpl implements UserClientService {
         UserInfoDto dto;
         try {
             dto = userClient.registerUser(regDto);
+            if (dto == null) {
+                log.warn("The user was not found in user service{}", regDto.getUserEmail());
+                throw new UserNotFoundException(regDto.getUserEmail());
+            }
         } catch (FeignException.NotFound e) {
             log.warn("The user was not found in user service{}", regDto.getUserEmail());
             throw new UserNotFoundException(regDto.getUserEmail(), e);
