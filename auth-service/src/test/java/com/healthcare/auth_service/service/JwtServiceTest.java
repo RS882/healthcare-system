@@ -19,6 +19,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(value = DisplayNameGenerator.ReplaceUnderscores.class)
 class JwtServiceTest {
+
     @InjectMocks
     private JwtService jwtService;
 
@@ -39,6 +40,7 @@ class JwtServiceTest {
         ReflectionTestUtils.setField(jwtService, "refreshSecret", refreshSecret);
         ReflectionTestUtils.setField(jwtService, "accessExpirationMs", 600000L);
         ReflectionTestUtils.setField(jwtService, "refreshExpirationMs", 1209600000L);
+
         jwtService.initKey();
 
         userDetails = User.withUsername(USER_EMAIL)
