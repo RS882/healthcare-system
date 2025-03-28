@@ -17,7 +17,7 @@ public class BlockServiceImpl implements BlockService {
     @Value("${jwt.access-token-expiration-ms}")
     private long accessExpirationMs;
 
-    @Value("${prefix.blocked")
+    @Value("${prefix.blocked}")
     private String blockedPrefix;
 
     private final StringRedisTemplate redis;

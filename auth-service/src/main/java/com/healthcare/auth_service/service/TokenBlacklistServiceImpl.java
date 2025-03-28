@@ -13,7 +13,7 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class TokenBlacklistServiceImpl implements TokenBlacklistService {
 
-    @Value("${prefix.blacklist")
+    @Value("${prefix.blacklist}")
     private String blacklistPrefix;
 
     private final StringRedisTemplate redis;

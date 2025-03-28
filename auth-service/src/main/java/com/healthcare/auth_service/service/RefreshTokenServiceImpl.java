@@ -21,7 +21,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Value("${jwt.max-tokens}")
     private int maxTokens;
 
-    @Value("${prefix.refresh")
+    @Value("${prefix.refresh}")
     private String refreshPrefix;
 
     private final StringRedisTemplate redis;
