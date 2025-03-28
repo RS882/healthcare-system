@@ -12,8 +12,8 @@ import org.springframework.util.StringUtils;
 @Service
 public class CookieService {
 
-    @Value("${jwt.refresh-token-expiration}")
-    private long refreshExpiration;
+    @Value("${jwt.refresh-token-expiration-ms}")
+    private long refreshExpirationMs;
 
     @Value("${jwt.cookie-path}")
     private String path;
@@ -21,7 +21,7 @@ public class CookieService {
     public static final String REFRESH_TOKEN = "Refresh-token";
 
     public void setRefreshTokenToCookie(HttpServletResponse response, String refreshToken) {
-        ResponseCookie cookie = makeCookie(REFRESH_TOKEN, refreshToken, refreshExpiration, path);
+        ResponseCookie cookie = makeCookie(REFRESH_TOKEN, refreshToken, refreshExpirationMs, path);
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 

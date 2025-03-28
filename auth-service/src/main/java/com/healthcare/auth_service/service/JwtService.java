@@ -30,11 +30,11 @@ public class JwtService {
     @Value("${jwt.refresh-secret}")
     private String refreshSecret;
 
-    @Value("${jwt.access-token-expiration}")
-    private long accessExpiration;
+    @Value("${jwt.access-token-expiration-ms}")
+    private long accessExpirationMs;
 
-    @Value("${jwt.refresh-token-expiration}")
-    private long refreshExpiration;
+    @Value("${jwt.refresh-token-expiration-ms}")
+    private long refreshExpirationMs;
 
     private static final String TOKENS_ISSUER = "Healthcare Authorization";
 
@@ -61,11 +61,11 @@ public class JwtService {
                 .toList());
         claims.put(USER_ID, userId);
 
-        return buildToken(claims, userDetails.getUsername(), accessExpiration, accessKey);
+        return buildToken(claims, userDetails.getUsername(), accessExpirationMs, accessKey);
     }
 
     private String generateRefreshToken(UserDetails userDetails) {
-        return buildToken(new HashMap<>(), userDetails.getUsername(), refreshExpiration, refreshKey);
+        return buildToken(new HashMap<>(), userDetails.getUsername(), refreshExpirationMs, refreshKey);
     }
 
     private String buildToken(

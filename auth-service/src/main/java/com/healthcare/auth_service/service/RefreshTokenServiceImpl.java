@@ -15,8 +15,8 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class RefreshTokenServiceImpl implements RefreshTokenService {
 
-    @Value("${jwt.refresh-token-expiration}")
-    private long refreshExpiration;
+    @Value("${jwt.refresh-token-expiration-ms}")
+    private long refreshExpirationMs;
 
     private final StringRedisTemplate redis;
     private final BlockService blockService;
@@ -31,9 +31,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         String setKey = getSetKey(userId);
 
         redis.opsForSet().add(setKey, token);
-        redis.expire(setKey, Duration.ofSeconds(refreshExpiration));
+        redis.expire(setKey, Duration.ofMillis(refreshExpirationMs));
 
-        redis.opsForValue().set(getKey(token, userId), "valid", Duration.ofSeconds(refreshExpiration));
+        redis.opsForValue().set(getKey(token, userId), "valid", Duration.ofMillis(refreshExpirationMs));
     }
 
     @Override

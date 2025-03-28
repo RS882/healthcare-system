@@ -14,8 +14,8 @@ import java.time.Duration;
 @Slf4j
 public class BlockServiceImpl implements BlockService {
 
-    @Value("${jwt.access-token-expiration}")
-    private long accessExpiration;
+    @Value("${jwt.access-token-expiration-ms}")
+    private long accessExpirationMs;
 
     private final StringRedisTemplate redis;
 
@@ -23,8 +23,8 @@ public class BlockServiceImpl implements BlockService {
 
     @Override
     public void block(Long userId) {
-        redis.opsForValue().set(getKey(userId), "blocked", Duration.ofSeconds(accessExpiration));
-        log.warn("User {} was blocked for {} seconds", userId, accessExpiration);
+        redis.opsForValue().set(getKey(userId), "blocked", Duration.ofMillis(accessExpirationMs));
+        log.warn("User {} was blocked for {} seconds", userId, accessExpirationMs/1000);
     }
 
     @Override
