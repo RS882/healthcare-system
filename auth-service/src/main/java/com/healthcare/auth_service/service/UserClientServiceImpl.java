@@ -32,13 +32,13 @@ public class UserClientServiceImpl implements UserClientService {
         UserInfoDto dto;
         try {
             dto = userClient.getUserByEmail(email);
-            if (!dto.isEnabled()) {
-                log.warn("User {} has been blocked.", email);
-                throw new AccessDeniedException("User " + email + " has been blocked.");
-            }
         } catch (Exception e) {
             log.warn("User not found or error occurred for email {}: {}", email, e.getMessage());
             throw new UserNotFoundException(email, e);
+        }
+        if (!dto.isEnabled()) {
+            log.warn("User {} has been blocked.", email);
+            throw new AccessDeniedException("User " + email + " has been blocked.");
         }
         validator.validateUser(dto);
 
@@ -51,16 +51,17 @@ public class UserClientServiceImpl implements UserClientService {
         UserInfoDto dto;
         try {
             dto = userClient.registerUser(regDto);
-            if (dto == null) {
-                log.warn("The user was not found in user service{}", regDto.getUserEmail());
-                throw new UserNotFoundException(regDto.getUserEmail());
-            }
         } catch (FeignException.NotFound e) {
             log.warn("The user was not found in user service{}", regDto.getUserEmail());
             throw new UserNotFoundException(regDto.getUserEmail(), e);
         } catch (Exception e) {
             log.warn("An error when registering a user through user-service. Email: {}, error: {}", regDto.getUserEmail(), e.toString(), e);
             throw new ServiceUnavailableException("Temporary error when registering user", e);
+        }
+
+        if (dto == null) {
+            log.warn("The user was not found in user service{}", regDto.getUserEmail());
+            throw new UserNotFoundException(regDto.getUserEmail());
         }
         validator.validateUser(dto);
 
