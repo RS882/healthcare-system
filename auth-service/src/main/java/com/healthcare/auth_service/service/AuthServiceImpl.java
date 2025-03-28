@@ -27,7 +27,6 @@ public class AuthServiceImpl implements AuthService {
     JwtService jwtService;
     AuthenticationManager authManager;
     RefreshTokenService refreshTokenService;
-    CookieService cookieService;
     BlockService blockService;
     TokenBlacklistService tokenBlacklistService;
 
@@ -57,7 +56,6 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public TokensDto refresh(String refreshToken) {
-
 
         AuthUserDetails userDetails = validateRefreshTokenAndGetUser(refreshToken);
 
