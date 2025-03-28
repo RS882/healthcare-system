@@ -18,11 +18,14 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     @Value("${jwt.refresh-token-expiration-ms}")
     private long refreshExpirationMs;
 
+    @Value("${jwt.max-tokens}")
+    private int maxTokens;
+
+    @Value("${prefix.refresh")
+    private String refreshPrefix;
+
     private final StringRedisTemplate redis;
     private final BlockService blockService;
-
-    private static final String PREFIX = "refresh:";
-    private static final int MAX_TOKENS = 5;
 
     @Override
     public void save(String token, Long userId) {
@@ -66,7 +69,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         }
 
         Long count = redis.opsForSet().size(getSetKey(userId));
-        if (count != null && count >= MAX_TOKENS) {
+        if (count != null && count >= maxTokens) {
             deleteAll(userId);
             blockService.block(userId);
             throw new AccessDeniedException("Too many active sessions. You were temporarily blocked.");
@@ -74,10 +77,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     private String getKey(String token, Long userId) {
-        return PREFIX + userId + ":" + token;
+        return refreshPrefix + userId + ":" + token;
     }
 
     private String getSetKey(Long userId) {
-        return  PREFIX + userId;
+        return refreshPrefix + userId;
     }
 }

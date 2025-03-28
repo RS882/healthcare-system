@@ -17,9 +17,10 @@ public class BlockServiceImpl implements BlockService {
     @Value("${jwt.access-token-expiration-ms}")
     private long accessExpirationMs;
 
-    private final StringRedisTemplate redis;
+    @Value("${prefix.blocked")
+    private String blockedPrefix;
 
-    private static final String BLOCKED_PREFIX = "refresh-block:";
+    private final StringRedisTemplate redis;
 
     @Override
     public void block(Long userId) {
@@ -33,6 +34,6 @@ public class BlockServiceImpl implements BlockService {
     }
 
     private String getKey(Long userId) {
-        return BLOCKED_PREFIX + userId;
+        return blockedPrefix + userId;
     }
 }
