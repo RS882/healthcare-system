@@ -105,8 +105,12 @@ public class JwtService {
         }
     }
 
-    public long  getRemainingTTLAccessToken(String token) {
+    public long getRemainingTTLAccessToken(String token) {
         return getRemainingTTL(token, accessKey);
+    }
+
+    public long getRemainingTTLRefreshToken(String token) {
+        return getRemainingTTL(token, refreshKey);
     }
 
     private long getRemainingTTL(String token, SecretKey key) {
@@ -138,7 +142,7 @@ public class JwtService {
         return claims.get(ROLES, List.class);
     }
 
-    public <T> T extractClaim(String token, Function<Claims, T> resolver, SecretKey key) {
+    private  <T> T extractClaim(String token, Function<Claims, T> resolver, SecretKey key) {
         final Claims claims = extractAllClaims(token, key);
         return resolver.apply(claims);
     }
