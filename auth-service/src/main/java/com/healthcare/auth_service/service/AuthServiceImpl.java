@@ -2,7 +2,6 @@ package com.healthcare.auth_service.service;
 
 import com.healthcare.auth_service.domain.AuthUserDetails;
 import com.healthcare.auth_service.domain.dto.LoginDto;
-import com.healthcare.auth_service.domain.dto.RegistrationDto;
 import com.healthcare.auth_service.domain.dto.TokensDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.exception_handler.exception.UnauthorizedException;
@@ -13,7 +12,6 @@ import lombok.experimental.FieldDefaults;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -23,20 +21,11 @@ import org.springframework.util.StringUtils;
 public class AuthServiceImpl implements AuthService {
 
     UserClientService userClientService;
-    PasswordEncoder passwordEncoder;
     JwtService jwtService;
     AuthenticationManager authManager;
     RefreshTokenService refreshTokenService;
     BlockService blockService;
     TokenBlacklistService tokenBlacklistService;
-
-    @Override
-    public TokensDto registration(RegistrationDto dto) {
-
-        dto.setPassword(passwordEncoder.encode(dto.getPassword()));
-
-        return generateAndStoreTokens(userClientService.registerUser(dto));
-    }
 
     @Override
     public TokensDto login(LoginDto dto) {

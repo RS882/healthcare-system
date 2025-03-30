@@ -1,6 +1,5 @@
 package com.healthcare.auth_service.service.feignClient;
 
-import com.healthcare.auth_service.domain.dto.RegistrationDto;
 import com.healthcare.auth_service.domain.dto.UserInfoDto;
 import com.healthcare.auth_service.exception_handler.exception.ServiceUnavailableException;
 import lombok.extern.slf4j.Slf4j;
@@ -15,9 +14,4 @@ public class UserClientFallback implements UserClient {
         throw new ServiceUnavailableException("User service is temporarily unavailable");
     }
 
-    @Override
-    public UserInfoDto registerUser(RegistrationDto dto) {
-        log.error("User service is unavailable. Cannot register user: {}", dto.getUserEmail());
-        throw new ServiceUnavailableException("User service is temporarily unavailable");
-    }
 }

@@ -1,14 +1,11 @@
 package com.healthcare.auth_service.service;
 
 import com.healthcare.auth_service.domain.AuthUserDetails;
-import com.healthcare.auth_service.domain.dto.RegistrationDto;
 import com.healthcare.auth_service.domain.dto.UserInfoDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
-import com.healthcare.auth_service.exception_handler.exception.ServiceUnavailableException;
 import com.healthcare.auth_service.exception_handler.exception.UserNotFoundException;
 import com.healthcare.auth_service.service.feignClient.UserClient;
 import com.healthcare.auth_service.validator.UserInfoDtoValidator;
-import feign.FeignException;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -20,7 +17,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(value = DisplayNameGenerator.ReplaceUnderscores.class)
@@ -42,7 +40,6 @@ class UserClientServiceTest {
 
     private UserInfoDto activeUser;
     private UserInfoDto inactiveUser;
-    private RegistrationDto regDto;
 
     @BeforeEach
     void setUp() {
@@ -61,12 +58,6 @@ class UserClientServiceTest {
                 .password(PASSWORD)
                 .roles(Set.of(USER_ROLE))
                 .enabled(false)
-                .build();
-
-        regDto = RegistrationDto.builder()
-                .userEmail(EMAIL)
-                .userName("Test User")
-                .password(PASSWORD)
                 .build();
     }
 
@@ -104,51 +95,6 @@ class UserClientServiceTest {
             when(userClient.getUserByEmail(EMAIL)).thenThrow(new RuntimeException("Unexpected"));
 
             assertThrows(UserNotFoundException.class, () -> service.getUserByEmail(EMAIL));
-        }
-    }
-
-    @Nested
-    @DisplayName("Register user")
-    public class RegisterUserTests {
-
-        @Test
-        void positive_should_return_authUserDetails_when_ok() {
-            when(userClient.registerUser(regDto)).thenReturn(activeUser);
-
-            AuthUserDetails result = service.registerUser(regDto);
-
-            assertNotNull(result);
-            assertEquals(EMAIL, result.getUsername());
-            assertEquals(USER_ID, result.getId());
-            assertEquals(PASSWORD, result.getPassword());
-            Set<String> actualRoles = result.getAuthorities()
-                    .stream()
-                    .map(GrantedAuthority::getAuthority)
-                    .collect(Collectors.toSet());
-            assertEquals(Set.of(USER_ROLE), actualRoles);
-            assertTrue(result.isEnabled());
-            verify(validator).validateUser(activeUser);
-        }
-
-        @Test
-        void negative_should_throw_UserNotFoundException_when_null_returned() {
-            when(userClient.registerUser(regDto)).thenReturn(null);
-
-            assertThrows(UserNotFoundException.class, () -> service.registerUser(regDto));
-        }
-
-        @Test
-        void negative_should_throw_UserNotFoundException_when_feign_not_found() {
-            when(userClient.registerUser(regDto)).thenThrow(mock(FeignException.NotFound.class));
-
-            assertThrows(UserNotFoundException.class, () -> service.registerUser(regDto));
-        }
-
-        @Test
-        void negative_should_throw_ServiceUnavailableException_on_other_error() {
-            when(userClient.registerUser(regDto)).thenThrow(new RuntimeException("Connection timeout"));
-
-            assertThrows(ServiceUnavailableException.class, () -> service.registerUser(regDto));
         }
     }
 }

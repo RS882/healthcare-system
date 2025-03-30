@@ -6,9 +6,13 @@ import com.healthcare.user_service.model.User;
 import com.healthcare.user_service.model.UserRole;
 import com.healthcare.user_service.model.dto.RegistrationDto;
 import com.healthcare.user_service.model.dto.UserInfoDto;
+import com.healthcare.user_service.model.dto.UserRegDto;
 import com.healthcare.user_service.repository.UserRepository;
 import com.healthcare.user_service.service.interfacies.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Bean;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -19,6 +23,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository repository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public UserInfoDto getUserInfoByEmail(String email) {
@@ -28,9 +33,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserInfoDto registration(RegistrationDto dto) {
+    public UserRegDto registration(RegistrationDto dto) {
         User user = repository.save(getUser(dto));
-        return getUserInfoDto(user);
+        return getUserRegDto(user);
     }
 
     private UserInfoDto getUserInfoDto(User user) {
@@ -46,10 +51,19 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
+    private UserRegDto getUserRegDto(User user) {
+        return UserRegDto.builder()
+                .id(user.getId())
+                .email(user.getEmail())
+                .name(user.getUsername())
+                .roles(user.getRoles().stream().map(UserRole::getRole).collect(Collectors.toSet()))
+                .build();
+    }
+
     private User getUser(RegistrationDto dto) {
         User user = User.builder()
                 .email(dto.getUserEmail())
-                .password(dto.getPassword())
+                .password(passwordEncoder.encode(dto.getPassword()))
                 .username(dto.getUserName())
                 .isActive(true)
                 .build();

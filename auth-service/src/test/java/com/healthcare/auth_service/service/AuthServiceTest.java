@@ -2,7 +2,6 @@ package com.healthcare.auth_service.service;
 
 import com.healthcare.auth_service.domain.AuthUserDetails;
 import com.healthcare.auth_service.domain.dto.LoginDto;
-import com.healthcare.auth_service.domain.dto.RegistrationDto;
 import com.healthcare.auth_service.domain.dto.TokensDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.exception_handler.exception.UnauthorizedException;
@@ -69,29 +68,6 @@ class AuthServiceTest {
         );
 
         tokens = new TokensDto(ACCESS_TOKEN, REFRESH_TOKEN);
-    }
-
-    @Nested
-    @DisplayName("User registration tests")
-    public class RegistrationTests {
-
-        @Test
-        void positive_should_return_tokens_and_save_refresh_token() {
-            RegistrationDto dto = RegistrationDto.builder()
-                    .userName("test")
-                    .password(PASSWORD)
-                    .userEmail(EMAIL)
-                    .build();
-
-            when(passwordEncoder.encode(PASSWORD)).thenReturn("encodedPass");
-            when(userClientService.registerUser(any())).thenReturn(userDetails);
-            when(jwtService.getTokens(eq(userDetails), eq(USER_ID))).thenReturn(tokens);
-
-            TokensDto result = authService.registration(dto);
-
-            assertEquals(tokens, result);
-            verify(refreshTokenService).save(REFRESH_TOKEN, USER_ID);
-        }
     }
 
     @Nested

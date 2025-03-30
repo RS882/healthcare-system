@@ -3,7 +3,6 @@ package com.healthcare.auth_service.controller;
 import com.healthcare.auth_service.controller.API.AuthAPI;
 import com.healthcare.auth_service.domain.dto.AuthResponse;
 import com.healthcare.auth_service.domain.dto.LoginDto;
-import com.healthcare.auth_service.domain.dto.RegistrationDto;
 import com.healthcare.auth_service.service.CookieService;
 import com.healthcare.auth_service.service.interfacies.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -18,18 +17,6 @@ public class AuthController implements AuthAPI {
 
     private final AuthService authService;
     private final CookieService cookieService;
-
-    @Override
-    public ResponseEntity<AuthResponse> registerUser(
-            RegistrationDto dto,
-            HttpServletResponse response) {
-
-        var tokens = authService.registration(dto);
-        cookieService.setRefreshTokenToCookie(response, tokens.getRefreshToken());
-
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new AuthResponse(tokens.getAccessToken()));
-    }
 
     @Override
     public ResponseEntity<AuthResponse> loginUser(
