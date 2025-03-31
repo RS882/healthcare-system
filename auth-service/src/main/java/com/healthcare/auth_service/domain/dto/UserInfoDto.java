@@ -26,6 +26,7 @@ public class UserInfoDto {
     private String password;
 
     @NotEmpty(message = "Roles collection cannot be empty")
+    @NotNull(message = "Roles cannot be null")
     private Set<String> roles;
 
     private boolean enabled;

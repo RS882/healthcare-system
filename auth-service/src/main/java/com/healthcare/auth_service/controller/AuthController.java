@@ -19,7 +19,7 @@ public class AuthController implements AuthAPI {
     private final CookieService cookieService;
 
     @Override
-    public ResponseEntity<AuthResponse> loginUser(
+    public ResponseEntity<AuthResponse> login(
             LoginDto dto,
             HttpServletResponse response) {
 

@@ -2,23 +2,38 @@ package com.healthcare.auth_service.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
+import com.healthcare.auth_service.domain.dto.LoginDto;
 import com.healthcare.auth_service.domain.dto.UserInfoDto;
-import com.healthcare.auth_service.service.CookieService;
+import com.healthcare.auth_service.exception_handler.dto.ErrorResponse;
+import com.healthcare.auth_service.service.JwtService;
 import com.healthcare.auth_service.service.feignClient.UserClient;
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
+import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 
+import static com.healthcare.auth_service.service.CookieService.REFRESH_TOKEN;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -36,60 +51,471 @@ class AuthControllerTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private CookieService cookieService;
+    private JwtService jwtService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private StringRedisTemplate redis;
+
+    @Autowired
+    private ObjectMapper mapper;
+
     @MockBean
     private UserClient userClient;
 
-    private ObjectMapper mapper = new ObjectMapper();
+    @Value("${prefix.blocked}")
+    private String blockedPrefix;
 
-    private final String EMAIL = "test@example.com";
-    private final String PASSWORD = "136Jkn!kPu5%";
-    private final String USER_NAME = "Test User";
-    private final Long USER_ID = 1L;
-    private final String USER_ROLE = "ROLE_TEST";
+    @Value("${prefix.refresh}")
+    private String refreshPrefix;
 
-    private final String REG_URL = "/api/v1/auth/registration";
+    @Value("${prefix.blacklist}")
+    private String blacklistPrefix;
 
-    private UserInfoDto userInfoDto;
+    @Value("${jwt.max-tokens}")
+    private int maxTokens;
+
+    private static final String EMAIL = "test@example.com";
+    private static final String PASSWORD = "136Jkn!kPu5%";
+    private static final Long USER_ID = 1L;
+    private static final String USER_ROLE = "ROLE_TEST";
+
+    private final String LOGIN_URL = "/api/v1/auth/login";
+
+
+    @AfterEach
+    void afterEach() {
+        Set<String> keys = redis.keys("test" + "*");
+        redis.delete(keys);
+    }
 
     @Nested
-    @DisplayName("POST " + REG_URL)
-    class RegisterUserTests {
+    @DisplayName("POST " + LOGIN_URL)
+    class LoginUserTests {
 
+        @Test
+        public void login_user_should_return_200() throws Exception {
 
-
-        @BeforeEach
-        void setUp() {
-
-
-            userInfoDto = UserInfoDto.builder()
+            UserInfoDto userInfoDto = UserInfoDto.builder()
                     .email(EMAIL)
                     .password(passwordEncoder.encode(PASSWORD))
                     .id(USER_ID)
                     .enabled(true)
                     .roles(Set.of(USER_ROLE))
                     .build();
+
+            UserDetails userDetail = new User(
+                    EMAIL,
+                    userInfoDto.getPassword(),
+                    userInfoDto.isEnabled(),
+                    true,
+                    true,
+                    true,
+                    userInfoDto.getRoles().stream()
+                            .map(SimpleGrantedAuthority::new)
+                            .toList());
+
+            LoginDto loginDto = LoginDto.builder()
+                    .password(PASSWORD)
+                    .userEmail(EMAIL)
+                    .build();
+
+            when(userClient.getUserByEmail(any(String.class)))
+                    .thenReturn(userInfoDto);
+
+            String dtoJson = mapper.writeValueAsString(loginDto);
+
+            MvcResult result = mockMvc.perform(post(LOGIN_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(dtoJson))
+                    .andExpect(status().isOk())
+                    .andReturn();
+
+            String responseToken = result.getResponse().getContentAsString();
+            JsonNode jsonNodeToken = mapper.readTree(responseToken);
+            String accessToken = jsonNodeToken.get("accessToken").asText();
+            String refreshToken = Objects.requireNonNull(
+                            result.getResponse().getCookie(REFRESH_TOKEN))
+                    .getValue();
+
+            assertTrue(jwtService.validateAccessToken(accessToken, userDetail));
+            assertTrue(jwtService.validateRefreshToken(refreshToken, userDetail));
+
+            assertTrue(redis.hasKey(refreshPrefix + USER_ID));
+        }
+
+        @ParameterizedTest(name = "Тест {index}: login_with_status_400_login_data_is_incorrect [{arguments}]")
+        @MethodSource("incorrectLoginData")
+        public void login_user_should_return_400_when_login_data_is_wrong(LoginDto loginDto) throws Exception {
+
+            String dtoJson = mapper.writeValueAsString(loginDto);
+
+            MvcResult result = mockMvc.perform(post(LOGIN_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(dtoJson))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            String responseBody = result.getResponse().getContentAsString();
+            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
+
+            HttpStatus status = HttpStatus.BAD_REQUEST;
+            assertNotNull(error.getMessage());
+            assertEquals(error.getStatus(), status.value());
+            assertEquals(error.getError(), status.getReasonPhrase());
+            assertEquals(error.getPath(), LOGIN_URL);
+            assertFalse(error.getValidationErrors().isEmpty());
+
+            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+        }
+
+        private static Stream<Arguments> incorrectLoginData() {
+            return Stream.of(Arguments.of(
+                            LoginDto.builder()
+                                    .userEmail("testexample?com")
+                                    .password(PASSWORD)
+                                    .build()),
+                    Arguments.of(
+                            LoginDto.builder()
+                                    .password(PASSWORD)
+                                    .build()),
+                    Arguments.of(
+                            LoginDto.builder()
+                                    .userEmail(EMAIL)
+                                    .build()),
+                    Arguments.of(
+                            LoginDto.builder()
+                                    .userEmail(EMAIL)
+                                    .password("1E")
+                                    .build()),
+                    Arguments.of(
+                            LoginDto.builder()
+                                    .userEmail(EMAIL)
+                                    .password("asdasdlDFsd90q!u023402lks@djalsdajsd#lahsdkahs$$%dllkasd")
+                                    .build()),
+                    Arguments.of(
+                            LoginDto.builder()
+                                    .userEmail(EMAIL)
+                                    .password("asdasdlweqwe")
+                                    .build()),
+                    Arguments.of(
+                            LoginDto.builder()
+                                    .userEmail(EMAIL)
+                                    .password("asda@sdlweqwe")
+                                    .build()),
+                    Arguments.of(
+                            LoginDto.builder()
+                                    .userEmail(EMAIL)
+                                    .password("asdasdlwe8qwe")
+                                    .build()),
+                    Arguments.of(
+                            LoginDto.builder()
+                                    .userEmail(EMAIL)
+                                    .password("Qsdasdlwe8qwe")
+                                    .build()),
+                    Arguments.of(
+                            LoginDto.builder()
+                                    .userEmail("testexample?com")
+                                    .password("Qsdasdlwe8qwe")
+                                    .build())
+            );
         }
 
         @Test
-        public void register_user_should_return_201() throws Exception {
-//
-//            when(userClient.registerUser(any(RegistrationDto.class)))
-//                    .thenReturn(userInfoDto);
-//
-//            String dtoJson = mapper.writeValueAsString(regDto);
-//
-//            MvcResult result = mockMvc.perform(post(REG_URL)
-//                            .contentType(MediaType.APPLICATION_JSON)
-//                            .content(dtoJson))
-//                    .andExpect(status().isCreated())
-//                    .andReturn();
-//            String responseToken = result.getResponse().getContentAsString();
-//            JsonNode jsonNodeToken = mapper.readTree(responseToken);
+        public void login_user_should_return_404_when_user_service_get_exception() throws Exception {
+
+            when(userClient.getUserByEmail(any(String.class)))
+                    .thenThrow(new RuntimeException("Something went wrong"));
+
+            LoginDto loginDto = LoginDto.builder()
+                    .password(PASSWORD)
+                    .userEmail(EMAIL)
+                    .build();
+
+            String dtoJson = mapper.writeValueAsString(loginDto);
+
+            MvcResult result = mockMvc.perform(post(LOGIN_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(dtoJson))
+                    .andExpect(status().isNotFound())
+                    .andReturn();
+
+            String responseBody = result.getResponse().getContentAsString();
+            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
+
+            HttpStatus status = HttpStatus.NOT_FOUND;
+            assertNotNull(error.getMessage());
+            assertEquals(error.getStatus(), status.value());
+            assertEquals(error.getError(), status.getReasonPhrase());
+            assertEquals(error.getPath(), LOGIN_URL);
+            assertNull(error.getValidationErrors());
+
+            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+        }
+
+        @Test
+        public void login_user_should_return_404_when_user_service_get_null() throws Exception {
+
+            when(userClient.getUserByEmail(any(String.class)))
+                    .thenReturn(null);
+
+            LoginDto loginDto = LoginDto.builder()
+                    .password(PASSWORD)
+                    .userEmail(EMAIL)
+                    .build();
+
+            String dtoJson = mapper.writeValueAsString(loginDto);
+
+            MvcResult result = mockMvc.perform(post(LOGIN_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(dtoJson))
+                    .andExpect(status().isNotFound())
+                    .andReturn();
+
+            String responseBody = result.getResponse().getContentAsString();
+            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
+
+            HttpStatus status = HttpStatus.NOT_FOUND;
+            assertNotNull(error.getMessage());
+            assertEquals(error.getStatus(), status.value());
+            assertEquals(error.getError(), status.getReasonPhrase());
+            assertEquals(error.getPath(), LOGIN_URL);
+            assertNull(error.getValidationErrors());
+
+            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+        }
+
+        @Test
+        public void login_user_should_return_403_when_user_is_disable() throws Exception {
+
+            UserInfoDto userInfoDto = UserInfoDto.builder()
+                    .email(EMAIL)
+                    .password(passwordEncoder.encode(PASSWORD))
+                    .id(USER_ID)
+                    .enabled(false)
+                    .roles(Set.of(USER_ROLE))
+                    .build();
+
+            when(userClient.getUserByEmail(any(String.class)))
+                    .thenReturn(userInfoDto);
+
+            LoginDto loginDto = LoginDto.builder()
+                    .password(PASSWORD)
+                    .userEmail(EMAIL)
+                    .build();
+
+            String dtoJson = mapper.writeValueAsString(loginDto);
+
+            MvcResult result = mockMvc.perform(post(LOGIN_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(dtoJson))
+                    .andExpect(status().isForbidden())
+                    .andReturn();
+
+            String responseBody = result.getResponse().getContentAsString();
+            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
+
+            HttpStatus status = HttpStatus.FORBIDDEN;
+            assertNotNull(error.getMessage());
+            assertEquals(error.getStatus(), status.value());
+            assertEquals(error.getError(), status.getReasonPhrase());
+            assertEquals(error.getPath(), LOGIN_URL);
+            assertNull(error.getValidationErrors());
+
+            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+        }
+
+        @ParameterizedTest(name = "Тест {index}: login_with_status_400_when_user_service_get_incorrect_user_info_dto[{arguments}]")
+        @MethodSource("incorrectUserInfo")
+        public void login_user_should_return_400_when_user_service_get_incorrect_user_info_dto(UserInfoDto userInfoDto) throws Exception {
+
+            when(userClient.getUserByEmail(any(String.class)))
+                    .thenReturn(userInfoDto);
+
+            LoginDto loginDto = LoginDto.builder()
+                    .password(PASSWORD)
+                    .userEmail(EMAIL)
+                    .build();
+
+            String dtoJson = mapper.writeValueAsString(loginDto);
+
+            MvcResult result = mockMvc.perform(post(LOGIN_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(dtoJson))
+                    .andExpect(status().isBadRequest())
+                    .andReturn();
+
+            String responseBody = result.getResponse().getContentAsString();
+            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
+
+            HttpStatus status = HttpStatus.BAD_REQUEST;
+            assertNotNull(error.getMessage());
+            assertEquals(error.getStatus(), status.value());
+            assertEquals(error.getError(), status.getReasonPhrase());
+            assertEquals(error.getPath(), LOGIN_URL);
+            assertFalse(error.getValidationErrors().isEmpty());
+
+            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+        }
+
+        private static Stream<Arguments> incorrectUserInfo() {
+
+            return Stream.of(Arguments.of(
+                            UserInfoDto.builder()
+                                    .email(EMAIL)
+                                    .password(PASSWORD)
+                                    .enabled(true)
+                                    .roles(Set.of(USER_ROLE))
+                                    .build()),
+                    Arguments.of(UserInfoDto.builder()
+                            .password(PASSWORD)
+                            .id(USER_ID)
+                            .enabled(true)
+                            .roles(Set.of(USER_ROLE))
+                            .build()),
+                    Arguments.of(UserInfoDto.builder()
+                            .email("testexample?com")
+                            .password(PASSWORD)
+                            .id(USER_ID)
+                            .enabled(true)
+                            .roles(Set.of(USER_ROLE))
+                            .build()),
+                    Arguments.of(UserInfoDto.builder()
+                            .email(EMAIL)
+                            .id(USER_ID)
+                            .enabled(true)
+                            .roles(Set.of(USER_ROLE))
+                            .build()),
+                    Arguments.of(UserInfoDto.builder()
+                            .email(EMAIL)
+                            .password("")
+                            .id(USER_ID)
+                            .enabled(true)
+                            .roles(Set.of(USER_ROLE))
+                            .build()),
+                    Arguments.of(UserInfoDto.builder()
+                            .email(EMAIL)
+                            .password("         ")
+                            .id(USER_ID)
+                            .enabled(true)
+                            .roles(Set.of(USER_ROLE))
+                            .build()),
+                    Arguments.of(UserInfoDto.builder()
+                            .email(EMAIL)
+                            .password(PASSWORD)
+                            .id(USER_ID)
+                            .enabled(true)
+                            .roles(new HashSet<>())
+                            .build()),
+                    Arguments.of(UserInfoDto.builder()
+                            .email(EMAIL)
+                            .password(PASSWORD)
+                            .id(USER_ID)
+                            .enabled(true)
+                            .build()),
+                    Arguments.of(UserInfoDto.builder()
+                            .enabled(true)
+                            .build()),
+                    Arguments.of(UserInfoDto.builder()
+                            .email("EMAIL")
+                            .password("")
+                            .enabled(true)
+                            .roles(new HashSet<>())
+                            .build())
+            );
+        }
+
+
+        @Test
+        public void login_user_should_return_403_when_user_is_blocked() throws Exception {
+
+            UserInfoDto userInfoDto = UserInfoDto.builder()
+                    .email(EMAIL)
+                    .password(passwordEncoder.encode(PASSWORD))
+                    .id(USER_ID)
+                    .enabled(true)
+                    .roles(Set.of(USER_ROLE))
+                    .build();
+
+            when(userClient.getUserByEmail(any(String.class)))
+                    .thenReturn(userInfoDto);
+
+            LoginDto loginDto = LoginDto.builder()
+                    .password(PASSWORD)
+                    .userEmail(EMAIL)
+                    .build();
+
+            String dtoJson = mapper.writeValueAsString(loginDto);
+
+            for (int i = 0; i < maxTokens; i++) {
+                Thread.sleep(1000);
+                mockMvc.perform(post(LOGIN_URL)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(dtoJson))
+                        .andExpect(status().isOk());
+            }
+
+            MvcResult result = mockMvc.perform(post(LOGIN_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(dtoJson))
+                    .andExpect(status().isForbidden())
+                    .andReturn();
+
+            String responseBody = result.getResponse().getContentAsString();
+            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
+
+            HttpStatus status = HttpStatus.FORBIDDEN;
+            assertNotNull(error.getMessage());
+            assertEquals(error.getStatus(), status.value());
+            assertEquals(error.getError(), status.getReasonPhrase());
+            assertEquals(error.getPath(), LOGIN_URL);
+            assertNull(error.getValidationErrors());
+
+            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+        }
+
+
+        @Test
+        public void login_user_should_return_403_when_password_is_wrong() throws Exception {
+
+            UserInfoDto userInfoDto = UserInfoDto.builder()
+                    .email(EMAIL)
+                    .password(passwordEncoder.encode(PASSWORD))
+                    .id(USER_ID)
+                    .enabled(true)
+                    .roles(Set.of(USER_ROLE))
+                    .build();
+
+            when(userClient.getUserByEmail(any(String.class)))
+                    .thenReturn(userInfoDto);
+
+            LoginDto loginDto = LoginDto.builder()
+                    .password(PASSWORD+"wrong")
+                    .userEmail(EMAIL)
+                    .build();
+
+            String dtoJson = mapper.writeValueAsString(loginDto);
+
+            MvcResult result = mockMvc.perform(post(LOGIN_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(dtoJson))
+                    .andExpect(status().isUnauthorized())
+                    .andReturn();
+
+            String responseBody = result.getResponse().getContentAsString();
+            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
+
+            HttpStatus status = HttpStatus.UNAUTHORIZED;
+            assertNotNull(error.getMessage());
+            assertEquals(error.getStatus(), status.value());
+            assertEquals(error.getError(), status.getReasonPhrase());
+            assertEquals(error.getPath(), LOGIN_URL);
+            assertNull(error.getValidationErrors());
+
+            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
         }
     }
+
 }

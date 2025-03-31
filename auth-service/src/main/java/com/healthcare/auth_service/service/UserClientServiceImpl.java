@@ -33,6 +33,10 @@ public class UserClientServiceImpl implements UserClientService {
             log.warn("User not found or error occurred for email {}: {}", email, e.getMessage());
             throw new UserNotFoundException(email, e);
         }
+        if (dto == null) {
+            log.warn("User for email {} not found. User service get null", email);
+            throw new UserNotFoundException(email);
+        }
         if (!dto.isEnabled()) {
             log.warn("User {} has been blocked.", email);
             throw new AccessDeniedException("User " + email + " has been blocked.");

@@ -69,7 +69,7 @@ public interface AuthAPI {
                     ))}
     )
     @PostMapping("/login")
-    ResponseEntity<AuthResponse> loginUser(
+    ResponseEntity<AuthResponse> login(
             @Valid
             @org.springframework.web.bind.annotation.RequestBody
             LoginDto dto,
