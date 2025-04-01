@@ -3,10 +3,13 @@ package com.healthcare.auth_service.controller;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.auth_service.domain.dto.LoginDto;
+import com.healthcare.auth_service.domain.dto.TokensDto;
 import com.healthcare.auth_service.domain.dto.UserInfoDto;
 import com.healthcare.auth_service.exception_handler.dto.ErrorResponse;
+import com.healthcare.auth_service.service.CookieService;
 import com.healthcare.auth_service.service.JwtService;
 import com.healthcare.auth_service.service.feignClient.UserClient;
+import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -36,6 +39,7 @@ import static com.healthcare.auth_service.service.CookieService.REFRESH_TOKEN;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -55,6 +59,9 @@ class AuthControllerTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private CookieService cookieService;
 
     @Autowired
     private StringRedisTemplate redis;
@@ -83,12 +90,52 @@ class AuthControllerTest {
     private static final String USER_ROLE = "ROLE_TEST";
 
     private final String LOGIN_URL = "/api/v1/auth/login";
-
+    private final String REFRESH_URL = "/api/v1/auth/refresh";
 
     @AfterEach
     void afterEach() {
         Set<String> keys = redis.keys("test" + "*");
         redis.delete(keys);
+    }
+
+    private Cookie getCookie() throws Exception {
+
+        UserInfoDto userInfoDto = UserInfoDto.builder()
+                .email(EMAIL)
+                .password(passwordEncoder.encode(PASSWORD))
+                .id(USER_ID)
+                .enabled(true)
+                .roles(Set.of(USER_ROLE))
+                .build();
+
+        UserDetails userDetail = new User(
+                EMAIL,
+                userInfoDto.getPassword(),
+                userInfoDto.isEnabled(),
+                true,
+                true,
+                true,
+                userInfoDto.getRoles().stream()
+                        .map(SimpleGrantedAuthority::new)
+                        .toList());
+
+        LoginDto loginDto = LoginDto.builder()
+                .password(PASSWORD)
+                .userEmail(EMAIL)
+                .build();
+
+        when(userClient.getUserByEmail(any(String.class)))
+                .thenReturn(userInfoDto);
+
+        String dtoJson = mapper.writeValueAsString(loginDto);
+
+        MvcResult result = mockMvc.perform(post(LOGIN_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(dtoJson))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        return result.getResponse().getCookie(REFRESH_TOKEN);
     }
 
     @Nested
@@ -143,7 +190,7 @@ class AuthControllerTest {
             assertTrue(jwtService.validateAccessToken(accessToken, userDetail));
             assertTrue(jwtService.validateRefreshToken(refreshToken, userDetail));
 
-            assertTrue(redis.hasKey(refreshPrefix + USER_ID));
+            assertTrue(redis.hasKey(refreshPrefix + USER_ID + ":" + refreshToken));
         }
 
         @ParameterizedTest(name = "Тест {index}: login_with_status_400_login_data_is_incorrect [{arguments}]")
@@ -478,7 +525,7 @@ class AuthControllerTest {
 
 
         @Test
-        public void login_user_should_return_403_when_password_is_wrong() throws Exception {
+        public void login_user_should_return_401_when_password_is_wrong() throws Exception {
 
             UserInfoDto userInfoDto = UserInfoDto.builder()
                     .email(EMAIL)
@@ -492,7 +539,7 @@ class AuthControllerTest {
                     .thenReturn(userInfoDto);
 
             LoginDto loginDto = LoginDto.builder()
-                    .password(PASSWORD+"wrong")
+                    .password(PASSWORD + "wrong")
                     .userEmail(EMAIL)
                     .build();
 
@@ -518,4 +565,137 @@ class AuthControllerTest {
         }
     }
 
+    @Nested
+    @DisplayName("POST " + REFRESH_URL)
+    class RefreshTests {
+
+        @Test
+        public void refresh_should_return_200() throws Exception {
+
+            UserInfoDto userInfoDto = UserInfoDto.builder()
+                    .email(EMAIL)
+                    .password(passwordEncoder.encode(PASSWORD))
+                    .id(USER_ID)
+                    .enabled(true)
+                    .roles(Set.of(USER_ROLE))
+                    .build();
+
+            UserDetails userDetail = new User(
+                    EMAIL,
+                    userInfoDto.getPassword(),
+                    userInfoDto.isEnabled(),
+                    true,
+                    true,
+                    true,
+                    userInfoDto.getRoles().stream()
+                            .map(SimpleGrantedAuthority::new)
+                            .toList());
+
+            Cookie cookie = getCookie();
+
+            when(userClient.getUserByEmail(any(String.class)))
+                    .thenReturn(userInfoDto);
+
+            Thread.sleep(1000);
+            MvcResult result = mockMvc.perform(post(REFRESH_URL)
+                            .cookie(cookie))
+                    .andExpect(status().isOk())
+                    .andReturn();
+
+            String responseToken = result.getResponse().getContentAsString();
+            JsonNode jsonNodeToken = mapper.readTree(responseToken);
+            String accessToken = jsonNodeToken.get("accessToken").asText();
+            String refreshToken = Objects.requireNonNull(
+                            result.getResponse().getCookie(REFRESH_TOKEN))
+                    .getValue();
+
+            assertTrue(jwtService.validateAccessToken(accessToken, userDetail));
+            assertTrue(jwtService.validateRefreshToken(refreshToken, userDetail));
+
+            assertTrue(redis.hasKey(refreshPrefix + USER_ID + ":" + refreshToken));
+
+            assertFalse(redis.hasKey(refreshPrefix + USER_ID + ":" + cookie.getValue()));
+        }
+
+        @Test
+        public void refresh_should_return_400_when_cookie_is_null() throws Exception {
+            mockMvc.perform(post(REFRESH_URL))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        public void refresh_with_status_401_cookie_is_incorrect() throws Exception {
+            Cookie cookie = new Cookie("test", "test");
+            MvcResult result = mockMvc.perform(get(REFRESH_URL)
+                            .cookie(cookie))
+                    .andExpect(status().isUnauthorized())
+                    .andReturn();
+
+            String responseBody = result.getResponse().getContentAsString();
+            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
+            HttpStatus status = HttpStatus.UNAUTHORIZED;
+            assertNotNull(error.getMessage());
+            assertEquals(error.getStatus(), status.value());
+            assertEquals(error.getError(), status.getReasonPhrase());
+            assertEquals(error.getPath(), REFRESH_URL);
+            assertNull(error.getValidationErrors());
+
+            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+        }
+
+        @Test
+        public void refresh_with_status_401_token_is_incorrect() throws Exception {
+            Cookie cookie = new Cookie(REFRESH_TOKEN, "test");
+            MvcResult result = mockMvc.perform(get(REFRESH_URL)
+                            .cookie(cookie))
+                    .andExpect(status().isUnauthorized())
+                    .andReturn();
+
+            String responseBody = result.getResponse().getContentAsString();
+            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
+            HttpStatus status = HttpStatus.UNAUTHORIZED;
+            assertNotNull(error.getMessage());
+            assertEquals(error.getStatus(), status.value());
+            assertEquals(error.getError(), status.getReasonPhrase());
+            assertEquals(error.getPath(), REFRESH_URL);
+            assertNull(error.getValidationErrors());
+
+            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+        }
+
+        @Test
+        public void refresh_with_status_401_token_is_not_found() throws Exception {
+
+            UserDetails userDetail = new User(
+                    EMAIL,
+                    passwordEncoder.encode(PASSWORD),
+                    true,
+                    true,
+                    true,
+                    true,
+                    Set.of(USER_ROLE).stream()
+                            .map(SimpleGrantedAuthority::new)
+                            .toList());
+
+            TokensDto tokens = jwtService.getTokens(userDetail, USER_ID);
+
+            Cookie cookie = new Cookie(REFRESH_TOKEN, tokens.getRefreshToken());
+
+            MvcResult result = mockMvc.perform(get(REFRESH_URL)
+                            .cookie(cookie))
+                    .andExpect(status().isUnauthorized())
+                    .andReturn();
+
+            String responseBody = result.getResponse().getContentAsString();
+            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
+            HttpStatus status = HttpStatus.UNAUTHORIZED;
+            assertNotNull(error.getMessage());
+            assertEquals(error.getStatus(), status.value());
+            assertEquals(error.getError(), status.getReasonPhrase());
+            assertEquals(error.getPath(), REFRESH_URL);
+            assertNull(error.getValidationErrors());
+
+            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+        }
+    }
 }
