@@ -6,9 +6,9 @@ import com.healthcare.auth_service.domain.dto.LoginDto;
 import com.healthcare.auth_service.domain.dto.TokensDto;
 import com.healthcare.auth_service.domain.dto.UserInfoDto;
 import com.healthcare.auth_service.exception_handler.dto.ErrorResponse;
-import com.healthcare.auth_service.service.CookieService;
 import com.healthcare.auth_service.service.JwtService;
 import com.healthcare.auth_service.service.feignClient.UserClient;
+import com.healthcare.auth_service.service.interfacies.TokenBlacklistService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -20,9 +20,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -41,6 +43,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -61,7 +64,7 @@ class AuthControllerTest {
     private PasswordEncoder passwordEncoder;
 
     @Autowired
-    private CookieService cookieService;
+    private TokenBlacklistService tokenBlacklistService;
 
     @Autowired
     private StringRedisTemplate redis;
@@ -91,6 +94,7 @@ class AuthControllerTest {
 
     private final String LOGIN_URL = "/api/v1/auth/login";
     private final String REFRESH_URL = "/api/v1/auth/refresh";
+    private final String LOGOUT_URL = "/api/v1/auth/logout";
 
     @AfterEach
     void afterEach() {
@@ -138,59 +142,106 @@ class AuthControllerTest {
         return result.getResponse().getCookie(REFRESH_TOKEN);
     }
 
+    private TokensDto loginUser() throws Exception {
+        UserInfoDto userInfoDto = UserInfoDto.builder()
+                .email(EMAIL)
+                .password(passwordEncoder.encode(PASSWORD))
+                .id(USER_ID)
+                .enabled(true)
+                .roles(Set.of(USER_ROLE))
+                .build();
+
+        LoginDto loginDto = LoginDto.builder()
+                .password(PASSWORD)
+                .userEmail(EMAIL)
+                .build();
+
+        when(userClient.getUserByEmail(any(String.class)))
+                .thenReturn(userInfoDto);
+
+        String dtoJson = mapper.writeValueAsString(loginDto);
+
+        MvcResult result = mockMvc.perform(post(LOGIN_URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(dtoJson))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String responseToken = result.getResponse().getContentAsString();
+        JsonNode jsonNodeToken = mapper.readTree(responseToken);
+        String accessToken = jsonNodeToken.get("accessToken").asText();
+        String refreshToken = Objects.requireNonNull(
+                        result.getResponse().getCookie(REFRESH_TOKEN))
+                .getValue();
+        return TokensDto.builder()
+                .accessToken(accessToken)
+                .refreshToken(refreshToken)
+                .build();
+    }
+
+    private ErrorResponse checkErrorResponseResultWithoutCheckingValidationErrors(MvcResult result, HttpStatus status, String url) throws Exception {
+        String responseBody = result.getResponse().getContentAsString();
+        ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
+        assertNotNull(error.getMessage());
+        assertEquals(error.getStatus(), status.value());
+        assertEquals(error.getError(), status.getReasonPhrase());
+        assertEquals(error.getPath(), url);
+
+        return error;
+    }
+
+    private void checkErrorResponseResult(MvcResult result, HttpStatus status, String url) throws Exception {
+        ErrorResponse error = checkErrorResponseResultWithoutCheckingValidationErrors(result, status, url);
+        assertNull(error.getValidationErrors());
+    }
+
+    private void checkErrorResponseResultWithValidationErrors(MvcResult result, HttpStatus status, String url) throws Exception {
+        ErrorResponse error = checkErrorResponseResultWithoutCheckingValidationErrors(result, status, url);
+        assertFalse(error.getValidationErrors().isEmpty());
+    }
+
+    private String getKey() {
+        return refreshPrefix + USER_ID;
+    }
+
     @Nested
     @DisplayName("POST " + LOGIN_URL)
     class LoginUserTests {
 
+        private void checkErrorResponseResult(MvcResult result, HttpStatus status) throws Exception {
+            AuthControllerTest.this.checkErrorResponseResult(result, status, LOGIN_URL);
+
+            assertFalse(redis.hasKey(getKey()));
+        }
+
+        private void checkErrorResponseResultWithValidationErrors(MvcResult result, HttpStatus status) throws Exception {
+            AuthControllerTest.this.checkErrorResponseResultWithValidationErrors(result, status, LOGIN_URL);
+
+            assertFalse(redis.hasKey(getKey()));
+        }
+
         @Test
         public void login_user_should_return_200() throws Exception {
 
-            UserInfoDto userInfoDto = UserInfoDto.builder()
-                    .email(EMAIL)
-                    .password(passwordEncoder.encode(PASSWORD))
-                    .id(USER_ID)
-                    .enabled(true)
-                    .roles(Set.of(USER_ROLE))
-                    .build();
-
             UserDetails userDetail = new User(
                     EMAIL,
-                    userInfoDto.getPassword(),
-                    userInfoDto.isEnabled(),
+                    passwordEncoder.encode(PASSWORD),
                     true,
                     true,
                     true,
-                    userInfoDto.getRoles().stream()
+                    true,
+                    Set.of(USER_ROLE).stream()
                             .map(SimpleGrantedAuthority::new)
                             .toList());
 
-            LoginDto loginDto = LoginDto.builder()
-                    .password(PASSWORD)
-                    .userEmail(EMAIL)
-                    .build();
-
-            when(userClient.getUserByEmail(any(String.class)))
-                    .thenReturn(userInfoDto);
-
-            String dtoJson = mapper.writeValueAsString(loginDto);
-
-            MvcResult result = mockMvc.perform(post(LOGIN_URL)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(dtoJson))
-                    .andExpect(status().isOk())
-                    .andReturn();
-
-            String responseToken = result.getResponse().getContentAsString();
-            JsonNode jsonNodeToken = mapper.readTree(responseToken);
-            String accessToken = jsonNodeToken.get("accessToken").asText();
-            String refreshToken = Objects.requireNonNull(
-                            result.getResponse().getCookie(REFRESH_TOKEN))
-                    .getValue();
+            TokensDto tokensDto = loginUser();
+            String accessToken = tokensDto.getAccessToken();
+            String refreshToken = tokensDto.getRefreshToken();
 
             assertTrue(jwtService.validateAccessToken(accessToken, userDetail));
             assertTrue(jwtService.validateRefreshToken(refreshToken, userDetail));
 
-            assertTrue(redis.hasKey(refreshPrefix + USER_ID + ":" + refreshToken));
+            assertTrue(redis.hasKey(getKey() + ":" + refreshToken));
         }
 
         @ParameterizedTest(name = "Тест {index}: login_with_status_400_login_data_is_incorrect [{arguments}]")
@@ -205,17 +256,7 @@ class AuthControllerTest {
                     .andExpect(status().isBadRequest())
                     .andReturn();
 
-            String responseBody = result.getResponse().getContentAsString();
-            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
-
-            HttpStatus status = HttpStatus.BAD_REQUEST;
-            assertNotNull(error.getMessage());
-            assertEquals(error.getStatus(), status.value());
-            assertEquals(error.getError(), status.getReasonPhrase());
-            assertEquals(error.getPath(), LOGIN_URL);
-            assertFalse(error.getValidationErrors().isEmpty());
-
-            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+            checkErrorResponseResultWithValidationErrors(result, HttpStatus.BAD_REQUEST);
         }
 
         private static Stream<Arguments> incorrectLoginData() {
@@ -289,17 +330,7 @@ class AuthControllerTest {
                     .andExpect(status().isNotFound())
                     .andReturn();
 
-            String responseBody = result.getResponse().getContentAsString();
-            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
-
-            HttpStatus status = HttpStatus.NOT_FOUND;
-            assertNotNull(error.getMessage());
-            assertEquals(error.getStatus(), status.value());
-            assertEquals(error.getError(), status.getReasonPhrase());
-            assertEquals(error.getPath(), LOGIN_URL);
-            assertNull(error.getValidationErrors());
-
-            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+            checkErrorResponseResult(result, HttpStatus.NOT_FOUND);
         }
 
         @Test
@@ -321,17 +352,7 @@ class AuthControllerTest {
                     .andExpect(status().isNotFound())
                     .andReturn();
 
-            String responseBody = result.getResponse().getContentAsString();
-            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
-
-            HttpStatus status = HttpStatus.NOT_FOUND;
-            assertNotNull(error.getMessage());
-            assertEquals(error.getStatus(), status.value());
-            assertEquals(error.getError(), status.getReasonPhrase());
-            assertEquals(error.getPath(), LOGIN_URL);
-            assertNull(error.getValidationErrors());
-
-            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+            checkErrorResponseResult(result, HttpStatus.NOT_FOUND);
         }
 
         @Test
@@ -361,17 +382,7 @@ class AuthControllerTest {
                     .andExpect(status().isForbidden())
                     .andReturn();
 
-            String responseBody = result.getResponse().getContentAsString();
-            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
-
-            HttpStatus status = HttpStatus.FORBIDDEN;
-            assertNotNull(error.getMessage());
-            assertEquals(error.getStatus(), status.value());
-            assertEquals(error.getError(), status.getReasonPhrase());
-            assertEquals(error.getPath(), LOGIN_URL);
-            assertNull(error.getValidationErrors());
-
-            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+            checkErrorResponseResult(result, HttpStatus.FORBIDDEN);
         }
 
         @ParameterizedTest(name = "Тест {index}: login_with_status_400_when_user_service_get_incorrect_user_info_dto[{arguments}]")
@@ -394,17 +405,7 @@ class AuthControllerTest {
                     .andExpect(status().isBadRequest())
                     .andReturn();
 
-            String responseBody = result.getResponse().getContentAsString();
-            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
-
-            HttpStatus status = HttpStatus.BAD_REQUEST;
-            assertNotNull(error.getMessage());
-            assertEquals(error.getStatus(), status.value());
-            assertEquals(error.getError(), status.getReasonPhrase());
-            assertEquals(error.getPath(), LOGIN_URL);
-            assertFalse(error.getValidationErrors().isEmpty());
-
-            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+            checkErrorResponseResultWithValidationErrors(result, HttpStatus.BAD_REQUEST);
         }
 
         private static Stream<Arguments> incorrectUserInfo() {
@@ -510,17 +511,7 @@ class AuthControllerTest {
                     .andExpect(status().isForbidden())
                     .andReturn();
 
-            String responseBody = result.getResponse().getContentAsString();
-            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
-
-            HttpStatus status = HttpStatus.FORBIDDEN;
-            assertNotNull(error.getMessage());
-            assertEquals(error.getStatus(), status.value());
-            assertEquals(error.getError(), status.getReasonPhrase());
-            assertEquals(error.getPath(), LOGIN_URL);
-            assertNull(error.getValidationErrors());
-
-            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+            checkErrorResponseResult(result, HttpStatus.FORBIDDEN);
         }
 
 
@@ -551,23 +542,19 @@ class AuthControllerTest {
                     .andExpect(status().isUnauthorized())
                     .andReturn();
 
-            String responseBody = result.getResponse().getContentAsString();
-            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
-
-            HttpStatus status = HttpStatus.UNAUTHORIZED;
-            assertNotNull(error.getMessage());
-            assertEquals(error.getStatus(), status.value());
-            assertEquals(error.getError(), status.getReasonPhrase());
-            assertEquals(error.getPath(), LOGIN_URL);
-            assertNull(error.getValidationErrors());
-
-            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+            checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
         }
     }
 
     @Nested
     @DisplayName("POST " + REFRESH_URL)
     class RefreshTests {
+
+        private void checkErrorResponseResult(MvcResult result, HttpStatus status) throws Exception {
+            AuthControllerTest.this.checkErrorResponseResult(result, status, REFRESH_URL);
+
+            assertFalse(redis.hasKey(getKey()));
+        }
 
         @Test
         public void refresh_should_return_200() throws Exception {
@@ -612,9 +599,9 @@ class AuthControllerTest {
             assertTrue(jwtService.validateAccessToken(accessToken, userDetail));
             assertTrue(jwtService.validateRefreshToken(refreshToken, userDetail));
 
-            assertTrue(redis.hasKey(refreshPrefix + USER_ID + ":" + refreshToken));
+            assertTrue(redis.hasKey(getKey() + ":" + refreshToken));
 
-            assertFalse(redis.hasKey(refreshPrefix + USER_ID + ":" + cookie.getValue()));
+            assertFalse(redis.hasKey(getKey() + ":" + cookie.getValue()));
         }
 
         @Test
@@ -631,16 +618,7 @@ class AuthControllerTest {
                     .andExpect(status().isUnauthorized())
                     .andReturn();
 
-            String responseBody = result.getResponse().getContentAsString();
-            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
-            HttpStatus status = HttpStatus.UNAUTHORIZED;
-            assertNotNull(error.getMessage());
-            assertEquals(error.getStatus(), status.value());
-            assertEquals(error.getError(), status.getReasonPhrase());
-            assertEquals(error.getPath(), REFRESH_URL);
-            assertNull(error.getValidationErrors());
-
-            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+            checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
         }
 
         @Test
@@ -651,16 +629,7 @@ class AuthControllerTest {
                     .andExpect(status().isUnauthorized())
                     .andReturn();
 
-            String responseBody = result.getResponse().getContentAsString();
-            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
-            HttpStatus status = HttpStatus.UNAUTHORIZED;
-            assertNotNull(error.getMessage());
-            assertEquals(error.getStatus(), status.value());
-            assertEquals(error.getError(), status.getReasonPhrase());
-            assertEquals(error.getPath(), REFRESH_URL);
-            assertNull(error.getValidationErrors());
-
-            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+            checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
         }
 
         @Test
@@ -686,16 +655,161 @@ class AuthControllerTest {
                     .andExpect(status().isUnauthorized())
                     .andReturn();
 
-            String responseBody = result.getResponse().getContentAsString();
-            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
-            HttpStatus status = HttpStatus.UNAUTHORIZED;
-            assertNotNull(error.getMessage());
-            assertEquals(error.getStatus(), status.value());
-            assertEquals(error.getError(), status.getReasonPhrase());
-            assertEquals(error.getPath(), REFRESH_URL);
-            assertNull(error.getValidationErrors());
+            checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
+        }
+    }
 
-            assertFalse(redis.hasKey(refreshPrefix + USER_ID));
+    @Nested
+    @DisplayName("POST" + LOGOUT_URL)
+    class LogoutTests {
+
+        private void checkErrorResponseResult(MvcResult result, HttpStatus status) throws Exception {
+            AuthControllerTest.this.checkErrorResponseResult(result, status, LOGOUT_URL);
+        }
+
+        @Test
+        public void logout_should_return_204() throws Exception {
+            TokensDto tokens = loginUser();
+            String accessToken = tokens.getAccessToken();
+            String refreshToken = tokens.getRefreshToken();
+
+            Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
+
+            mockMvc.perform(post(LOGOUT_URL)
+                            .cookie(cookie)
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                    .andExpect(status().isNoContent());
+
+            assertFalse(redis.hasKey(getKey() + ":" + refreshToken));
+
+            assertTrue(tokenBlacklistService.isBlacklisted(accessToken));
+
+            assertNull(SecurityContextHolder.getContext().getAuthentication());
+        }
+
+        @Test
+        public void logout_should_return_401_header_authorization_is_null() throws Exception {
+            TokensDto tokens = loginUser();
+
+            String accessToken = tokens.getAccessToken();
+            String refreshToken = tokens.getRefreshToken();
+
+            Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
+
+            MvcResult result = mockMvc.perform(post(LOGOUT_URL)
+                            .cookie(cookie))
+                    .andExpect(status().isUnauthorized())
+                    .andReturn();
+
+            checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
+
+            assertTrue(redis.hasKey(getKey() + ":" + refreshToken));
+            assertFalse(tokenBlacklistService.isBlacklisted(accessToken));
+        }
+
+        @Test
+        public void logout_should_return_401_header_authorization_is_not_bearer() throws Exception {
+            TokensDto tokens = loginUser();
+
+            String accessToken = tokens.getAccessToken();
+            String refreshToken = tokens.getRefreshToken();
+
+            Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
+
+            MvcResult result = mockMvc.perform(post(LOGOUT_URL)
+                            .cookie(cookie)
+                            .header(HttpHeaders.AUTHORIZATION, "Test " + accessToken))
+                    .andExpect(status().isUnauthorized())
+                    .andReturn();
+
+            checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
+
+            assertTrue(redis.hasKey(getKey() + ":" + refreshToken));
+            assertFalse(tokenBlacklistService.isBlacklisted(accessToken));
+        }
+
+
+        @Test
+        public void logout_should_return_401_token_is_incorrect() throws Exception {
+            TokensDto tokens = loginUser();
+
+            String accessToken = tokens.getAccessToken();
+            String refreshToken = tokens.getRefreshToken();
+
+            Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
+
+            MvcResult result = mockMvc.perform(post(LOGOUT_URL)
+                            .cookie(cookie)
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + "test_wrong_token"))
+                    .andExpect(status().isUnauthorized())
+                    .andReturn();
+
+            checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
+
+            assertTrue(redis.hasKey(getKey() + ":" + refreshToken));
+            assertFalse(tokenBlacklistService.isBlacklisted(accessToken));
+        }
+
+        @Test
+        public void logout_should_return_400_when_cookie_is_null() throws Exception {
+            TokensDto tokens = loginUser();
+
+            String accessToken = tokens.getAccessToken();
+
+            mockMvc.perform(post(LOGOUT_URL)
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                    .andExpect(status().isBadRequest())
+                    .andDo(print());
+            ;
+        }
+
+        @Test
+        public void logout_with_status_400_cookie_is_incorrect() throws Exception {
+            TokensDto tokens = loginUser();
+
+            String accessToken = tokens.getAccessToken();
+
+            Cookie cookie = new Cookie("test", "test");
+             mockMvc.perform(post(LOGOUT_URL)
+                            .cookie(cookie)
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        public void logout_with_status_401_token_is_incorrect() throws Exception {
+            TokensDto tokens = loginUser();
+
+            String accessToken = tokens.getAccessToken();
+
+            Cookie cookie = new Cookie(REFRESH_TOKEN, "test");
+            MvcResult result = mockMvc.perform(post(LOGOUT_URL)
+                            .cookie(cookie)
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                    .andExpect(status().isUnauthorized())
+                    .andReturn();
+
+            checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
+        }
+
+        @Test
+        public void logout_with_status_401_token_is_not_found() throws Exception {
+            TokensDto tokens = loginUser();
+
+            String accessToken = tokens.getAccessToken();
+            String refreshToken = tokens.getRefreshToken();
+
+            redis.delete(getKey() + ":" + refreshToken);
+
+            Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
+
+            MvcResult result = mockMvc.perform(post(LOGOUT_URL)
+                            .cookie(cookie)
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                    .andExpect(status().isUnauthorized())
+                    .andReturn();
+
+            checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
         }
     }
 }

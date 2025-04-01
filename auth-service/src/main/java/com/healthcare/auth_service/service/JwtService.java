@@ -1,6 +1,7 @@
 package com.healthcare.auth_service.service;
 
 import com.healthcare.auth_service.domain.dto.TokensDto;
+import com.healthcare.auth_service.exception_handler.exception.UnauthorizedException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -114,7 +115,7 @@ public class JwtService {
     }
 
     private long getRemainingTTL(String token, SecretKey key) {
-        Claims claims = extractAllClaims(token,key);
+        Claims claims = extractAllClaims(token, key);
         Date expiration = claims.getExpiration();
         long now = System.currentTimeMillis();
         return Math.max(expiration.getTime() - now, 0);
@@ -142,16 +143,20 @@ public class JwtService {
         return claims.get(ROLES, List.class);
     }
 
-    private  <T> T extractClaim(String token, Function<Claims, T> resolver, SecretKey key) {
+    private <T> T extractClaim(String token, Function<Claims, T> resolver, SecretKey key) {
         final Claims claims = extractAllClaims(token, key);
         return resolver.apply(claims);
     }
 
     private Claims extractAllClaims(String token, SecretKey key) {
-        return Jwts.parser()
-                .verifyWith(key)
-                .build()
-                .parseSignedClaims(token)
-                .getPayload();
+        try {
+            return Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload();
+        } catch (Exception e) {
+            throw new UnauthorizedException("Token is invalid", e);
+        }
     }
 }
