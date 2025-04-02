@@ -6,7 +6,7 @@ Authentication and authorization microservice using Spring Boot, JWT, Redis, and
 
 ## 📚 Features
 
-- 🔐 User registration and login
+- 🔐 User  login
 - 🔑 Access / Refresh token generation (JWT)
 - 🧁 Refresh token stored in HttpOnly cookie
 - 🔁 Token refresh via `/refresh`
@@ -63,7 +63,7 @@ jwt:
 
 | Method | URL | Description        |
 |--------|-----|--------------------|
-| POST   | `/api/v1/auth/registration` | Register user      |
+|    |  |    |
 | POST   | `/api/v1/auth/login`        | Login user         |
 | POST   | `/api/v1/auth/refresh`      | Refresh tokens     |
 | POST   | `/api/v1/auth/logout`       | Logout user        |
@@ -132,7 +132,7 @@ auth-service/
 ## 🧑‍💻 Author
 
 - Developer: @Ruslan Senkin
-- Last updated: March 2025
+- Last updated: April 2025
 
 ---
 
