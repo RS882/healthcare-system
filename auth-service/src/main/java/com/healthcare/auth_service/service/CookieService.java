@@ -34,7 +34,8 @@ public class CookieService {
                 .secure(false)
                 .path(path)
                 .maxAge(maxAge)
-                .sameSite("None")
+                //TODO for https
+//                .sameSite("None")
                 .build();
     }
 }
