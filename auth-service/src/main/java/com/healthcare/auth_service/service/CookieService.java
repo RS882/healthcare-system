@@ -31,7 +31,7 @@ public class CookieService {
         return ResponseCookie.from(name, value)
                 .httpOnly(true)
                 //TODO for https - make secure true
-                .secure(true)
+                .secure(false)
                 .path(path)
                 .maxAge(maxAge)
                 .sameSite("None")
