@@ -30,7 +30,8 @@ public class CookieService {
     private ResponseCookie makeCookie(String name, String value, long maxAge, String path) {
         return ResponseCookie.from(name, value)
                 .httpOnly(true)
-                .secure(true)
+                //TODO for https - make secure true
+                .secure(false)
                 .path(path)
                 .maxAge(maxAge)
                 .sameSite("None")
