@@ -75,14 +75,8 @@ class AuthControllerTest {
     @MockBean
     private UserClient userClient;
 
-    @Value("${prefix.blocked}")
-    private String blockedPrefix;
-
     @Value("${prefix.refresh}")
     private String refreshPrefix;
-
-    @Value("${prefix.blacklist}")
-    private String blacklistPrefix;
 
     @Value("${jwt.max-tokens}")
     private int maxTokens;

@@ -1,0 +1,81 @@
+services:
+
+  service-registry:
+    build:
+      context: ./service-registry
+      dockerfile: Dockerfile
+    ports:
+      - "8761:8761"
+    environment:
+      EUREKA_HOSTNAME: ${EUREKA_HOSTNAME}
+    networks:
+      - healthcare-network
+
+  config-server:
+    build:
+      context: ./config-server
+      dockerfile: Dockerfile
+    ports:
+      - "8888:8888"
+    environment:
+      EUREKA: ${EUREKA}
+      GIT: ${GIT}
+    depends_on:
+      - service-registry
+    networks:
+      - healthcare-network
+
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      EUREKA: ${EUREKA}
+      CONFIG: ${CONFIG}
+    depends_on:
+      - config-server
+      - service-registry
+    networks:
+      - healthcare-network
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8081"
+    environment:
+      ACCESS_SECRET: ${ACCESS_SECRET}
+      ACCESS_TOKEN_EXPIRATION_MS: ${ACCESS_TOKEN_EXPIRATION_MS}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      BLACKLIST_PREFIX: ${BLACKLIST_PREFIX}
+      BLOCKED_PREFIX: ${BLOCKED_PREFIX}
+      CONFIG: ${CONFIG}
+      COOKIE_PATH: ${COOKIE_PATH}
+      EUREKA: ${EUREKA}
+      MAX_TOKEN: ${MAX_TOKEN}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REFRESH_PREFIX: ${REFRESH_PREFIX}
+      REFRESH_SECRET: ${REFRESH_SECRET}
+      REFRESH_TOKEN_EXPIRATION_MS : ${REFRESH_TOKEN_EXPIRATION_MS}
+    depends_on:
+      - redis
+      - config-server
+      - service-registry
+    networks:
+      - healthcare-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - healthcare-network
+
+networks:
+  healthcare-network:
+    driver: bridge
