@@ -10,6 +10,12 @@ services:
       EUREKA_HOSTNAME: ${EUREKA_HOSTNAME}
     networks:
       - healthcare-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: on-failure
 
   config-server:
     build:
@@ -21,9 +27,16 @@ services:
       EUREKA: ${EUREKA}
       GIT: ${GIT}
     depends_on:
-      - service-registry
+      service-registry:
+        condition: service_healthy
     networks:
       - healthcare-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: on-failure
 
   api-gateway:
     build:
@@ -35,8 +48,10 @@ services:
       EUREKA: ${EUREKA}
       CONFIG: ${CONFIG}
     depends_on:
-      - config-server
-      - service-registry
+      config-server:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
     networks:
       - healthcare-network
 
@@ -60,11 +75,14 @@ services:
       REDIS_PORT: ${REDIS_PORT}
       REFRESH_PREFIX: ${REFRESH_PREFIX}
       REFRESH_SECRET: ${REFRESH_SECRET}
-      REFRESH_TOKEN_EXPIRATION_MS : ${REFRESH_TOKEN_EXPIRATION_MS}
+      REFRESH_TOKEN_EXPIRATION_MS: ${REFRESH_TOKEN_EXPIRATION_MS}
     depends_on:
-      - redis
-      - config-server
-      - service-registry
+      redis:
+        condition: service_healthy
+      config-server:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
     networks:
       - healthcare-network
 
@@ -75,6 +93,12 @@ services:
       - "6379:6379"
     networks:
       - healthcare-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: on-failure
 
 networks:
   healthcare-network:
