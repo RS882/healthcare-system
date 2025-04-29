@@ -10,8 +10,6 @@ import com.healthcare.user_service.model.dto.UserRegDto;
 import com.healthcare.user_service.repository.UserRepository;
 import com.healthcare.user_service.service.interfacies.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

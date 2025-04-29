@@ -2,7 +2,6 @@ package com.healthcare.user_service.model;
 
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.healthcare.user_service.constant.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,14 +22,16 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Column(name = "email", unique = true, nullable = false)
     private String email;
 
+    @Column(name = "username", nullable = false)
     private String username;
 
-    @Column(nullable = false)
+    @Column(name ="password", nullable = false)
     private String password;
 
+    @Column(name = "is_active")
     private boolean isActive;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)

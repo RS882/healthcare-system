@@ -1,7 +1,6 @@
 package com.healthcare.user_service.controller;
 
 
-import com.healthcare.user_service.model.User;
 import com.healthcare.user_service.model.dto.RegistrationDto;
 import com.healthcare.user_service.model.dto.UserInfoDto;
 import com.healthcare.user_service.model.dto.UserRegDto;
@@ -15,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 
-public class UserController implements UserAPI{
+public class UserController implements UserAPI {
 
     private final UserService userService;
 
@@ -31,7 +30,7 @@ public class UserController implements UserAPI{
 
     @Override
     @PostMapping("/registration")
-    public  ResponseEntity<UserRegDto> registerUser(
+    public ResponseEntity<UserRegDto> registerUser(
             @RequestBody
             RegistrationDto dto) {
 
