@@ -31,7 +31,6 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/users/registration").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/users/email/{email}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/test").permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)

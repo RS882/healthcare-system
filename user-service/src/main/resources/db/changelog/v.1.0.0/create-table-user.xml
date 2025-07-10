@@ -20,6 +20,26 @@
                 <constraints nullable="false"/>
             </column>
             <column name="is_active" type="BOOLEAN"/>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
+
     </changeSet>
+
+    <changeSet id="add-default-created-at" author="RsLan">
+        <sql>
+            ALTER TABLE user MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        </sql>
+    </changeSet>
+
+    <changeSet id="alter-updated-at" author="RsLan">
+        <sql>
+            ALTER TABLE user MODIFY updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>

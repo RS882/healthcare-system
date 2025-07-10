@@ -14,7 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
-import java.util.stream.Collectors;
+
+import static com.healthcare.user_service.model.dto.UserInfoDto.getUserInfoDto;
+import static com.healthcare.user_service.model.dto.UserRegDto.getUserRegDto;
 
 @Service
 @RequiredArgsConstructor
@@ -36,28 +38,6 @@ public class UserServiceImpl implements UserService {
         return getUserRegDto(user);
     }
 
-    private UserInfoDto getUserInfoDto(User user) {
-        return UserInfoDto.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .password(user.getPassword())
-                .enabled(user.isActive())
-                .roles(user.getRoles()
-                        .stream()
-                        .map(r -> r.getRole().name())
-                        .collect(Collectors.toSet()))
-                .build();
-    }
-
-    private UserRegDto getUserRegDto(User user) {
-        return UserRegDto.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .name(user.getUsername())
-                .roles(user.getRoles().stream().map(UserRole::getRole).collect(Collectors.toSet()))
-                .build();
-    }
-
     private User getUser(RegistrationDto dto) {
         User user = User.builder()
                 .email(dto.getUserEmail())
@@ -72,7 +52,6 @@ public class UserServiceImpl implements UserService {
                 .build();
 
         user.setRoles(Set.of(role));
-
         return user;
     }
 }
