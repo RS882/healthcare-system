@@ -19,13 +19,4 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="3" author="you">
-        <addForeignKeyConstraint
-                baseTableName="role"
-                baseColumnNames="user_id"
-                constraintName="fk_role_user"
-                referencedTableName="user"
-                referencedColumnNames="id"
-                onDelete="CASCADE"/>
-    </changeSet>
 </databaseChangeLog>
