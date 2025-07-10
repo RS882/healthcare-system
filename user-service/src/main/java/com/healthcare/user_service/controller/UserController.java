@@ -35,5 +35,4 @@ public class UserController implements UserAPI {
 
         return ResponseEntity.ok(userService.registration(dto));
     }
-
 }
