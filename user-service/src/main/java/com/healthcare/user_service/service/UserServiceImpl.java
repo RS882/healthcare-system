@@ -2,6 +2,7 @@ package com.healthcare.user_service.service;
 
 
 import com.healthcare.user_service.constant.Role;
+import com.healthcare.user_service.exception_handler.exception.UserNotFoundException;
 import com.healthcare.user_service.model.User;
 import com.healthcare.user_service.model.UserRole;
 import com.healthcare.user_service.model.dto.RegistrationDto;
@@ -27,7 +28,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserInfoDto getUserInfoByEmail(String email) {
-        User user = repository.findByEmail(email).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = repository.findByEmail(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
 
         return getUserInfoDto(user);
     }

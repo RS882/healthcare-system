@@ -8,6 +8,7 @@ import com.healthcare.user_service.service.interfacies.UserService;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +25,8 @@ public class UserController implements UserAPI {
             @Email
             @PathVariable String email) {
 
-        return ResponseEntity.ok(userService.getUserInfoByEmail(email));
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(userService.getUserInfoByEmail(email));
     }
 
     @Override
@@ -33,6 +35,7 @@ public class UserController implements UserAPI {
             @RequestBody
             RegistrationDto dto) {
 
-        return ResponseEntity.ok(userService.registration(dto));
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(userService.registration(dto));
     }
 }
