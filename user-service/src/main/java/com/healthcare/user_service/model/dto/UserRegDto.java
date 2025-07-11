@@ -32,7 +32,10 @@ public class UserRegDto {
                 .id(user.getId())
                 .email(user.getEmail())
                 .name(user.getUsername())
-                .roles(user.getRoles().stream().map(UserRole::getRole).collect(Collectors.toSet()))
+                .roles(user.getRoles().stream()
+                        .map(UserRole::getRole)
+                        .collect(Collectors.toSet()))
+                .enabled(user.isActive())
                 .build();
     }
 }

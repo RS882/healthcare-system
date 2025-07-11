@@ -7,7 +7,7 @@
 
     <changeSet id="add_users" author="RsLan">
 
-        <insert tableName="user">
+        <insert tableName="users">
             <column name="id" valueNumeric="1"/>
             <column name="email" value="admin@example.com"/>
             <column name="username" value="admin"/>
@@ -15,7 +15,7 @@
             <column name="is_active" valueBoolean="true"/>
         </insert>
 
-        <insert tableName="user">
+        <insert tableName="users">
             <column name="id" valueNumeric="2"/>
             <column name="email" value="doctor1@example.com"/>
             <column name="username" value="doctor1"/>
@@ -23,7 +23,7 @@
             <column name="is_active" valueBoolean="true"/>
         </insert>
 
-        <insert tableName="user">
+        <insert tableName="users">
             <column name="id" valueNumeric="3"/>
             <column name="email" value="doctor2@example.com"/>
             <column name="username" value="doctor2"/>
@@ -31,7 +31,7 @@
             <column name="is_active" valueBoolean="true"/>
         </insert>
 
-        <insert tableName="user">
+        <insert tableName="users">
             <column name="id" valueNumeric="4"/>
             <column name="email" value="patient1@example.com"/>
             <column name="username" value="patient1"/>
@@ -39,7 +39,7 @@
             <column name="is_active" valueBoolean="true"/>
         </insert>
 
-        <insert tableName="user">
+        <insert tableName="users">
             <column name="id" valueNumeric="5"/>
             <column name="email" value="patient2@example.com"/>
             <column name="username" value="patient2"/>
@@ -47,7 +47,7 @@
             <column name="is_active" valueBoolean="true"/>
         </insert>
 
-        <insert tableName="user">
+        <insert tableName="users">
             <column name="id" valueNumeric="6"/>
             <column name="email" value="superadmin@example.com"/>
             <column name="username" value="super admin"/>

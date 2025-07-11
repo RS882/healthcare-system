@@ -5,8 +5,8 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
                       http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
 
-    <changeSet id="create_table_user" author="RsLan">
-        <createTable tableName="user">
+    <changeSet id="create_table_users" author="RsLan">
+        <createTable tableName="users">
             <column name="id" type="BIGINT" autoIncrement="true">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
@@ -30,15 +30,16 @@
 
     </changeSet>
 
-    <changeSet id="add-default-created-at" author="RsLan">
+    <changeSet id="add-default-created-at-mysql" author="RsLan">
         <sql>
-            ALTER TABLE user MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP;
+            ALTER TABLE users MODIFY created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
         </sql>
     </changeSet>
 
-    <changeSet id="alter-updated-at" author="RsLan">
+    <changeSet id="alter-updated-at-mysql" author="RsLan">
         <sql>
-            ALTER TABLE user MODIFY updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+            ALTER TABLE users MODIFY updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE
+            CURRENT_TIMESTAMP;
         </sql>
     </changeSet>
 
