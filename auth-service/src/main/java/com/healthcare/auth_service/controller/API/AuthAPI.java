@@ -21,9 +21,10 @@ import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import static com.healthcare.auth_service.controller.API.ApiPaths.*;
 import static com.healthcare.auth_service.service.CookieService.REFRESH_TOKEN;
 
-@RequestMapping("/api/v1/auth")
+@RequestMapping(AUTH_BASIC_URL)
 @Tag(name = "Authentication controller", description = "Controller for User authentication using JWT")
 public interface AuthAPI {
 
@@ -68,7 +69,7 @@ public interface AuthAPI {
                             schema = @Schema(implementation = ErrorResponse.class)
                     ))}
     )
-    @PostMapping("/login")
+    @PostMapping(value = LOGIN)
     ResponseEntity<AuthResponse> login(
             @Valid
             @org.springframework.web.bind.annotation.RequestBody
@@ -101,7 +102,7 @@ public interface AuthAPI {
                             schema = @Schema(implementation = ErrorResponse.class)
                     ))}
     )
-    @PostMapping("/refresh")
+    @PostMapping(value = REFRESH)
     ResponseEntity<AuthResponse> refresh(
             @Parameter(hidden = true)
             HttpServletResponse response,
@@ -131,7 +132,7 @@ public interface AuthAPI {
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
                     ))})
-    @PostMapping("/logout")
+    @PostMapping(value = REFRESH)
     ResponseEntity<Void> logout(
             @Parameter(hidden = true)
             HttpServletResponse response,

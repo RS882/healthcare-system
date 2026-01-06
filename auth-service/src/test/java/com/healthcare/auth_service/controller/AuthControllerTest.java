@@ -29,6 +29,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -37,6 +38,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import static com.healthcare.auth_service.controller.API.ApiPaths.*;
 import static com.healthcare.auth_service.service.CookieService.REFRESH_TOKEN;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.any;
@@ -72,7 +74,7 @@ class AuthControllerTest {
     @Autowired
     private ObjectMapper mapper;
 
-    @MockBean
+    @MockitoSpyBean
     private UserClient userClient;
 
     @Value("${prefix.refresh}")
@@ -86,9 +88,6 @@ class AuthControllerTest {
     private static final Long USER_ID = 1L;
     private static final String USER_ROLE = "ROLE_TEST";
 
-    private final String LOGIN_URL = "/api/v1/auth/login";
-    private final String REFRESH_URL = "/api/v1/auth/refresh";
-    private final String LOGOUT_URL = "/api/v1/auth/logout";
 
     @AfterEach
     void afterEach() {

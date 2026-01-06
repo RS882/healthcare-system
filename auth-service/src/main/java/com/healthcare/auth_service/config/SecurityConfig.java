@@ -31,6 +31,8 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.healthcare.auth_service.controller.API.ApiPaths.LOGIN_URL;
+import static com.healthcare.auth_service.controller.API.ApiPaths.REFRESH_URL;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
@@ -55,9 +57,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/error").permitAll()
 
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/refresh").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/logout").authenticated()
+                        .requestMatchers(HttpMethod.POST, LOGIN_URL).permitAll()
+                        .requestMatchers(HttpMethod.POST, REFRESH_URL).permitAll()
+                        .requestMatchers(HttpMethod.POST, LOGIN_URL).authenticated()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)
