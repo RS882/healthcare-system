@@ -132,7 +132,7 @@ public interface AuthAPI {
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class)
                     ))})
-    @PostMapping(value = REFRESH)
+    @PostMapping(value = LOGOUT)
     ResponseEntity<Void> logout(
             @Parameter(hidden = true)
             HttpServletResponse response,

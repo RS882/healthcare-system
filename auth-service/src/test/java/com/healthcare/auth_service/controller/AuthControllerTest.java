@@ -29,7 +29,6 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -74,7 +73,7 @@ class AuthControllerTest {
     @Autowired
     private ObjectMapper mapper;
 
-    @MockitoSpyBean
+    @MockBean
     private UserClient userClient;
 
     @Value("${prefix.refresh}")
