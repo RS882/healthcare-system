@@ -22,7 +22,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-import static com.healthcare.auth_service.service.token_utilities.TokenUtilities.extractJwtFromRequest;
+import static com.healthcare.auth_service.service.utilities.TokenUtilities.extractJwtFromRequest;
 
 @Component
 @RequiredArgsConstructor

@@ -1,14 +1,13 @@
 package com.healthcare.auth_service.config.annotation.bearer_token;
 
 import org.springframework.core.MethodParameter;
-import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
-import static com.healthcare.auth_service.service.token_utilities.TokenUtilities.extractJwtFromRequest;
+import static com.healthcare.auth_service.service.utilities.TokenUtilities.extractJwtFromRequest;
 
 @Component
 public class BearerTokenResolver implements HandlerMethodArgumentResolver {

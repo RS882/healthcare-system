@@ -1,4 +1,4 @@
-package com.healthcare.auth_service.service.token_utilities;
+package com.healthcare.auth_service.service.utilities;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;

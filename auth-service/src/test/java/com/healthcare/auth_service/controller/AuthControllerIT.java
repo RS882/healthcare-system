@@ -35,6 +35,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static com.healthcare.auth_service.controller.API.ApiPaths.*;
@@ -53,7 +54,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @DisplayName("Auth controller integration tests: ")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 @DisplayNameGeneration(value = DisplayNameGenerator.ReplaceUnderscores.class)
-class AuthControllerTest {
+class AuthControllerIT {
 
     @Autowired
     private MockMvc mockMvc;
@@ -120,7 +121,7 @@ class AuthControllerTest {
                 .userEmail(EMAIL)
                 .build();
 
-        when(userClient.getUserByEmail(any(String.class)))
+        when(userClient.getUserByEmail(any(String.class), any(UUID.class)))
                 .thenReturn(userInfoDto);
 
         String dtoJson = mapper.writeValueAsString(loginDto);
@@ -148,7 +149,7 @@ class AuthControllerTest {
                 .userEmail(EMAIL)
                 .build();
 
-        when(userClient.getUserByEmail(any(String.class)))
+        when(userClient.getUserByEmail(any(String.class), any(UUID.class)))
                 .thenReturn(userInfoDto);
 
         String dtoJson = mapper.writeValueAsString(loginDto);
@@ -201,13 +202,13 @@ class AuthControllerTest {
     class LoginUserTests {
 
         private void checkErrorResponseResult(MvcResult result, HttpStatus status) throws Exception {
-            AuthControllerTest.this.checkErrorResponseResult(result, status, LOGIN_URL);
+            AuthControllerIT.this.checkErrorResponseResult(result, status, LOGIN_URL);
 
             assertFalse(redis.hasKey(getKey()));
         }
 
         private void checkErrorResponseResultWithValidationErrors(MvcResult result, HttpStatus status) throws Exception {
-            AuthControllerTest.this.checkErrorResponseResultWithValidationErrors(result, status, LOGIN_URL);
+            AuthControllerIT.this.checkErrorResponseResultWithValidationErrors(result, status, LOGIN_URL);
 
             assertFalse(redis.hasKey(getKey()));
         }
@@ -306,7 +307,7 @@ class AuthControllerTest {
         @Test
         public void login_user_should_return_404_when_user_service_get_exception() throws Exception {
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.getUserByEmail(any(String.class), any(UUID.class)))
                     .thenThrow(new RuntimeException("Something went wrong"));
 
             LoginDto loginDto = LoginDto.builder()
@@ -328,7 +329,7 @@ class AuthControllerTest {
         @Test
         public void login_user_should_return_404_when_user_service_get_null() throws Exception {
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.getUserByEmail(any(String.class), any(UUID.class)))
                     .thenReturn(null);
 
             LoginDto loginDto = LoginDto.builder()
@@ -358,7 +359,7 @@ class AuthControllerTest {
                     .roles(Set.of(USER_ROLE))
                     .build();
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.getUserByEmail(any(String.class), any(UUID.class)))
                     .thenReturn(userInfoDto);
 
             LoginDto loginDto = LoginDto.builder()
@@ -381,7 +382,7 @@ class AuthControllerTest {
         @MethodSource("incorrectUserInfo")
         public void login_user_should_return_400_when_user_service_get_incorrect_user_info_dto(UserInfoDto userInfoDto) throws Exception {
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.getUserByEmail(any(String.class), any(UUID.class)))
                     .thenReturn(userInfoDto);
 
             LoginDto loginDto = LoginDto.builder()
@@ -479,7 +480,7 @@ class AuthControllerTest {
                     .roles(Set.of(USER_ROLE))
                     .build();
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.getUserByEmail(any(String.class), any(UUID.class)))
                     .thenReturn(userInfoDto);
 
             LoginDto loginDto = LoginDto.builder()
@@ -518,7 +519,7 @@ class AuthControllerTest {
                     .roles(Set.of(USER_ROLE))
                     .build();
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.getUserByEmail(any(String.class), any(UUID.class)))
                     .thenReturn(userInfoDto);
 
             LoginDto loginDto = LoginDto.builder()
@@ -543,7 +544,7 @@ class AuthControllerTest {
     class RefreshTests {
 
         private void checkErrorResponseResult(MvcResult result, HttpStatus status) throws Exception {
-            AuthControllerTest.this.checkErrorResponseResult(result, status, REFRESH_URL);
+            AuthControllerIT.this.checkErrorResponseResult(result, status, REFRESH_URL);
 
             assertFalse(redis.hasKey(getKey()));
         }
@@ -572,7 +573,7 @@ class AuthControllerTest {
 
             Cookie cookie = getCookie();
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.getUserByEmail(any(String.class), any(UUID.class)))
                     .thenReturn(userInfoDto);
 
             Thread.sleep(1000);
@@ -656,7 +657,7 @@ class AuthControllerTest {
     class LogoutTests {
 
         private void checkErrorResponseResult(MvcResult result, HttpStatus status) throws Exception {
-            AuthControllerTest.this.checkErrorResponseResult(result, status, LOGOUT_URL);
+            AuthControllerIT.this.checkErrorResponseResult(result, status, LOGOUT_URL);
         }
 
         @Test

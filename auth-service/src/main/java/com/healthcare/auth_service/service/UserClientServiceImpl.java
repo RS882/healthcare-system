@@ -5,6 +5,7 @@ import com.healthcare.auth_service.domain.dto.UserInfoDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.exception_handler.exception.UserNotFoundException;
 import com.healthcare.auth_service.service.feignClient.UserClient;
+import com.healthcare.auth_service.service.interfacies.RequestIdService;
 import com.healthcare.auth_service.service.interfacies.UserClientService;
 import com.healthcare.auth_service.validator.UserInfoDtoValidator;
 import lombok.AccessLevel;
@@ -23,12 +24,15 @@ public class UserClientServiceImpl implements UserClientService {
 
     UserClient userClient;
     UserInfoDtoValidator validator;
+    RequestIdService requestIdService;
 
     @Override
     public AuthUserDetails getUserByEmail(String email) {
         UserInfoDto dto;
         try {
-            dto = userClient.getUserByEmail(email);
+            dto = userClient.getUserByEmail(
+                    email,
+                    requestIdService.getRequestId());
         } catch (Exception e) {
             log.warn("User not found or error occurred for email {}: {}", email, e.getMessage());
             throw new UserNotFoundException(email, e);

@@ -5,11 +5,13 @@ import com.healthcare.auth_service.exception_handler.exception.ServiceUnavailabl
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.UUID;
+
 @Component
 @Slf4j
 public class UserClientFallback implements UserClient {
     @Override
-    public UserInfoDto getUserByEmail(String email) {
+    public UserInfoDto getUserByEmail(String email, UUID requestId) {
         log.error("User service is unavailable. Cannot load user by email: {}", email);
         throw new ServiceUnavailableException("User service is temporarily unavailable");
     }
