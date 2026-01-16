@@ -19,3 +19,5 @@ public interface UserClient {
             @PathVariable("email") String email,
             @RequestHeader("X-Request-Id") UUID requestId);
 }
+
+

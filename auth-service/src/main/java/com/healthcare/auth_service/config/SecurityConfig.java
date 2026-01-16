@@ -31,8 +31,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.healthcare.auth_service.controller.API.ApiPaths.LOGIN_URL;
-import static com.healthcare.auth_service.controller.API.ApiPaths.REFRESH_URL;
+import static com.healthcare.auth_service.controller.API.ApiPaths.*;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
@@ -59,7 +58,7 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.POST, LOGIN_URL).permitAll()
                         .requestMatchers(HttpMethod.POST, REFRESH_URL).permitAll()
-                        .requestMatchers(HttpMethod.POST, LOGIN_URL).authenticated()
+                        .requestMatchers(HttpMethod.POST, LOGOUT_URL).authenticated()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)

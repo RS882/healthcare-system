@@ -15,8 +15,10 @@ public class RequestIdServiceImpl implements RequestIdService {
 
     private final StringRedisTemplate redis;
 
-    public static final String REQUEST_ID_VALUE = "Request Id";
+    public static final String REQUEST_ID_VALUE = "auth-service";
     public static final long REQUEST_ID_TTL = 30_000L;
+    private static final String REDIS_KEY_PREFIX = "request-id:";
+
 
     @Override
     public UUID getRequestId() {
@@ -29,8 +31,9 @@ public class RequestIdServiceImpl implements RequestIdService {
 
     @Override
     public boolean saveRequestId(UUID id) {
+        String redisKey = REDIS_KEY_PREFIX + id;
         Boolean result = redis.opsForValue().setIfAbsent(
-                id.toString(),
+                redisKey,
                 REQUEST_ID_VALUE,
                 Duration.ofMillis(REQUEST_ID_TTL)
         );
