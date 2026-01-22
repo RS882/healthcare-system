@@ -12,8 +12,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import java.time.Duration;
 import java.util.UUID;
 
-import static com.healthcare.auth_service.service.RequestIdServiceImpl.REQUEST_ID_TTL;
-import static com.healthcare.auth_service.service.RequestIdServiceImpl.REQUEST_ID_VALUE;
+import static com.healthcare.auth_service.service.RequestIdServiceImpl.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.verify;
@@ -41,7 +40,7 @@ class RequestIdServiceTest {
 
             when(redis.opsForValue()).thenReturn(valueOperations);
             when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
-                    .thenReturn(true);
+                    .thenReturn(Boolean.TRUE);
 
             UUID result = service.getRequestId();
 
@@ -49,7 +48,7 @@ class RequestIdServiceTest {
             assertInstanceOf(UUID.class, result);
 
             verify(valueOperations).setIfAbsent(
-                    eq(result.toString()),
+                    eq(REDIS_KEY_PREFIX + result),
                     eq(REQUEST_ID_VALUE),
                     any(Duration.class)
             );
@@ -60,36 +59,161 @@ class RequestIdServiceTest {
 
             when(redis.opsForValue()).thenReturn(valueOperations);
             when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
-                    .thenReturn(false);
+                    .thenReturn(Boolean.FALSE);
+
+            assertThrows(RequestIdSaveException.class, () -> service.getRequestId());
+        }
+
+        @Test
+        void negative_should_throw_RequestIdSaveException_when_redis_return_null() {
+
+            when(redis.opsForValue()).thenReturn(valueOperations);
+            when(valueOperations.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                    .thenReturn(null);
 
             assertThrows(RequestIdSaveException.class, () -> service.getRequestId());
         }
     }
 
-    @Test
-    void positive_should_return_true() {
+    @Nested
+    @DisplayName("Save request id tests")
+    public class SaveRequestIdTests {
 
-        UUID id = UUID.randomUUID();
+        @Test
+        void positive_should_return_true() {
 
-        when(redis.opsForValue()).thenReturn(valueOperations);
+            UUID id = UUID.randomUUID();
 
-        when(valueOperations.setIfAbsent(
-                eq(id.toString()),
-                eq(REQUEST_ID_VALUE),
-                any()
-        )).thenReturn(true);
+            String key = REDIS_KEY_PREFIX + id;
 
-        boolean result = service.saveRequestId(id);
+            when(redis.opsForValue()).thenReturn(valueOperations);
 
-        assertTrue(result);
-        assertTrue(result);
+            when(valueOperations.setIfAbsent(
+                    eq(key),
+                    eq(REQUEST_ID_VALUE),
+                    any()
+            )).thenReturn(Boolean.TRUE);
 
-        verify(redis).opsForValue();
+            Boolean result = service.saveRequestId(id);
 
-        verify(valueOperations).setIfAbsent(
-                eq(id.toString()),
-                eq(REQUEST_ID_VALUE),
-                eq(Duration.ofMillis(REQUEST_ID_TTL))
-        );
+            assertTrue(result);
+
+            verify(redis).opsForValue();
+
+            verify(valueOperations).setIfAbsent(
+                    eq(key),
+                    eq(REQUEST_ID_VALUE),
+                    eq(Duration.ofMillis(REQUEST_ID_TTL))
+            );
+        }
+
+        @Test
+        void negative_should_return_false() {
+
+            UUID id = UUID.randomUUID();
+
+            String key = REDIS_KEY_PREFIX + id;
+
+            when(redis.opsForValue()).thenReturn(valueOperations);
+
+            when(valueOperations.setIfAbsent(
+                    eq(key),
+                    eq(REQUEST_ID_VALUE),
+                    any()
+            )).thenReturn(Boolean.FALSE);
+
+            Boolean result = service.saveRequestId(id);
+
+            assertFalse(result);
+
+            verify(redis).opsForValue();
+
+            verify(valueOperations).setIfAbsent(
+                    eq(key),
+                    eq(REQUEST_ID_VALUE),
+                    eq(Duration.ofMillis(REQUEST_ID_TTL))
+            );
+        }
+
+        @Test
+        void negative_should_return_false_when_redis_return_null() {
+
+            UUID id = UUID.randomUUID();
+
+            String key = REDIS_KEY_PREFIX + id;
+
+            when(redis.opsForValue()).thenReturn(valueOperations);
+
+            when(valueOperations.setIfAbsent(
+                    eq(key),
+                    eq(REQUEST_ID_VALUE),
+                    any()
+            )).thenReturn(null);
+
+            Boolean result = service.saveRequestId(id);
+
+            assertFalse(result);
+
+            verify(redis).opsForValue();
+
+            verify(valueOperations).setIfAbsent(
+                    eq(key),
+                    eq(REQUEST_ID_VALUE),
+                    eq(Duration.ofMillis(REQUEST_ID_TTL))
+            );
+        }
+    }
+
+    @Nested
+    @DisplayName("Is request id valid tests")
+    public class IsRequestIdValidTests {
+
+        @Test
+        void positive_should_return_true() {
+
+            UUID id = UUID.randomUUID();
+
+            String key = REDIS_KEY_PREFIX + id;
+
+            when(redis.hasKey(key)).thenReturn(Boolean.TRUE);
+
+            Boolean result = service.isRequestIdValid(id.toString());
+
+            assertTrue(result);
+
+            verify(redis).hasKey(key);
+        }
+
+        @Test
+        void negative_should_return_false() {
+
+            UUID id = UUID.randomUUID();
+
+            String key = REDIS_KEY_PREFIX + id;
+
+            when(redis.hasKey(key)).thenReturn(Boolean.FALSE);
+
+            Boolean result = service.isRequestIdValid(id.toString());
+
+            assertFalse(result);
+
+            verify(redis).hasKey(key);
+        }
+
+        @Test
+        void negative_should_return_false_when_redis_return_null() {
+
+            UUID id = UUID.randomUUID();
+
+            String key = REDIS_KEY_PREFIX + id;
+
+            when(redis.hasKey(key)).thenReturn(null);
+
+            Boolean result = service.isRequestIdValid(id.toString());
+
+            assertFalse(result);
+
+            verify(redis).hasKey(key);
+        }
     }
 }

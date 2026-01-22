@@ -13,7 +13,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,10 +37,10 @@ public class RestExceptionHandler {
         HttpStatus status = HttpStatus.BAD_REQUEST;
 
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .status(status.value())
                 .error(status.getReasonPhrase())
-                .message(Set.of("The error of validation of the request"))
+                .message(List.of("The error of validation of the request"))
                 .validationErrors(validationErrors)
                 .path(request.getRequestURI())
                 .build();
@@ -50,10 +52,10 @@ public class RestExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex, HttpServletRequest request) {
         HttpStatus status = HttpStatus.UNAUTHORIZED;
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .status(status.value())
                 .error(status.getReasonPhrase())
-                .message(Set.of(ex.getMessage()))
+                .message(List.of(ex.getMessage()))
                 .path(request.getRequestURI())
                 .validationErrors(null)
                 .build();
@@ -65,10 +67,10 @@ public class RestExceptionHandler {
     public ResponseEntity<ErrorResponse> handleBadCredentials(AuthenticationException ex, HttpServletRequest request) {
         HttpStatus status = HttpStatus.UNAUTHORIZED;
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .status(status.value())
                 .error(status.getReasonPhrase())
-                .message(Set.of(ex.getMessage()))
+                .message(List.of(ex.getMessage()))
                 .path(request.getRequestURI())
                 .validationErrors(null)
                 .build();
@@ -90,10 +92,10 @@ public class RestExceptionHandler {
     public ResponseEntity<ErrorResponse> handleException(RuntimeException ex, HttpServletRequest request) {
         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
         ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .status(status.value())
                 .error(status.getReasonPhrase())
-                .message(Set.of(ex.getMessage()))
+                .message(List.of(ex.getMessage()))
                 .path(request.getRequestURI())
                 .build();
         ;

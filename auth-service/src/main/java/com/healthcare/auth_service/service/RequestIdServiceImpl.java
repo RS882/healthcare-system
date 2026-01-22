@@ -17,7 +17,7 @@ public class RequestIdServiceImpl implements RequestIdService {
 
     public static final String REQUEST_ID_VALUE = "auth-service";
     public static final long REQUEST_ID_TTL = 30_000L;
-    private static final String REDIS_KEY_PREFIX = "request-id:";
+    public static final String REDIS_KEY_PREFIX = "request-id:";
 
 
     @Override
@@ -38,5 +38,16 @@ public class RequestIdServiceImpl implements RequestIdService {
                 Duration.ofMillis(REQUEST_ID_TTL)
         );
         return Boolean.TRUE.equals(result);
+    }
+
+    @Override
+    public boolean isRequestIdValid(String id) {
+        try {
+            UUID uuid = UUID.fromString(id);
+            Boolean exists = redis.hasKey(REDIS_KEY_PREFIX + uuid);
+            return Boolean.TRUE.equals(exists);
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

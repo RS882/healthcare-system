@@ -7,4 +7,6 @@ public interface RequestIdService {
     UUID getRequestId();
 
     boolean saveRequestId(UUID id);
+
+    boolean isRequestIdValid(String id);
 }

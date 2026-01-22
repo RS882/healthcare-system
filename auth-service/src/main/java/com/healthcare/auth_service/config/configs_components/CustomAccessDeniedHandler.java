@@ -13,8 +13,8 @@ import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.Set;
+import java.time.Instant;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -27,12 +27,18 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
     public void handle(HttpServletRequest request,
                        HttpServletResponse response,
                        AccessDeniedException accessDeniedException) throws IOException {
+
+        if (response.isCommitted()) {
+            log.debug("Response already committed. Skipping error writing.");
+            return;
+        }
+
         HttpStatus status = HttpStatus.FORBIDDEN;
         ErrorResponse error = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .status(status.value())
                 .error(status.getReasonPhrase())
-                .message(Set.of("Access denied",  accessDeniedException.getMessage()))
+                .message(List.of("Access denied", accessDeniedException.getMessage()))
                 .path(request.getRequestURI())
                 .build();
 

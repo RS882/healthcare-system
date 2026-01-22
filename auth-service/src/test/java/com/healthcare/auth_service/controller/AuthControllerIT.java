@@ -8,6 +8,7 @@ import com.healthcare.auth_service.domain.dto.UserInfoDto;
 import com.healthcare.auth_service.exception_handler.dto.ErrorResponse;
 import com.healthcare.auth_service.service.JwtService;
 import com.healthcare.auth_service.service.feignClient.UserClient;
+import com.healthcare.auth_service.service.interfacies.RequestIdService;
 import com.healthcare.auth_service.service.interfacies.TokenBlacklistService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
@@ -39,6 +40,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import static com.healthcare.auth_service.controller.API.ApiPaths.*;
+import static com.healthcare.auth_service.filter.RequestIdFilter.REQUEST_ID_HEADER_NAME;
 import static com.healthcare.auth_service.service.CookieService.REFRESH_TOKEN;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.any;
@@ -69,6 +71,9 @@ class AuthControllerIT {
     private TokenBlacklistService tokenBlacklistService;
 
     @Autowired
+    private RequestIdService requestIdService;
+
+    @Autowired
     private StringRedisTemplate redis;
 
     @Autowired
@@ -87,6 +92,7 @@ class AuthControllerIT {
     private static final String PASSWORD = "136Jkn!kPu5%";
     private static final Long USER_ID = 1L;
     private static final String USER_ROLE = "ROLE_TEST";
+    private static UUID requestId = UUID.randomUUID();
 
 
     @AfterEach
@@ -126,8 +132,11 @@ class AuthControllerIT {
 
         String dtoJson = mapper.writeValueAsString(loginDto);
 
+        requestId = requestIdService.getRequestId();
+
         MvcResult result = mockMvc.perform(post(LOGIN_URL)
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                         .content(dtoJson))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -154,8 +163,11 @@ class AuthControllerIT {
 
         String dtoJson = mapper.writeValueAsString(loginDto);
 
+        requestId = requestIdService.getRequestId();
+
         MvcResult result = mockMvc.perform(post(LOGIN_URL)
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                         .content(dtoJson))
                 .andExpect(status().isOk())
                 .andReturn();
@@ -243,8 +255,11 @@ class AuthControllerIT {
 
             String dtoJson = mapper.writeValueAsString(loginDto);
 
+            requestId = requestIdService.getRequestId();
+
             MvcResult result = mockMvc.perform(post(LOGIN_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .content(dtoJson))
                     .andExpect(status().isBadRequest())
                     .andReturn();
@@ -317,8 +332,11 @@ class AuthControllerIT {
 
             String dtoJson = mapper.writeValueAsString(loginDto);
 
+            requestId = requestIdService.getRequestId();
+
             MvcResult result = mockMvc.perform(post(LOGIN_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .content(dtoJson))
                     .andExpect(status().isNotFound())
                     .andReturn();
@@ -339,8 +357,11 @@ class AuthControllerIT {
 
             String dtoJson = mapper.writeValueAsString(loginDto);
 
+            requestId = requestIdService.getRequestId();
+
             MvcResult result = mockMvc.perform(post(LOGIN_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .content(dtoJson))
                     .andExpect(status().isNotFound())
                     .andReturn();
@@ -369,8 +390,11 @@ class AuthControllerIT {
 
             String dtoJson = mapper.writeValueAsString(loginDto);
 
+            requestId = requestIdService.getRequestId();
+
             MvcResult result = mockMvc.perform(post(LOGIN_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .content(dtoJson))
                     .andExpect(status().isForbidden())
                     .andReturn();
@@ -392,8 +416,11 @@ class AuthControllerIT {
 
             String dtoJson = mapper.writeValueAsString(loginDto);
 
+            requestId = requestIdService.getRequestId();
+
             MvcResult result = mockMvc.perform(post(LOGIN_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .content(dtoJson))
                     .andExpect(status().isBadRequest())
                     .andReturn();
@@ -490,16 +517,20 @@ class AuthControllerIT {
 
             String dtoJson = mapper.writeValueAsString(loginDto);
 
+            requestId = requestIdService.getRequestId();
+
             for (int i = 0; i < maxTokens; i++) {
                 Thread.sleep(1000);
                 mockMvc.perform(post(LOGIN_URL)
                                 .contentType(MediaType.APPLICATION_JSON)
+                                .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                                 .content(dtoJson))
                         .andExpect(status().isOk());
             }
 
             MvcResult result = mockMvc.perform(post(LOGIN_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .content(dtoJson))
                     .andExpect(status().isForbidden())
                     .andReturn();
@@ -529,8 +560,11 @@ class AuthControllerIT {
 
             String dtoJson = mapper.writeValueAsString(loginDto);
 
+            requestId = requestIdService.getRequestId();
+
             MvcResult result = mockMvc.perform(post(LOGIN_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .content(dtoJson))
                     .andExpect(status().isUnauthorized())
                     .andReturn();
@@ -577,7 +611,10 @@ class AuthControllerIT {
                     .thenReturn(userInfoDto);
 
             Thread.sleep(1000);
+
+            requestId = requestIdService.getRequestId();
             MvcResult result = mockMvc.perform(post(REFRESH_URL)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .cookie(cookie))
                     .andExpect(status().isOk())
                     .andReturn();
@@ -599,15 +636,24 @@ class AuthControllerIT {
 
         @Test
         public void refresh_should_return_400_when_cookie_is_null() throws Exception {
-            mockMvc.perform(post(REFRESH_URL))
+
+            requestId = requestIdService.getRequestId();
+
+            mockMvc.perform(post(REFRESH_URL)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString()))
                     .andExpect(status().isBadRequest());
         }
 
         @Test
         public void refresh_with_status_401_cookie_is_incorrect() throws Exception {
+
             Cookie cookie = new Cookie("test", "test");
+
+            requestId = requestIdService.getRequestId();
+
             MvcResult result = mockMvc.perform(get(REFRESH_URL)
-                            .cookie(cookie))
+                            .cookie(cookie)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString()))
                     .andExpect(status().isUnauthorized())
                     .andReturn();
 
@@ -616,9 +662,14 @@ class AuthControllerIT {
 
         @Test
         public void refresh_with_status_401_token_is_incorrect() throws Exception {
+
             Cookie cookie = new Cookie(REFRESH_TOKEN, "test");
+
+            requestId = requestIdService.getRequestId();
+
             MvcResult result = mockMvc.perform(get(REFRESH_URL)
-                            .cookie(cookie))
+                            .cookie(cookie)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString()))
                     .andExpect(status().isUnauthorized())
                     .andReturn();
 
@@ -643,8 +694,11 @@ class AuthControllerIT {
 
             Cookie cookie = new Cookie(REFRESH_TOKEN, tokens.getRefreshToken());
 
+            requestId = requestIdService.getRequestId();
+
             MvcResult result = mockMvc.perform(get(REFRESH_URL)
-                            .cookie(cookie))
+                            .cookie(cookie)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString()))
                     .andExpect(status().isUnauthorized())
                     .andReturn();
 
@@ -670,6 +724,7 @@ class AuthControllerIT {
 
             mockMvc.perform(post(LOGOUT_URL)
                             .cookie(cookie)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
                     .andExpect(status().isNoContent());
 
@@ -690,6 +745,7 @@ class AuthControllerIT {
             Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
 
             MvcResult result = mockMvc.perform(post(LOGOUT_URL)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .cookie(cookie))
                     .andExpect(status().isUnauthorized())
                     .andReturn();
@@ -710,6 +766,7 @@ class AuthControllerIT {
             Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
 
             MvcResult result = mockMvc.perform(post(LOGOUT_URL)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .cookie(cookie)
                             .header(HttpHeaders.AUTHORIZATION, "Test " + accessToken))
                     .andExpect(status().isUnauthorized())
@@ -732,6 +789,7 @@ class AuthControllerIT {
             Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
 
             MvcResult result = mockMvc.perform(post(LOGOUT_URL)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .cookie(cookie)
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + "test_wrong_token"))
                     .andExpect(status().isUnauthorized())
@@ -750,10 +808,10 @@ class AuthControllerIT {
             String accessToken = tokens.getAccessToken();
 
             mockMvc.perform(post(LOGOUT_URL)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
                     .andExpect(status().isBadRequest())
                     .andDo(print());
-            ;
         }
 
         @Test
@@ -763,8 +821,9 @@ class AuthControllerIT {
             String accessToken = tokens.getAccessToken();
 
             Cookie cookie = new Cookie("test", "test");
-             mockMvc.perform(post(LOGOUT_URL)
+            mockMvc.perform(post(LOGOUT_URL)
                             .cookie(cookie)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
                     .andExpect(status().isBadRequest());
         }
@@ -778,6 +837,7 @@ class AuthControllerIT {
             Cookie cookie = new Cookie(REFRESH_TOKEN, "test");
             MvcResult result = mockMvc.perform(post(LOGOUT_URL)
                             .cookie(cookie)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
                     .andExpect(status().isUnauthorized())
                     .andReturn();
@@ -798,6 +858,7 @@ class AuthControllerIT {
 
             MvcResult result = mockMvc.perform(post(LOGOUT_URL)
                             .cookie(cookie)
+                            .header(REQUEST_ID_HEADER_NAME, requestId.toString())
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
                     .andExpect(status().isUnauthorized())
                     .andReturn();

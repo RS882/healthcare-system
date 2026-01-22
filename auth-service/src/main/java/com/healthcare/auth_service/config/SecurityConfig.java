@@ -3,6 +3,7 @@ package com.healthcare.auth_service.config;
 import com.healthcare.auth_service.config.configs_components.CustomAccessDeniedHandler;
 import com.healthcare.auth_service.config.configs_components.CustomAuthenticationEntryPoint;
 import com.healthcare.auth_service.filter.JwtAuthFilter;
+import com.healthcare.auth_service.filter.RequestIdFilter;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
@@ -39,6 +40,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final RequestIdFilter requestIdFilter;
     private final UserDetailsService userDetailsService;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
@@ -63,7 +65,8 @@ public class SecurityConfig {
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(jwtAuthFilter, RequestIdFilter.class)
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint(customAuthenticationEntryPoint)
                         .accessDeniedHandler(customAccessDeniedHandler)

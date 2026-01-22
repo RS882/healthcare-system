@@ -2,6 +2,8 @@ package com.healthcare.auth_service.config.configs_components;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.auth_service.exception_handler.dto.ErrorResponse;
+import com.healthcare.auth_service.exception_handler.exception.JwtAuthenticationException;
+import com.healthcare.auth_service.exception_handler.exception.RequestIdAuthenticationException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -13,8 +15,8 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
-import java.util.Set;
+import java.time.Instant;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -27,18 +29,56 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
-        HttpStatus status = HttpStatus.UNAUTHORIZED;
+
+        if (response.isCommitted()) {
+            log.debug("Response already committed. Skipping error writing.");
+            return;
+        }
+
+        Throwable t = authException;
+        while (t != null) {
+
+            if (t instanceof RequestIdAuthenticationException ex) {
+                log.debug("RequestId validation failed: {}", ex.getMessage());
+                writeError(request, response, ex.getStatus(), List.of(ex.getMessage()));
+                return;
+             }
+
+            if (t instanceof JwtAuthenticationException ex) {
+                log.debug("JWT authentication failed: {}", ex.getMessage());
+                writeError(request, response, HttpStatus.UNAUTHORIZED,
+                        List.of("Unauthorized access", ex.getMessage()));
+                return;
+            }
+
+            t = t.getCause();
+        }
+
+        log.debug("Authentication failed: {}", authException.getMessage(), authException);
+        writeError(request, response, HttpStatus.UNAUTHORIZED, List.of("Unauthorized access"));
+    }
+
+    private void writeError(HttpServletRequest request,
+                            HttpServletResponse response,
+                            HttpStatus status,
+                            List<String> messages) throws IOException {
+
+        if (response.isCommitted()) {
+            return;
+        }
+
+        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+        response.setCharacterEncoding("UTF-8");
+        response.setStatus(status.value());
+
         ErrorResponse error = ErrorResponse.builder()
-                .timestamp(LocalDateTime.now())
+                .timestamp(Instant.now())
                 .status(status.value())
                 .error(status.getReasonPhrase())
-                .message(Set.of("Unauthorized access", authException.getMessage()))
+                .message(messages)
                 .path(request.getRequestURI())
                 .build();
 
-        log.error("Unauthorized Error: {}", error, authException);
-        response.setStatus(status.value());
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
         objectMapper.writeValue(response.getOutputStream(), error);
     }
 }

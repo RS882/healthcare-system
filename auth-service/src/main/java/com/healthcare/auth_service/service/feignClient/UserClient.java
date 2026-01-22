@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.UUID;
 
+import static com.healthcare.auth_service.filter.RequestIdFilter.REQUEST_ID_HEADER_NAME;
+
 @FeignClient(
         name = "user-service",
         path = "/api/v1/users",
@@ -17,7 +19,7 @@ public interface UserClient {
     @GetMapping("/email/{email}")
     UserInfoDto getUserByEmail(
             @PathVariable("email") String email,
-            @RequestHeader("X-Request-Id") UUID requestId);
+            @RequestHeader(REQUEST_ID_HEADER_NAME) UUID requestId);
 }
 
 

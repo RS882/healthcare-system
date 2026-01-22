@@ -7,8 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-import java.util.HashSet;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -19,7 +20,7 @@ import java.util.Set;
 public class ErrorResponse {
 
     @Schema(description = "The time of the appearance of an error", example = "21.07.2025 11:20")
-    private LocalDateTime timestamp;
+    private Instant timestamp;
 
     @Schema(description = "Error http status", example = "401")
     private int status;
@@ -28,7 +29,7 @@ public class ErrorResponse {
     private String error;
 
     @Schema(description = "Errors message", example = "[\"Error of validation\", \"Email is null\"]")
-    private Set<String> message = new HashSet<>();
+    private List<String> message = new ArrayList<>();
 
     @Schema(description = "The path when contacting which an error arose", example = "/api/v1/auth/login")
     private String path;
