@@ -1,65 +1,79 @@
 package com.healthcare.api_gateway.filter;
 
+import com.healthcare.api_gateway.service.interfaces.RequestIdReactiveService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
-import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.time.Duration;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.HashMap;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
 public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
 
     public static final String HEADER_REQUEST_ID = "X-Request-Id";
+    public static final String ATTR_REQUEST_ID = "attr.requestId";
 
-    private static final String REDIS_KEY_PREFIX = "request-id:";
-    private static final Duration TTL = Duration.ofSeconds(30);
-    private static final String REDIS_VALUE = "gateway";
-
-    private final ReactiveStringRedisTemplate redis;
-
+    private final RequestIdReactiveService requestIdService;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange,
                              GatewayFilterChain chain) {
 
-        String requestId = resolveOrGenerateRequestId(exchange.getRequest());
+        String headerValue = exchange.getRequest().getHeaders().getFirst(HEADER_REQUEST_ID);
+        String requestId = requestIdService.resolveOrGenerate(headerValue);
 
-        String redisKey = REDIS_KEY_PREFIX + requestId;
+        ServerWebExchange mutatedExchange = mutateExchangeRequest(exchange, requestId);
 
-        Mono<Boolean> saveMono = redis.opsForValue()
-                .setIfAbsent(redisKey, REDIS_VALUE, TTL)
-                .onErrorResume(ex -> Mono.just(false));
-
-        return saveMono
-                .flatMap(saved -> {
-                    ServerHttpRequest mutatedRequest = exchange.getRequest()
-                            .mutate()
-                            .header(HEADER_REQUEST_ID, requestId)
-                            .build();
-
-                    ServerWebExchange mutatedExchange = exchange.mutate()
-                            .request(mutatedRequest)
-                            .build();
-
-                    mutatedExchange.getAttributes().put(HEADER_REQUEST_ID, requestId);
-
-                    return chain.filter(mutatedExchange);
-                });
+        return requestIdService.save(requestId)
+                .then(chain.filter(mutatedExchange));
     }
 
-    private String resolveOrGenerateRequestId(ServerHttpRequest request) {
-        return Optional.ofNullable(request.getHeaders().getFirst(HEADER_REQUEST_ID))
-                .filter(v -> !v.isBlank())
-                .orElseGet(() -> UUID.randomUUID().toString());
+
+    private ServerWebExchange mutateExchangeRequest(ServerWebExchange exchange, String requestId) {
+
+        ServerHttpRequest mutatedRequest = mutateRequestHeaders(exchange, requestId);
+
+        ServerWebExchange mutatedExchange = exchange.mutate()
+                .request(mutatedRequest)
+                .build();
+
+        mutatedExchange.getAttributes().put(ATTR_REQUEST_ID, requestId);
+
+        return mutatedExchange;
+    }
+
+    private ServerHttpRequest mutateRequestHeaders(ServerWebExchange exchange, String requestId) {
+
+        Map<String, String> headers = new HashMap<>();
+        headers.put(HEADER_REQUEST_ID, requestId);
+
+        return mutateRequestHeaders(exchange, headers);
+    }
+
+    private ServerHttpRequest mutateRequestHeaders(ServerWebExchange exchange, Map<String, String> headers) {
+
+        if (headers == null || headers.isEmpty()) {
+            return exchange.getRequest();
+        }
+
+        return exchange.getRequest()
+                .mutate()
+                .headers(httpHeaders -> {
+                    headers.forEach((key, value) -> {
+                        if (key != null && !key.isBlank() && value != null && !value.isBlank()) {
+                            httpHeaders.remove(key);
+                            httpHeaders.add(key, value);
+                        }
+                    });
+                })
+                .build();
     }
 
     @Override
