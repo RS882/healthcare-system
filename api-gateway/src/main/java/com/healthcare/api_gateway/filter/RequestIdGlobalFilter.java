@@ -35,7 +35,6 @@ public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
                 .then(chain.filter(mutatedExchange));
     }
 
-
     private ServerWebExchange mutateExchangeRequest(ServerWebExchange exchange, String requestId) {
 
         ServerHttpRequest mutatedRequest = mutateRequestHeaders(exchange, requestId);

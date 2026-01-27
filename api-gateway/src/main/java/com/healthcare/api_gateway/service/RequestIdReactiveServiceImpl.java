@@ -50,7 +50,7 @@ public class RequestIdReactiveServiceImpl implements RequestIdReactiveService {
         String redisKey = toRedisKey(requestId);
 
         return redis.opsForValue()
-                .setIfAbsent(redisKey, props.prefix(), props.ttl())
+                .setIfAbsent(redisKey, props.value(), props.ttl())
                 .doOnError(ex -> log.warn("Failed to save requestId {} to Redis", requestId, ex))
                 .onErrorReturn(false);
     }
@@ -76,6 +76,6 @@ public class RequestIdReactiveServiceImpl implements RequestIdReactiveService {
 
     @Override
     public String toRedisKey(String requestId) {
-        return props.value() + requestId;
+        return props.prefix() + requestId;
     }
 }
