@@ -1,9 +1,12 @@
 package com.healthcare.api_gateway.config;
 
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
-@ConfigurationProperties(prefix = "header-request-id")
+@Validated
+@ConfigurationProperties(prefix = "gateway.request-id.header")
 public record HeaderRequestIdProperties(
-        String name
+        @NotBlank String name
 ) {
 }

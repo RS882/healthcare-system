@@ -14,11 +14,14 @@ import reactor.core.publisher.Mono;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.healthcare.api_gateway.filter.AttrRequestId.ATTR_REQUEST_ID;
+import static com.healthcare.api_gateway.filter.RequestIdContextKeys.REQUEST_ID;
+
 @Component
 @RequiredArgsConstructor
 public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
 
-    private static final String ATTR_REQUEST_ID = "attr.requestId";
+    private static final int ORDER = -1000;
 
     private final RequestIdReactiveService requestIdService;
     private final HeaderRequestIdProperties props;
@@ -28,12 +31,15 @@ public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
                              GatewayFilterChain chain) {
 
         String headerValue = exchange.getRequest().getHeaders().getFirst(props.name());
+
         String requestId = requestIdService.resolveOrGenerate(headerValue);
 
         ServerWebExchange mutatedExchange = mutateExchangeRequest(exchange, requestId);
 
         return requestIdService.save(requestId)
-                .then(chain.filter(mutatedExchange));
+                .onErrorResume(e -> Mono.empty())
+                .then(chain.filter(mutatedExchange))
+                .contextWrite(ctx -> ctx.put(REQUEST_ID, requestId));
     }
 
     private ServerWebExchange mutateExchangeRequest(ServerWebExchange exchange, String requestId) {
@@ -78,6 +84,7 @@ public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
 
     @Override
     public int getOrder() {
-        return -1000;
+        return ORDER;
     }
 }
+
