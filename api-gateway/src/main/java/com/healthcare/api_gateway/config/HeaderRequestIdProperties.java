@@ -4,6 +4,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @ConfigurationProperties(prefix = "header-request-id")
 public record HeaderRequestIdProperties(
-        String headerRequestId
+        String name
 ) {
 }

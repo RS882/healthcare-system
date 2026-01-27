@@ -27,7 +27,7 @@ public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange,
                              GatewayFilterChain chain) {
 
-        String headerValue = exchange.getRequest().getHeaders().getFirst(props.headerRequestId());
+        String headerValue = exchange.getRequest().getHeaders().getFirst(props.name());
         String requestId = requestIdService.resolveOrGenerate(headerValue);
 
         ServerWebExchange mutatedExchange = mutateExchangeRequest(exchange, requestId);
@@ -52,7 +52,7 @@ public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
     private ServerHttpRequest mutateRequestHeaders(ServerWebExchange exchange, String requestId) {
 
         Map<String, String> headers = new HashMap<>();
-        headers.put(props.headerRequestId(), requestId);
+        headers.put(props.name(), requestId);
 
         return mutateRequestHeaders(exchange, headers);
     }
