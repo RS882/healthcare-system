@@ -1,7 +1,7 @@
 package com.healthcare.api_gateway.filter;
 
 
-import com.healthcare.api_gateway.config.RequestIdProperties;
+import com.healthcare.api_gateway.config.properties.RequestIdProperties;
 import com.healthcare.api_gateway.service.RequestIdReactiveServiceImpl;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;

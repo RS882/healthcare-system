@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import static com.healthcare.auth_service.controller.API.ApiPaths.*;
-import static com.healthcare.auth_service.service.CookieService.REFRESH_TOKEN;
+import static com.healthcare.auth_service.service.constant.RefreshTokenTitle.REFRESH_TOKEN;
 
 @RequestMapping(AUTH_BASIC_URL)
 @Tag(name = "Authentication controller", description = "Controller for User authentication using JWT")

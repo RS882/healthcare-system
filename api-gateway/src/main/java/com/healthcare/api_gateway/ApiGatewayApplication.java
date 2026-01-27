@@ -1,7 +1,7 @@
 package com.healthcare.api_gateway;
 
-import com.healthcare.api_gateway.config.HeaderRequestIdProperties;
-import com.healthcare.api_gateway.config.RequestIdProperties;
+import com.healthcare.api_gateway.config.properties.HeaderRequestIdProperties;
+import com.healthcare.api_gateway.config.properties.RequestIdProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;

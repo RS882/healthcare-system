@@ -1,6 +1,6 @@
 package com.healthcare.api_gateway.service;
 
-import com.healthcare.api_gateway.config.RequestIdProperties;
+import com.healthcare.api_gateway.config.properties.RequestIdProperties;
 import com.healthcare.api_gateway.service.interfaces.RequestIdReactiveService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

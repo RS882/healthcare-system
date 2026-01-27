@@ -1,5 +1,7 @@
 package com.healthcare.auth_service.service;
 
+import com.healthcare.auth_service.config.properties.JwtProperties;
+import com.healthcare.auth_service.config.properties.PrefixProperties;
 import com.healthcare.auth_service.service.interfacies.BlockService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,18 +16,18 @@ import java.time.Duration;
 @Slf4j
 public class BlockServiceImpl implements BlockService {
 
-    @Value("${jwt.access-token-expiration-ms}")
-    private long accessExpirationMs;
-
-    @Value("${prefix.blocked}")
-    private String blockedPrefix;
+    private final JwtProperties jwtProps;
+    private final PrefixProperties prefixProps;
 
     private final StringRedisTemplate redis;
 
+    private final String BLOCKED_REDIS_VALUE = "blocked";
+
     @Override
     public void block(Long userId) {
-        redis.opsForValue().set(getKey(userId), "blocked", Duration.ofMillis(accessExpirationMs));
-        log.warn("User {} was blocked for {} seconds", userId, accessExpirationMs/1000);
+        long expirationMs = jwtProps.accessTokenExpiration().toMillis();
+        redis.opsForValue().set(getKey(userId), BLOCKED_REDIS_VALUE, expirationMs);
+        log.warn("User {} was blocked for {} seconds", userId, expirationMs/1000);
     }
 
     @Override
@@ -34,6 +36,6 @@ public class BlockServiceImpl implements BlockService {
     }
 
     private String getKey(Long userId) {
-        return blockedPrefix + userId;
+        return prefixProps.blocked() + userId;
     }
 }

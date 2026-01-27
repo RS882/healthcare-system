@@ -2,6 +2,8 @@ package com.healthcare.auth_service.controller;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthcare.auth_service.config.properties.JwtProperties;
+import com.healthcare.auth_service.config.properties.PrefixProperties;
 import com.healthcare.auth_service.domain.dto.LoginDto;
 import com.healthcare.auth_service.domain.dto.TokensDto;
 import com.healthcare.auth_service.domain.dto.UserInfoDto;
@@ -16,7 +18,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -41,7 +42,7 @@ import java.util.stream.Stream;
 
 import static com.healthcare.auth_service.controller.API.ApiPaths.*;
 import static com.healthcare.auth_service.filter.RequestIdFilter.REQUEST_ID_HEADER_NAME;
-import static com.healthcare.auth_service.service.CookieService.REFRESH_TOKEN;
+import static com.healthcare.auth_service.service.constant.RefreshTokenTitle.REFRESH_TOKEN;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.when;
@@ -79,13 +80,17 @@ class AuthControllerIT {
     @Autowired
     private ObjectMapper mapper;
 
+    @Autowired
+    private JwtProperties jwtProps;
+
+    @Autowired
+    private PrefixProperties prefixProps;
+
     @MockBean
     private UserClient userClient;
 
-    @Value("${prefix.refresh}")
-    private String refreshPrefix;
 
-    @Value("${jwt.max-tokens}")
+    private String refreshPrefix;
     private int maxTokens;
 
     private static final String EMAIL = "test@example.com";
@@ -94,6 +99,12 @@ class AuthControllerIT {
     private static final String USER_ROLE = "ROLE_TEST";
     private static UUID requestId = UUID.randomUUID();
 
+
+    @BeforeAll
+    void setUp() {
+        refreshPrefix = prefixProps.refresh();
+        maxTokens = jwtProps.maxTokens();
+    }
 
     @AfterEach
     void afterEach() {
@@ -110,17 +121,6 @@ class AuthControllerIT {
                 .enabled(true)
                 .roles(Set.of(USER_ROLE))
                 .build();
-
-        UserDetails userDetail = new User(
-                EMAIL,
-                userInfoDto.getPassword(),
-                userInfoDto.isEnabled(),
-                true,
-                true,
-                true,
-                userInfoDto.getRoles().stream()
-                        .map(SimpleGrantedAuthority::new)
-                        .toList());
 
         LoginDto loginDto = LoginDto.builder()
                 .password(PASSWORD)

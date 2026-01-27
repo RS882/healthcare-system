@@ -1,6 +1,6 @@
 package com.healthcare.api_gateway.filter;
 
-import com.healthcare.api_gateway.config.HeaderRequestIdProperties;
+import com.healthcare.api_gateway.config.properties.HeaderRequestIdProperties;
 import com.healthcare.api_gateway.service.interfaces.RequestIdReactiveService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;

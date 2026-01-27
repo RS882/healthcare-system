@@ -1,13 +1,13 @@
-package com.healthcare.api_gateway.config;
+package com.healthcare.auth_service.config.properties;
 
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
-@ConfigurationProperties(prefix = "header-request-id")
-public record HeaderRequestIdProperties(
+@ConfigurationProperties(prefix = "cors")
+public record CorsProperties(
         @NotBlank
-        String name
+        String allowedOrigins
 ) {
 }

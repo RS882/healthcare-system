@@ -1,5 +1,6 @@
 package com.healthcare.auth_service.service;
 
+import com.healthcare.auth_service.config.properties.JwtProperties;
 import com.healthcare.auth_service.domain.dto.TokensDto;
 import com.healthcare.auth_service.exception_handler.exception.UnauthorizedException;
 import io.jsonwebtoken.Claims;
@@ -7,6 +8,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
@@ -22,20 +24,11 @@ import java.util.Map;
 import java.util.function.Function;
 
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class JwtService {
 
-    @Value("${jwt.access-secret}")
-    private String accessSecret;
-
-    @Value("${jwt.refresh-secret}")
-    private String refreshSecret;
-
-    @Value("${jwt.access-token-expiration-ms}")
-    private long accessExpirationMs;
-
-    @Value("${jwt.refresh-token-expiration-ms}")
-    private long refreshExpirationMs;
+    private final JwtProperties jwtProps;
 
     private static final String TOKENS_ISSUER = "Healthcare Authorization";
 
@@ -47,8 +40,8 @@ public class JwtService {
 
     @PostConstruct
     public void initKey() {
-        this.accessKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(accessSecret));
-        this.refreshKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(refreshSecret));
+        this.accessKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtProps.accessSecret()));
+        this.refreshKey = Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtProps.refreshSecret()));
     }
 
     public TokensDto getTokens(UserDetails userDetails, Long userId) {
@@ -61,12 +54,13 @@ public class JwtService {
                 .map(GrantedAuthority::getAuthority)
                 .toList());
         claims.put(USER_ID, userId);
-
-        return buildToken(claims, userDetails.getUsername(), accessExpirationMs, accessKey);
+        long expirationMs = jwtProps.accessTokenExpiration().toMillis();
+        return buildToken(claims, userDetails.getUsername(), expirationMs, accessKey);
     }
 
     private String generateRefreshToken(UserDetails userDetails) {
-        return buildToken(new HashMap<>(), userDetails.getUsername(), refreshExpirationMs, refreshKey);
+        long expirationMs = jwtProps.refreshTokenExpiration().toMillis();
+        return buildToken(new HashMap<>(), userDetails.getUsername(), expirationMs, refreshKey);
     }
 
     private String buildToken(

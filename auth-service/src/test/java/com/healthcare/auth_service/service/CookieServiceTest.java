@@ -10,11 +10,12 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.ResponseCookie;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import static com.healthcare.auth_service.service.CookieService.REFRESH_TOKEN;
-import static org.junit.jupiter.api.Assertions.*;
+import java.time.Duration;
+
+import static com.healthcare.auth_service.service.constant.RefreshTokenTitle.REFRESH_TOKEN;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -24,12 +25,13 @@ class CookieServiceTest {
     @InjectMocks
     private CookieService cookieService;
 
-    private final long refreshExpiration = 1209600000L; // 14 дней
+    private final Duration refreshExpiration = Duration.ofDays(14); // 14 days
     private final String cookiePath = "/api/v1/auth";
     private final String tokenValue = "sample-refresh-token";
 
     @BeforeEach
     void setUp() {
+        when
         ReflectionTestUtils.setField(cookieService, "refreshExpirationMs", refreshExpiration);
         ReflectionTestUtils.setField(cookieService, "path", cookiePath);
     }

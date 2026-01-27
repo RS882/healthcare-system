@@ -1,33 +1,34 @@
 package com.healthcare.auth_service.service;
 
+import com.healthcare.auth_service.config.properties.JwtProperties;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+
+import static com.healthcare.auth_service.service.constant.RefreshTokenTitle.REFRESH_TOKEN;
+
 @Service
+@RequiredArgsConstructor
 public class CookieService {
 
-    @Value("${jwt.refresh-token-expiration-ms}")
-    private long refreshExpirationMs;
-
-    @Value("${jwt.cookie-path}")
-    private String path;
-
-    public static final String REFRESH_TOKEN = "Refresh-token";
+    private final JwtProperties jwtProps;
 
     public void setRefreshTokenToCookie(HttpServletResponse response, String refreshToken) {
-        ResponseCookie cookie = makeCookie(REFRESH_TOKEN, refreshToken, refreshExpirationMs, path);
+        ResponseCookie cookie = makeCookie(REFRESH_TOKEN, refreshToken, jwtProps.refreshTokenExpiration(), jwtProps.cookiePath());
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
     public void removeRefreshTokenFromCookie(HttpServletResponse response) {
-        ResponseCookie cookie = makeCookie(REFRESH_TOKEN, "", 0, path);
+        ResponseCookie cookie = makeCookie(REFRESH_TOKEN, "", Duration.ZERO, jwtProps.cookiePath());
         response.addHeader(HttpHeaders.SET_COOKIE, cookie.toString());
     }
 
-    private ResponseCookie makeCookie(String name, String value, long maxAge, String path) {
+    private ResponseCookie makeCookie(String name, String value, Duration maxAge, String path) {
         return ResponseCookie.from(name, value)
                 .httpOnly(true)
                 //TODO for https - make secure true

@@ -2,6 +2,7 @@ package com.healthcare.auth_service.config;
 
 import com.healthcare.auth_service.config.configs_components.CustomAccessDeniedHandler;
 import com.healthcare.auth_service.config.configs_components.CustomAuthenticationEntryPoint;
+import com.healthcare.auth_service.config.properties.CorsProperties;
 import com.healthcare.auth_service.filter.JwtAuthFilter;
 import com.healthcare.auth_service.filter.RequestIdFilter;
 import io.swagger.v3.oas.models.Components;
@@ -44,9 +45,7 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-
-    @Value("${cors.allowed-origins}")
-    private String allowedOrigins;
+    private final CorsProperties corsProps;
 
     @Bean
     public SecurityFilterChain configureAuth(HttpSecurity http) throws Exception {
@@ -110,7 +109,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();
-        List<String> allowedOriginsList = Arrays.asList(allowedOrigins.split(","));
+        List<String> allowedOriginsList = Arrays.asList(corsProps.allowedOrigins().split(","));
         config.setAllowedOrigins(allowedOriginsList);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));

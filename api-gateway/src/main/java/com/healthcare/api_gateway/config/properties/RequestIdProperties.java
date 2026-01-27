@@ -1,4 +1,4 @@
-package com.healthcare.api_gateway.config;
+package com.healthcare.api_gateway.config.properties;
 
 
 import jakarta.validation.constraints.NotBlank;

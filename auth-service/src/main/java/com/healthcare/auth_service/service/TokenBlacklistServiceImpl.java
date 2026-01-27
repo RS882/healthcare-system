@@ -1,5 +1,6 @@
 package com.healthcare.auth_service.service;
 
+import com.healthcare.auth_service.config.properties.PrefixProperties;
 import com.healthcare.auth_service.service.interfacies.TokenBlacklistService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,8 +14,7 @@ import java.time.Duration;
 @RequiredArgsConstructor
 public class TokenBlacklistServiceImpl implements TokenBlacklistService {
 
-    @Value("${prefix.blacklist}")
-    private String blacklistPrefix;
+    private final PrefixProperties prefixProps;
 
     private final StringRedisTemplate redis;
 
@@ -22,7 +22,7 @@ public class TokenBlacklistServiceImpl implements TokenBlacklistService {
     public void blacklist(String accessToken, long ttl) {
         if (StringUtils.hasText(accessToken) && ttl > 0) {
             redis.opsForValue().set(
-                    blacklistPrefix + accessToken,
+                    prefixProps.blacklist() + accessToken,
                     "blacklisted",
                     Duration.ofMillis(ttl));
         }
@@ -30,6 +30,6 @@ public class TokenBlacklistServiceImpl implements TokenBlacklistService {
 
     @Override
     public boolean isBlacklisted(String accessToken) {
-        return Boolean.TRUE.equals(redis.hasKey(blacklistPrefix + accessToken));
+        return Boolean.TRUE.equals(redis.hasKey(prefixProps.blacklist() + accessToken));
     }
 }

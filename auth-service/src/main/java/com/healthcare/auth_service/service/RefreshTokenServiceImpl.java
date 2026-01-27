@@ -1,5 +1,7 @@
 package com.healthcare.auth_service.service;
 
+import com.healthcare.auth_service.config.properties.JwtProperties;
+import com.healthcare.auth_service.config.properties.PrefixProperties;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.service.interfacies.BlockService;
 import com.healthcare.auth_service.service.interfacies.RefreshTokenService;
@@ -15,14 +17,10 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class RefreshTokenServiceImpl implements RefreshTokenService {
 
-    @Value("${jwt.refresh-token-expiration-ms}")
-    private long refreshExpirationMs;
+    private final JwtProperties jwtProps;
+    private final PrefixProperties prefixProps;
 
-    @Value("${jwt.max-tokens}")
-    private int maxTokens;
-
-    @Value("${prefix.refresh}")
-    private String refreshPrefix;
+    private final String VALID_REDIS_VALUE = "valid";
 
     private final StringRedisTemplate redis;
     private final BlockService blockService;
@@ -34,9 +32,9 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         String setKey = getSetKey(userId);
 
         redis.opsForSet().add(setKey, token);
-        redis.expire(setKey, Duration.ofMillis(refreshExpirationMs));
+        redis.expire(setKey, jwtProps.refreshTokenExpiration());
 
-        redis.opsForValue().set(getKey(token, userId), "valid", Duration.ofMillis(refreshExpirationMs));
+        redis.opsForValue().set(getKey(token, userId), VALID_REDIS_VALUE, jwtProps.refreshTokenExpiration());
     }
 
     @Override
@@ -69,7 +67,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         }
 
         Long count = redis.opsForSet().size(getSetKey(userId));
-        if (count != null && count >= maxTokens) {
+        if (count != null && count >= jwtProps.maxTokens()) {
             deleteAll(userId);
             blockService.block(userId);
             throw new AccessDeniedException("Too many active sessions. You were temporarily blocked.");
@@ -77,10 +75,10 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     }
 
     private String getKey(String token, Long userId) {
-        return refreshPrefix + userId + ":" + token;
+        return prefixProps.refresh() + userId + ":" + token;
     }
 
     private String getSetKey(Long userId) {
-        return refreshPrefix + userId;
+        return prefixProps.refresh() + userId;
     }
 }

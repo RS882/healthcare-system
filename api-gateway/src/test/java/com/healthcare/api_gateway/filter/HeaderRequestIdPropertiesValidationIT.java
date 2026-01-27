@@ -1,6 +1,6 @@
 package com.healthcare.api_gateway.filter;
 
-import com.healthcare.api_gateway.config.HeaderRequestIdProperties;
+import com.healthcare.api_gateway.config.properties.HeaderRequestIdProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.validation.ValidationAutoConfiguration;
