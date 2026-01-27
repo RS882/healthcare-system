@@ -1,5 +1,6 @@
 package com.healthcare.auth_service.filter;
 
+import com.healthcare.auth_service.config.properties.HeaderRequestIdProperties;
 import com.healthcare.auth_service.exception_handler.exception.RequestIdAuthenticationException;
 import com.healthcare.auth_service.service.interfacies.RequestIdService;
 import jakarta.servlet.FilterChain;
@@ -18,7 +19,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class RequestIdFilter extends OncePerRequestFilter {
 
-    public static final String REQUEST_ID_HEADER_NAME = "X-Request-Id";
+    public final HeaderRequestIdProperties props;
 
     private final RequestIdService requestIdService;
 
@@ -27,7 +28,7 @@ public class RequestIdFilter extends OncePerRequestFilter {
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
 
-        String requestId = request.getHeader(REQUEST_ID_HEADER_NAME);
+        String requestId = request.getHeader(props.name());
         if (requestId == null || requestId.isBlank()) {
             throw new RequestIdAuthenticationException(
                     HttpStatus.BAD_REQUEST,

@@ -1,5 +1,6 @@
 package com.healthcare.auth_service.service;
 
+import com.healthcare.auth_service.config.properties.RequestIdProperties;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -9,7 +10,6 @@ import org.springframework.test.context.ActiveProfiles;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
-import static com.healthcare.auth_service.service.RequestIdServiceImpl.*;
 import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
@@ -25,20 +25,23 @@ class RequestIdServiceRedisIT {
     @Autowired
     private StringRedisTemplate redisTemplate;
 
+    @Autowired
+    private RequestIdProperties requestIdProps;
+
     @Test
     void getRequestId_should_write_key_to_redis_with_value_and_ttl() {
 
         UUID id = requestIdService.getRequestId();
 
-        String redisKey = REDIS_KEY_PREFIX + id;
+        String redisKey = requestIdProps.prefix() + id;
 
         String value = redisTemplate.opsForValue().get(redisKey);
-        assertEquals(REQUEST_ID_VALUE, value);
+        assertEquals(requestIdProps.value(), value);
 
         Long ttlMs = redisTemplate.getExpire(redisKey, TimeUnit.MILLISECONDS);
         assertNotNull(ttlMs);
         assertTrue(ttlMs > 0);
-        assertTrue(ttlMs <= REQUEST_ID_TTL);
+        assertTrue(ttlMs <= requestIdProps.ttl().toMillis());
 
         redisTemplate.delete(redisKey);
     }
@@ -47,14 +50,14 @@ class RequestIdServiceRedisIT {
     void saveRequestId_should_return_true_and_store_key() {
         UUID id = UUID.randomUUID();
 
-        String redisKey = REDIS_KEY_PREFIX + id;
+        String redisKey = requestIdProps.prefix() + id;
 
         boolean result = requestIdService.saveRequestId(id);
 
         assertTrue(result);
 
         String value = redisTemplate.opsForValue().get(redisKey);
-        assertEquals(REQUEST_ID_VALUE, value);
+        assertEquals(requestIdProps.value(), value);
 
         Long ttlMs = redisTemplate.getExpire(redisKey, TimeUnit.MILLISECONDS);
         assertNotNull(ttlMs);
@@ -108,7 +111,7 @@ class RequestIdServiceRedisIT {
     @Test
     void request_ID_isnt_valid_when_id_is_erroneous() {
 
-        UUID id = requestIdService.getRequestId();
+        requestIdService.getRequestId();
 
         boolean result = requestIdService.isRequestIdValid(UUID.randomUUID().toString());
 

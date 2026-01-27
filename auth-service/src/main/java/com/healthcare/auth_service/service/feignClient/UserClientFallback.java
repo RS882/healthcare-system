@@ -11,7 +11,7 @@ import java.util.UUID;
 @Slf4j
 public class UserClientFallback implements UserClient {
     @Override
-    public UserInfoDto getUserByEmail(String email, UUID requestId) {
+    public UserInfoDto getUserByEmail(String email) {
         log.error("User service is unavailable. Cannot load user by email: {}", email);
         throw new ServiceUnavailableException("User service is temporarily unavailable");
     }

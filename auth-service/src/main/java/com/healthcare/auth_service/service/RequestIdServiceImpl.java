@@ -1,5 +1,6 @@
 package com.healthcare.auth_service.service;
 
+import com.healthcare.auth_service.config.properties.RequestIdProperties;
 import com.healthcare.auth_service.exception_handler.exception.RequestIdSaveException;
 import com.healthcare.auth_service.service.interfacies.RequestIdService;
 import lombok.RequiredArgsConstructor;
@@ -14,11 +15,7 @@ import java.util.UUID;
 public class RequestIdServiceImpl implements RequestIdService {
 
     private final StringRedisTemplate redis;
-
-    public static final String REQUEST_ID_VALUE = "auth-service";
-    public static final long REQUEST_ID_TTL = 30_000L;
-    public static final String REDIS_KEY_PREFIX = "request-id:";
-
+    private final RequestIdProperties props;
 
     @Override
     public UUID getRequestId() {
@@ -31,23 +28,30 @@ public class RequestIdServiceImpl implements RequestIdService {
 
     @Override
     public boolean saveRequestId(UUID id) {
-        String redisKey = REDIS_KEY_PREFIX + id;
         Boolean result = redis.opsForValue().setIfAbsent(
-                redisKey,
-                REQUEST_ID_VALUE,
-                Duration.ofMillis(REQUEST_ID_TTL)
+                toRedisKey(id),
+                props.value(),
+                props.ttl()
         );
         return Boolean.TRUE.equals(result);
     }
 
     @Override
     public boolean isRequestIdValid(String id) {
+        if (id == null || id.isBlank()) {
+            return false;
+        }
         try {
             UUID uuid = UUID.fromString(id);
-            Boolean exists = redis.hasKey(REDIS_KEY_PREFIX + uuid);
+            Boolean exists = redis.hasKey(toRedisKey(uuid));
             return Boolean.TRUE.equals(exists);
         } catch (Exception e) {
             return false;
         }
+    }
+
+    @Override
+    public String toRedisKey(UUID requestId) {
+        return props.prefix() + requestId;
     }
 }

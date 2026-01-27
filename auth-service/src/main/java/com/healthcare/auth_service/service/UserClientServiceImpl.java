@@ -24,15 +24,12 @@ public class UserClientServiceImpl implements UserClientService {
 
     UserClient userClient;
     UserInfoDtoValidator validator;
-    RequestIdService requestIdService;
 
     @Override
     public AuthUserDetails getUserByEmail(String email) {
         UserInfoDto dto;
         try {
-            dto = userClient.getUserByEmail(
-                    email,
-                    requestIdService.getRequestId());
+            dto = userClient.getUserByEmail(email);
         } catch (Exception e) {
             log.warn("User not found or error occurred for email {}: {}", email, e.getMessage());
             throw new UserNotFoundException(email, e);

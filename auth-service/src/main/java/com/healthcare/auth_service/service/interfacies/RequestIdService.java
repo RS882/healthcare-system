@@ -9,4 +9,6 @@ public interface RequestIdService {
     boolean saveRequestId(UUID id);
 
     boolean isRequestIdValid(String id);
+
+    String toRedisKey(UUID requestId);
 }
