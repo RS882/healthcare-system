@@ -1,16 +1,16 @@
 package com.healthcare.auth_service.service;
 
+import com.healthcare.auth_service.config.properties.JwtProperties;
 import jakarta.servlet.http.HttpServletResponse;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpHeaders;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Duration;
 
@@ -22,40 +22,41 @@ import static org.mockito.Mockito.*;
 @DisplayNameGeneration(value = DisplayNameGenerator.ReplaceUnderscores.class)
 class CookieServiceTest {
 
+    @Mock
+    private JwtProperties jwtProps;
+
     @InjectMocks
     private CookieService cookieService;
 
-    private final Duration refreshExpiration = Duration.ofDays(14); // 14 days
-    private final String cookiePath = "/api/v1/auth";
-    private final String tokenValue = "sample-refresh-token";
-
-    @BeforeEach
-    void setUp() {
-        when
-        ReflectionTestUtils.setField(cookieService, "refreshExpirationMs", refreshExpiration);
-        ReflectionTestUtils.setField(cookieService, "path", cookiePath);
-    }
+    private final Duration REFRESH_EXPIRATION = Duration.ofDays(14); // 14 days
+    private final String COOKIE_PATH = "/api/v1/auth";
+    private final String TOKEN_VALUE = "sample-refresh-token";
 
     @Test
     void positive_should_set_refresh_token_to_cookie() {
+
+        when(jwtProps.refreshTokenExpiration()).thenReturn(REFRESH_EXPIRATION);
+        when(jwtProps.cookiePath()).thenReturn(COOKIE_PATH);
+
         HttpServletResponse response = mock(HttpServletResponse.class);
         ArgumentCaptor<String> headerCaptor = ArgumentCaptor.forClass(String.class);
 
-        cookieService.setRefreshTokenToCookie(response, tokenValue);
+        cookieService.setRefreshTokenToCookie(response, TOKEN_VALUE);
 
         verify(response).addHeader(eq(HttpHeaders.SET_COOKIE), headerCaptor.capture());
 
         String cookie = headerCaptor.getValue();
         assertTrue(cookie.contains(REFRESH_TOKEN));
-        assertTrue(cookie.contains(tokenValue));
+        assertTrue(cookie.contains(TOKEN_VALUE));
         assertTrue(cookie.contains("HttpOnly"));
-//        assertTrue(cookie.contains("Secure"));
-//        assertTrue(cookie.contains("SameSite=None"));
-        assertTrue(cookie.contains("Path=" + cookiePath));
+        assertTrue(cookie.contains("Path=" + COOKIE_PATH));
     }
 
     @Test
     void should_remove_refresh_token_cookie() {
+
+        when(jwtProps.cookiePath()).thenReturn(COOKIE_PATH);
+
         HttpServletResponse response = mock(HttpServletResponse.class);
         ArgumentCaptor<String> headerCaptor = ArgumentCaptor.forClass(String.class);
 
@@ -66,6 +67,6 @@ class CookieServiceTest {
         String cookie = headerCaptor.getValue();
         assertTrue(cookie.contains(REFRESH_TOKEN));
         assertTrue(cookie.contains("Max-Age=0"));
-        assertTrue(cookie.contains("Path=" + cookiePath));
+        assertTrue(cookie.contains("Path=" + COOKIE_PATH));
     }
 }

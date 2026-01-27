@@ -26,7 +26,7 @@ public class BlockServiceImpl implements BlockService {
     @Override
     public void block(Long userId) {
         long expirationMs = jwtProps.accessTokenExpiration().toMillis();
-        redis.opsForValue().set(getKey(userId), BLOCKED_REDIS_VALUE, expirationMs);
+        redis.opsForValue().set(getKey(userId), BLOCKED_REDIS_VALUE, jwtProps.accessTokenExpiration());
         log.warn("User {} was blocked for {} seconds", userId, expirationMs/1000);
     }
 

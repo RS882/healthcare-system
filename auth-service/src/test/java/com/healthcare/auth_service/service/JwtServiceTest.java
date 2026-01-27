@@ -1,24 +1,32 @@
 package com.healthcare.auth_service.service;
 
+import com.healthcare.auth_service.config.properties.JwtProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.Duration;
 import java.util.Base64;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(value = DisplayNameGenerator.ReplaceUnderscores.class)
 class JwtServiceTest {
+
+    @Mock
+    private  JwtProperties jwtProps;
 
     @InjectMocks
     private JwtService jwtService;
@@ -31,15 +39,16 @@ class JwtServiceTest {
     private final String USER_ROLE = "ROLE_TEST";
     private final Long USER_ID = 1L;
     private final String INVALID_TOKEN = "invalid.token.value";
+    private Duration ACCESS_EXPIRATION = Duration.ofMinutes(15);
+    private Duration REFRESH_EXPIRATION = Duration.ofDays(30);
 
     private UserDetails userDetails;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(jwtService, "accessSecret", accessSecret);
-        ReflectionTestUtils.setField(jwtService, "refreshSecret", refreshSecret);
-        ReflectionTestUtils.setField(jwtService, "accessExpirationMs", 600000L);
-        ReflectionTestUtils.setField(jwtService, "refreshExpirationMs", 1209600000L);
+
+        when(jwtProps.accessSecret()).thenReturn(accessSecret);
+        when(jwtProps.refreshSecret()).thenReturn(refreshSecret);
 
         jwtService.initKey();
 
@@ -51,6 +60,9 @@ class JwtServiceTest {
 
     @Test
     void positive_test_generate_and_validate_access_token() {
+
+        when(jwtProps.accessTokenExpiration()).thenReturn(ACCESS_EXPIRATION);
+        when(jwtProps.refreshTokenExpiration()).thenReturn(REFRESH_EXPIRATION);
 
         String token = jwtService.getTokens(userDetails, USER_ID).getAccessToken();
 
@@ -64,6 +76,9 @@ class JwtServiceTest {
 
     @Test
     void positive_test_generate_and_validate_refresh_token() {
+
+        when(jwtProps.accessTokenExpiration()).thenReturn(ACCESS_EXPIRATION);
+        when(jwtProps.refreshTokenExpiration()).thenReturn(REFRESH_EXPIRATION);
 
         String token = jwtService.getTokens(userDetails, USER_ID).getRefreshToken();
 

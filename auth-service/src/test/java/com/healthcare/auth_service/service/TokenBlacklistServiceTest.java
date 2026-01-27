@@ -1,5 +1,6 @@
 package com.healthcare.auth_service.service;
 
+import com.healthcare.auth_service.config.properties.PrefixProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -10,7 +11,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.Duration;
 
@@ -25,6 +25,9 @@ class TokenBlacklistServiceTest {
     private TokenBlacklistServiceImpl blacklistService;
 
     @Mock
+    private PrefixProperties prefixProps;
+
+    @Mock
     private StringRedisTemplate redis;
 
     @Mock
@@ -35,12 +38,15 @@ class TokenBlacklistServiceTest {
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(blacklistService, "blacklistPrefix", PREFIX);
+
         lenient().when(redis.opsForValue()).thenReturn(valueOps);
     }
 
     @Test
     void positive_should_blacklist_token_when_valid() {
+
+        when(prefixProps.blacklist()).thenReturn(PREFIX);
+
         long ttl = 1000L;
 
         assertDoesNotThrow(() -> blacklistService.blacklist(TOKEN, ttl));
@@ -62,13 +68,18 @@ class TokenBlacklistServiceTest {
 
     @Test
     void positive_should_return_true_if_token_blacklisted() {
+
+        when(prefixProps.blacklist()).thenReturn(PREFIX);
         when(redis.hasKey(PREFIX + TOKEN)).thenReturn(true);
+
         assertTrue(blacklistService.isBlacklisted(TOKEN));
     }
 
     @Test
     void negative_should_return_false_if_token_not_blacklisted() {
+        when(prefixProps.blacklist()).thenReturn(PREFIX);
         when(redis.hasKey(PREFIX + TOKEN)).thenReturn(false);
+
         assertFalse(blacklistService.isBlacklisted(TOKEN));
     }
 }

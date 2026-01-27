@@ -1,5 +1,7 @@
 package com.healthcare.auth_service.service;
 
+import com.healthcare.auth_service.config.properties.JwtProperties;
+import com.healthcare.auth_service.config.properties.PrefixProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -31,37 +33,51 @@ class BlockServiceTest {
     @Mock
     private ValueOperations<String, String> valueOps;
 
-    private final long expiration = 60000L; // 1 минута
-    private final String prefix = "refresh-block:";
-    private final Long userId = 42L;
+    @Mock
+    private  JwtProperties jwtProps;
+
+    @Mock
+    private  PrefixProperties prefixProps;
+
+    private final Duration ACCESS_EXPIRATION = Duration.ofMinutes(1);
+    private final String BLOCK_PREFIX = "refresh-block:";
+    private final Long USER_ID = 42L;
 
     @BeforeEach
     void setUp() {
-        ReflectionTestUtils.setField(blockService, "accessExpirationMs", expiration);
-        ReflectionTestUtils.setField(blockService, "blockedPrefix", prefix);
         lenient().when(redis.opsForValue()).thenReturn(valueOps);
     }
 
     @Test
     void positive_should_block_user() {
-        blockService.block(userId);
+
+        when(jwtProps.accessTokenExpiration()).thenReturn(ACCESS_EXPIRATION);
+        when(prefixProps.blocked()).thenReturn(BLOCK_PREFIX);
+
+        blockService.block(USER_ID);
 
         verify(valueOps).set(
-                prefix + userId,
+                BLOCK_PREFIX + USER_ID,
                 "blocked",
-                Duration.ofMillis(expiration)
+                ACCESS_EXPIRATION
         );
     }
 
     @Test
     void positive_should_return_true_if_user_blocked() {
-        when(redis.hasKey(prefix + userId)).thenReturn(true);
-        assertTrue(blockService.isBlocked(userId));
+
+        when(prefixProps.blocked()).thenReturn(BLOCK_PREFIX);
+        when(redis.hasKey(BLOCK_PREFIX + USER_ID)).thenReturn(true);
+
+        assertTrue(blockService.isBlocked(USER_ID));
     }
 
     @Test
     void negative_should_return_false_if_user_not_blocked() {
-        when(redis.hasKey(prefix + userId)).thenReturn(false);
-        assertFalse(blockService.isBlocked(userId));
+
+        when(prefixProps.blocked()).thenReturn(BLOCK_PREFIX);
+        when(redis.hasKey(BLOCK_PREFIX + USER_ID)).thenReturn(false);
+
+        assertFalse(blockService.isBlocked(USER_ID));
     }
 }
