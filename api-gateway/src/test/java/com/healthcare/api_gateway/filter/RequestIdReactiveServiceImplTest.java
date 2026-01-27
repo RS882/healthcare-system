@@ -1,12 +1,12 @@
 package com.healthcare.api_gateway.filter;
 
 
-
 import com.healthcare.api_gateway.config.RequestIdProperties;
 import com.healthcare.api_gateway.service.RequestIdReactiveServiceImpl;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
 import org.springframework.data.redis.core.ReactiveValueOperations;
@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
+@DisplayName("Request ID service tests")
 class RequestIdReactiveServiceImplTest {
 
     @Mock
@@ -38,14 +39,18 @@ class RequestIdReactiveServiceImplTest {
     private static final String VALUE = "test-gateway";
     private static final Duration TTL = Duration.ofSeconds(30);
 
-    @BeforeEach
-    void setUp() {
-        when(props.prefix()).thenReturn(PREFIX);
+    private void stubRequestIdProperties() {
+        stubPrefixProperties();
         when(props.value()).thenReturn(VALUE);
         when(props.ttl()).thenReturn(TTL);
     }
 
+    private void stubPrefixProperties() {
+        when(props.prefix()).thenReturn(PREFIX);
+    }
+
     @Nested
+    @DisplayName("Is UUID valid tests")
     class IsValidUuidTests {
 
         @Test
@@ -67,6 +72,7 @@ class RequestIdReactiveServiceImplTest {
     }
 
     @Nested
+    @DisplayName("Resolve or generate tests")
     class ResolveOrGenerateTests {
 
         @Test
@@ -91,6 +97,7 @@ class RequestIdReactiveServiceImplTest {
     }
 
     @Nested
+    @DisplayName("Save tests")
     class SaveTests {
 
         @Test
@@ -105,6 +112,9 @@ class RequestIdReactiveServiceImplTest {
 
         @Test
         void should_save_to_redis_and_return_true_when_setIfAbsent_true() {
+
+            stubRequestIdProperties();
+
             String id = UUID.randomUUID().toString();
             String key = PREFIX + id;
 
@@ -121,6 +131,9 @@ class RequestIdReactiveServiceImplTest {
 
         @Test
         void should_return_false_when_redis_errors() {
+
+            stubRequestIdProperties();
+
             String id = UUID.randomUUID().toString();
             String key = PREFIX + id;
 
@@ -134,6 +147,7 @@ class RequestIdReactiveServiceImplTest {
     }
 
     @Nested
+    @DisplayName("Exists tests")
     class ExistsTests {
 
         @Test
@@ -147,6 +161,8 @@ class RequestIdReactiveServiceImplTest {
 
         @Test
         void should_call_hasKey_and_return_value() {
+            stubPrefixProperties();
+
             String id = UUID.randomUUID().toString();
             String key = PREFIX + id;
 
@@ -161,6 +177,8 @@ class RequestIdReactiveServiceImplTest {
 
         @Test
         void should_return_false_when_redis_errors() {
+            stubPrefixProperties();
+
             String id = UUID.randomUUID().toString();
             String key = PREFIX + id;
 
@@ -169,10 +187,13 @@ class RequestIdReactiveServiceImplTest {
             StepVerifier.create(service.exists(id))
                     .expectNext(false)
                     .verifyComplete();
+
+            verify(redis).hasKey(key);
         }
     }
 
     @Nested
+    @DisplayName("TTL tests")
     class TtlTests {
 
         @Test
@@ -186,6 +207,8 @@ class RequestIdReactiveServiceImplTest {
 
         @Test
         void should_return_duration_when_positive() {
+            stubPrefixProperties();
+
             String id = UUID.randomUUID().toString();
             String key = PREFIX + id;
             Duration d = Duration.ofSeconds(12);
@@ -201,6 +224,8 @@ class RequestIdReactiveServiceImplTest {
 
         @Test
         void should_return_zero_when_null() {
+            stubPrefixProperties();
+
             String id = UUID.randomUUID().toString();
             String key = PREFIX + id;
 
@@ -213,6 +238,8 @@ class RequestIdReactiveServiceImplTest {
 
         @Test
         void should_return_zero_when_negative() {
+            stubPrefixProperties();
+
             String id = UUID.randomUUID().toString();
             String key = PREFIX + id;
 
@@ -225,6 +252,8 @@ class RequestIdReactiveServiceImplTest {
 
         @Test
         void should_return_zero_when_redis_errors() {
+            stubPrefixProperties();
+
             String id = UUID.randomUUID().toString();
             String key = PREFIX + id;
 
@@ -237,7 +266,13 @@ class RequestIdReactiveServiceImplTest {
     }
 
     @Nested
+    @DisplayName("To redis key tests")
     class ToRedisKeyTests {
+
+        @BeforeEach
+        void setUp() {
+            stubPrefixProperties();
+        }
 
         @Test
         void should_prefix_request_id() {

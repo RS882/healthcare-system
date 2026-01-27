@@ -71,6 +71,7 @@ public class RequestIdReactiveServiceImpl implements RequestIdReactiveService {
         }
         return redis.getExpire(toRedisKey(requestId))
                 .map(d -> d == null || d.isNegative() ? Duration.ZERO : d)
+                .defaultIfEmpty(Duration.ZERO)
                 .onErrorReturn(Duration.ZERO);
     }
 

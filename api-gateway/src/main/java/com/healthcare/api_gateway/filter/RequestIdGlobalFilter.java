@@ -1,5 +1,6 @@
 package com.healthcare.api_gateway.filter;
 
+import com.healthcare.api_gateway.config.HeaderRequestIdProperties;
 import com.healthcare.api_gateway.service.interfaces.RequestIdReactiveService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
@@ -17,16 +18,16 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
 
-    public static final String HEADER_REQUEST_ID = "X-Request-Id";
-    public static final String ATTR_REQUEST_ID = "attr.requestId";
+    private static final String ATTR_REQUEST_ID = "attr.requestId";
 
     private final RequestIdReactiveService requestIdService;
+    private final HeaderRequestIdProperties props;
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange,
                              GatewayFilterChain chain) {
 
-        String headerValue = exchange.getRequest().getHeaders().getFirst(HEADER_REQUEST_ID);
+        String headerValue = exchange.getRequest().getHeaders().getFirst(props.headerRequestId());
         String requestId = requestIdService.resolveOrGenerate(headerValue);
 
         ServerWebExchange mutatedExchange = mutateExchangeRequest(exchange, requestId);
@@ -51,7 +52,7 @@ public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
     private ServerHttpRequest mutateRequestHeaders(ServerWebExchange exchange, String requestId) {
 
         Map<String, String> headers = new HashMap<>();
-        headers.put(HEADER_REQUEST_ID, requestId);
+        headers.put(props.headerRequestId(), requestId);
 
         return mutateRequestHeaders(exchange, headers);
     }
