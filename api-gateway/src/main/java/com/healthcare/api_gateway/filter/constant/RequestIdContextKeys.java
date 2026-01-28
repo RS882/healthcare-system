@@ -1,4 +1,4 @@
-package com.healthcare.api_gateway.filter;
+package com.healthcare.api_gateway.filter.constant;
 
 public final class RequestIdContextKeys {
     private RequestIdContextKeys() {}

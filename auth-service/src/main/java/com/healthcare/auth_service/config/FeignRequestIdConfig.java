@@ -14,7 +14,6 @@ public class FeignRequestIdConfig {
     private final HeaderRequestIdProperties props;
     private final RequestIdService requestIdService;
 
-
     @Bean
     public RequestInterceptor requestIdInterceptor() {
         return template -> {

@@ -24,8 +24,8 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static com.healthcare.api_gateway.filter.AttrRequestId.ATTR_REQUEST_ID;
-import static com.healthcare.api_gateway.filter.RequestIdContextKeys.REQUEST_ID;
+import static com.healthcare.api_gateway.filter.constant.AttrRequestId.ATTR_REQUEST_ID;
+import static com.healthcare.api_gateway.filter.constant.RequestIdContextKeys.REQUEST_ID;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
