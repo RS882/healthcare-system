@@ -18,4 +18,8 @@ public final class ApiPaths {
     public static final String LOGOUT = "/logout";
 
     public static final String LOGOUT_URL = AUTH_BASIC_URL + LOGOUT;
+
+    public static final String VALIDATION = "/validation";
+
+    public static final String VALIDATION_URL = AUTH_BASIC_URL+VALIDATION;
 }

@@ -8,6 +8,7 @@ import com.healthcare.auth_service.config.properties.PrefixProperties;
 import com.healthcare.auth_service.domain.dto.LoginDto;
 import com.healthcare.auth_service.domain.dto.TokensDto;
 import com.healthcare.auth_service.domain.dto.UserInfoDto;
+import com.healthcare.auth_service.domain.dto.ValidationDto;
 import com.healthcare.auth_service.exception_handler.dto.ErrorResponse;
 import com.healthcare.auth_service.service.JwtService;
 import com.healthcare.auth_service.service.feignClient.UserClient;
@@ -867,6 +868,81 @@ class AuthControllerIT {
                             .cookie(cookie)
                             .header(headerRequestIdProps.name(), requestId.toString())
                             .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                    .andExpect(status().isUnauthorized())
+                    .andReturn();
+
+            checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
+        }
+    }
+
+    @Nested
+    @DisplayName("GET" + VALIDATION_URL)
+    class ValidationTests {
+
+        private void checkErrorResponseResult(MvcResult result, HttpStatus status) throws Exception {
+            AuthControllerIT.this.checkErrorResponseResult(result, status, VALIDATION_URL);
+        }
+
+        @Test
+        void validation_return_status_200_and_validation_dto() throws Exception {
+
+            TokensDto tokens = loginUser();
+            String accessToken = tokens.getAccessToken();
+
+            MvcResult result = mockMvc.perform(get(VALIDATION_URL)
+                            .header(headerRequestIdProps.name(), requestId.toString())
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                    .andExpect(status().isOk())
+                    .andReturn();
+
+            String jsonResponse = result.getResponse().getContentAsString();
+            ValidationDto responseDto = mapper.readValue(jsonResponse, ValidationDto.class);
+
+            assertNotNull(responseDto);
+            assertEquals(USER_ID, responseDto.getUserId());
+            assertTrue(responseDto.getUserRoles().contains(USER_ROLE));
+        }
+
+        @Test
+        public void validation_should_return_401_header_authorization_is_null() throws Exception {
+            TokensDto tokens = loginUser();
+
+            MvcResult result = mockMvc.perform(get(VALIDATION_URL)
+                            .header(headerRequestIdProps.name(), requestId.toString()))
+                    .andExpect(status().isUnauthorized())
+                    .andReturn();
+
+            checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
+        }
+
+        @Test
+        public void validation_should_return_401_header_authorization_is_not_bearer() throws Exception {
+            TokensDto tokens = loginUser();
+
+            String accessToken = tokens.getAccessToken();
+
+            MvcResult result = mockMvc.perform(get(VALIDATION_URL)
+                            .header(headerRequestIdProps.name(), requestId.toString())
+                            .header(HttpHeaders.AUTHORIZATION, "Test " + accessToken))
+                    .andExpect(status().isUnauthorized())
+                    .andReturn();
+
+            checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
+        }
+
+
+        @Test
+        public void validation_should_return_401_token_is_incorrect() throws Exception {
+            TokensDto tokens = loginUser();
+
+            String accessToken = tokens.getAccessToken();
+            String refreshToken = tokens.getRefreshToken();
+
+            Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
+
+            MvcResult result = mockMvc.perform(get(VALIDATION_URL)
+                            .header(headerRequestIdProps.name(), requestId.toString())
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + "test_wrong_token"))
                     .andExpect(status().isUnauthorized())
                     .andReturn();
 

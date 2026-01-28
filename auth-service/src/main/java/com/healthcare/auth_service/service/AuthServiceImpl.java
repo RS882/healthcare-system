@@ -3,6 +3,7 @@ package com.healthcare.auth_service.service;
 import com.healthcare.auth_service.domain.AuthUserDetails;
 import com.healthcare.auth_service.domain.dto.LoginDto;
 import com.healthcare.auth_service.domain.dto.TokensDto;
+import com.healthcare.auth_service.domain.dto.ValidationDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.exception_handler.exception.UnauthorizedException;
 import com.healthcare.auth_service.service.interfacies.*;
@@ -14,6 +15,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import static com.healthcare.auth_service.service.mapper.AuthUserMapper.toValidationDto;
 
 @Service
 @RequiredArgsConstructor
@@ -68,11 +71,16 @@ public class AuthServiceImpl implements AuthService {
         SecurityContextHolder.clearContext();
     }
 
+    @Override
+    public ValidationDto getValidationDto(AuthUserDetails principal) {
+
+        return toValidationDto(principal);
+    }
+
     private TokensDto generateAndStoreTokens(AuthUserDetails userDetails) {
+
         TokensDto tokens = jwtService.getTokens(userDetails, userDetails.getId());
-
         refreshTokenService.save(tokens.getRefreshToken(), userDetails.getId());
-
         return tokens;
     }
 

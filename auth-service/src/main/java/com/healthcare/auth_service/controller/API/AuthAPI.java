@@ -1,8 +1,10 @@
 package com.healthcare.auth_service.controller.API;
 
 import com.healthcare.auth_service.config.annotation.bearer_token.BearerToken;
+import com.healthcare.auth_service.domain.AuthUserDetails;
 import com.healthcare.auth_service.domain.dto.AuthResponse;
 import com.healthcare.auth_service.domain.dto.LoginDto;
+import com.healthcare.auth_service.domain.dto.ValidationDto;
 import com.healthcare.auth_service.exception_handler.dto.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,7 +19,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -151,4 +155,27 @@ public interface AuthAPI {
             @NotNull
             String accessToken
     );
+
+    @Operation(
+            summary = "Access token Validation",
+            description = "Validation access token. Access token must be in the header.")
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successful validation",
+                    content = {@Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ValidationDto.class))}
+            ),
+            @ApiResponse(responseCode = "401",
+                    description = "Invalid token",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class)
+                    ))})
+    @GetMapping(value = VALIDATION)
+    ResponseEntity<ValidationDto> validation(
+            @AuthenticationPrincipal
+            @Parameter(hidden = true)
+            @NotNull
+            AuthUserDetails principal);
 }

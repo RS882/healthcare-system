@@ -59,6 +59,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, LOGIN_URL).permitAll()
                         .requestMatchers(HttpMethod.POST, REFRESH_URL).permitAll()
                         .requestMatchers(HttpMethod.POST, LOGOUT_URL).authenticated()
+                        .requestMatchers(HttpMethod.GET, VALIDATION_URL).authenticated()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)

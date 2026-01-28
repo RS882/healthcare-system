@@ -1,6 +1,7 @@
 package com.healthcare.user_service.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.healthcare.user_service.constant.Role;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -19,7 +20,7 @@ public class UserRole {
     private Long id;
 
     @Enumerated(EnumType.STRING)
-    private com.healthcare.user_service.constant.Role role;
+    private Role role;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
