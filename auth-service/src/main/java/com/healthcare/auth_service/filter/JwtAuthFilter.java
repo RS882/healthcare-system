@@ -72,7 +72,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         } catch (UnauthorizedException e) {
             SecurityContextHolder.clearContext();
-            authenticationEntryPoint.commence(request, response, new JwtAuthenticationException(jwt, e));
+            authenticationEntryPoint.commence(request, response, new JwtAuthenticationException("Token is invalid", e));
         }
     }
 }

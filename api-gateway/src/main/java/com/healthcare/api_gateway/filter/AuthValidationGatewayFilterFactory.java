@@ -21,12 +21,18 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 @Component
-@RequiredArgsConstructor
 public class AuthValidationGatewayFilterFactory
         extends AbstractGatewayFilterFactory<AuthValidationGatewayFilterFactory.Config> {
 
     private final WebClient.Builder webClientBuilder;
     private final HeaderRequestIdProperties headerRequestIdProperties;
+
+    public AuthValidationGatewayFilterFactory(WebClient.Builder webClientBuilder,
+                                              HeaderRequestIdProperties headerRequestIdProperties) {
+        super(Config.class);
+        this.webClientBuilder = webClientBuilder;
+        this.headerRequestIdProperties = headerRequestIdProperties;
+    }
 
     @Getter
     @Setter
@@ -61,7 +67,6 @@ public class AuthValidationGatewayFilterFactory
     @Override
     public GatewayFilter apply(Config config) {
 
-        System.out.println();
         return (exchange, chain) -> callAuth(exchange, config)
                 .flatMap(ctx -> {
                     if (ctx == null) {
@@ -79,9 +84,9 @@ public class AuthValidationGatewayFilterFactory
                 });
     }
 
+
     private Mono<AuthContext> callAuth(ServerWebExchange exchange, Config config) {
         HttpHeaders incoming = exchange.getRequest().getHeaders();
-
         WebClient client = webClientBuilder.build();
 
         WebClient.RequestHeadersSpec<?> spec =
@@ -92,14 +97,24 @@ public class AuthValidationGatewayFilterFactory
         return spec
                 .accept(MediaType.APPLICATION_JSON)
                 .headers(out -> copySelectedHeaders(incoming, out, config.getForwardHeaders()))
-                // body не отправляем
-                .retrieve()
-                .onStatus(status -> status == HttpStatus.UNAUTHORIZED || status == HttpStatus.FORBIDDEN,
-                        resp ->
-                                Mono.error(new AuthDeniedException(
-                                        HttpStatus.valueOf(resp.statusCode().value()))))
-                .bodyToMono(AuthContext.class)
-                .onErrorResume(AuthDeniedException.class, ex -> writeStatus(exchange, ex.status));
+                .exchangeToMono(resp -> {
+                    int code = resp.statusCode().value();
+
+                    // 401/403 -> вернуть клиенту тот же статус и остановиться
+                    if (code == 401 || code == 403) {
+                        exchange.getResponse().setStatusCode(resp.statusCode()); // HttpStatusCode
+                        return exchange.getResponse().setComplete().then(Mono.empty());
+                    }
+
+                    // другие ошибки можно пробросить как 502/500 или просто как есть
+                    if (code >= 400) {
+                        exchange.getResponse().setStatusCode(resp.statusCode());
+                        return exchange.getResponse().setComplete().then(Mono.empty());
+                    }
+
+                    // 2xx -> читаем тело
+                    return resp.bodyToMono(AuthContext.class);
+                });
     }
 
     private void copySelectedHeaders(HttpHeaders from, HttpHeaders to, List<String> allowedLowercase) {
@@ -115,19 +130,6 @@ public class AuthValidationGatewayFilterFactory
             if (allowedLowercase.contains(name.toLowerCase(Locale.ROOT))) {
                 to.put(name, e.getValue());
             }
-        }
-    }
-
-    private Mono<AuthContext> writeStatus(ServerWebExchange exchange, HttpStatus status) {
-        exchange.getResponse().setStatusCode(status);
-        return exchange.getResponse().setComplete().thenReturn(null);
-    }
-
-    private static class AuthDeniedException extends RuntimeException {
-        private final HttpStatus status;
-
-        private AuthDeniedException(HttpStatus status) {
-            this.status = status;
         }
     }
 }
