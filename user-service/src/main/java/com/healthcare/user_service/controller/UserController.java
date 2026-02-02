@@ -30,6 +30,12 @@ public class UserController implements UserAPI {
     }
 
     @Override
+    @GetMapping("/id/{id}")
+    public ResponseEntity<UserInfoDto> getUserInfoById(String email) {
+        return null;
+    }
+
+    @Override
     @PostMapping("/registration")
     public ResponseEntity<UserRegDto> registerUser(
             @RequestBody

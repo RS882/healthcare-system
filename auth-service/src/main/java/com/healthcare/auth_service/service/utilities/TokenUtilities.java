@@ -6,15 +6,48 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.NativeWebRequest;
 
+import java.util.*;
+import java.util.function.Function;
+
+
 @Slf4j
 public class TokenUtilities {
 
     public static String extractJwtFromRequest(HttpServletRequest request) {
-        return extractJwtFromHeader(request.getHeader(HttpHeaders.AUTHORIZATION));
+        return extractJwtFromHeaders(
+                Collections.list(request.getHeaderNames()),
+                request::getHeader
+        );
     }
 
     public static String extractJwtFromRequest(NativeWebRequest webRequest) {
-        return extractJwtFromHeader(webRequest.getHeader(HttpHeaders.AUTHORIZATION));
+        List<String> headerNames = new ArrayList<>();
+
+        Iterator<String> it = webRequest.getHeaderNames();
+        while (it.hasNext()) {
+            headerNames.add(it.next());
+        }
+
+        return extractJwtFromHeaders(
+                headerNames,
+                webRequest::getHeader
+        );
+    }
+
+    private static String extractJwtFromHeaders(
+            Collection<String> headerNames,
+            Function<String, String> headerResolver
+    ) {
+        if (headerNames == null) {
+            return null;
+        }
+
+        for (String headerName : headerNames) {
+            if (HttpHeaders.AUTHORIZATION.equalsIgnoreCase(headerName)) {
+                return extractJwtFromHeader(headerResolver.apply(headerName));
+            }
+        }
+        return null;
     }
 
     private static String extractJwtFromHeader(String authHeader) {
@@ -27,3 +60,4 @@ public class TokenUtilities {
         return null;
     }
 }
+

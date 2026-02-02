@@ -79,4 +79,10 @@ public interface UserAPI {
             @NotNull
             @Email
             @PathVariable String email);
+
+    @GetMapping("/id/{id}")
+    public ResponseEntity<UserInfoDto> getUserInfoById(
+            @NotNull
+            @Email
+            @PathVariable String email);
 }
