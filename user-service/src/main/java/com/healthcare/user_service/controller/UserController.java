@@ -31,8 +31,11 @@ public class UserController implements UserAPI {
 
     @Override
     @GetMapping("/id/{id}")
-    public ResponseEntity<UserInfoDto> getUserInfoById(String email) {
-        return null;
+    public ResponseEntity<String> getUserInfoById(Long id) {
+
+        System.out.println();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(id.toString());
     }
 
     @Override

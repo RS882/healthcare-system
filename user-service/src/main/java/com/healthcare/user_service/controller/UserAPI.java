@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
@@ -81,8 +82,8 @@ public interface UserAPI {
             @PathVariable String email);
 
     @GetMapping("/id/{id}")
-    public ResponseEntity<UserInfoDto> getUserInfoById(
+    public ResponseEntity<String>  getUserInfoById(
             @NotNull
-            @Email
-            @PathVariable String email);
+            @Positive
+            @PathVariable Long id);
 }

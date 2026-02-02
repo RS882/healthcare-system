@@ -60,6 +60,8 @@ public class AuthValidationGatewayFilterFactory
 
     @Override
     public GatewayFilter apply(Config config) {
+
+        System.out.println();
         return (exchange, chain) -> callAuth(exchange, config)
                 .flatMap(ctx -> {
                     if (ctx == null) {
