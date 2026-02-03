@@ -68,7 +68,7 @@ class AuthServiceTest {
                 true
         );
 
-        tokens = new TokensDto(ACCESS_TOKEN, REFRESH_TOKEN);
+        tokens = new TokensDto(ACCESS_TOKEN, REFRESH_TOKEN,USER_ID);
     }
 
     @Nested

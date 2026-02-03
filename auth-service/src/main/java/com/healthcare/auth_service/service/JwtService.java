@@ -45,7 +45,10 @@ public class JwtService {
     }
 
     public TokensDto getTokens(UserDetails userDetails, Long userId) {
-        return new TokensDto(generateAccessToken(userDetails, userId), generateRefreshToken(userDetails));
+        return new TokensDto(
+                generateAccessToken(userDetails, userId),
+                generateRefreshToken(userDetails),
+                userId);
     }
 
     private String generateAccessToken(UserDetails userDetails, Long userId) {

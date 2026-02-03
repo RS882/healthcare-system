@@ -182,9 +182,12 @@ class AuthControllerIT {
         String refreshToken = Objects.requireNonNull(
                         result.getResponse().getCookie(REFRESH_TOKEN))
                 .getValue();
+        Long userId = jsonNodeToken.get("userId").asLong();
+
         return TokensDto.builder()
                 .accessToken(accessToken)
                 .refreshToken(refreshToken)
+                .userId(userId)
                 .build();
     }
 
@@ -246,9 +249,11 @@ class AuthControllerIT {
             TokensDto tokensDto = loginUser();
             String accessToken = tokensDto.getAccessToken();
             String refreshToken = tokensDto.getRefreshToken();
+            Long userId = tokensDto.getUserId();
 
             assertTrue(jwtService.validateAccessToken(accessToken, userDetail));
             assertTrue(jwtService.validateRefreshToken(refreshToken, userDetail));
+            assertEquals(USER_ID,userId);
 
             assertTrue(redis.hasKey(getKey() + ":" + refreshToken));
         }
@@ -633,9 +638,11 @@ class AuthControllerIT {
             String refreshToken = Objects.requireNonNull(
                             result.getResponse().getCookie(REFRESH_TOKEN))
                     .getValue();
+            Long userId = jsonNodeToken.get("userId").asLong();
 
             assertTrue(jwtService.validateAccessToken(accessToken, userDetail));
             assertTrue(jwtService.validateRefreshToken(refreshToken, userDetail));
+            assertEquals(USER_ID, userId);
 
             assertTrue(redis.hasKey(getKey() + ":" + refreshToken));
 

@@ -37,29 +37,17 @@ public class AuthValidationGatewayFilterFactory
     @Getter
     @Setter
     public static class Config {
-        /**
-         * Путь на auth-service (без хоста), например: /api/v1/auth/validation
-         */
+
         private String validatePath = "/api/v1/auth/validation";
 
-        /**
-         * Метод вызова auth-service: GET или POST
-         */
         private HttpMethod method = HttpMethod.GET;
 
-        /**
-         * Какие headers прокинуть в auth-service.
-         * Рекомендуется минимум: authorization (+ x-request-id если нужно).
-         */
         private List<String> forwardHeaders = Stream.of(
                 HttpHeaders.AUTHORIZATION,
                         "x-request-id")
                 .map(h -> h.toLowerCase(Locale.ROOT))
                 .toList();
 
-        /**
-         * Куда писать результат
-         */
         private String userIdHeader = "X-User-Id";
         private String rolesHeader = "X-User-Roles";
     }
@@ -84,7 +72,6 @@ public class AuthValidationGatewayFilterFactory
                 });
     }
 
-
     private Mono<AuthContext> callAuth(ServerWebExchange exchange, Config config) {
         HttpHeaders incoming = exchange.getRequest().getHeaders();
         WebClient client = webClientBuilder.build();
@@ -100,19 +87,16 @@ public class AuthValidationGatewayFilterFactory
                 .exchangeToMono(resp -> {
                     int code = resp.statusCode().value();
 
-                    // 401/403 -> вернуть клиенту тот же статус и остановиться
                     if (code == 401 || code == 403) {
-                        exchange.getResponse().setStatusCode(resp.statusCode()); // HttpStatusCode
+                        exchange.getResponse().setStatusCode(resp.statusCode());
                         return exchange.getResponse().setComplete().then(Mono.empty());
                     }
 
-                    // другие ошибки можно пробросить как 502/500 или просто как есть
                     if (code >= 400) {
                         exchange.getResponse().setStatusCode(resp.statusCode());
                         return exchange.getResponse().setComplete().then(Mono.empty());
                     }
 
-                    // 2xx -> читаем тело
                     return resp.bodyToMono(AuthContext.class);
                 });
     }

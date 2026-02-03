@@ -45,7 +45,6 @@ public class SecurityConfig {
     private final UserDetailsService userDetailsService;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
-    private final CorsProperties corsProps;
 
     @Bean
     public SecurityFilterChain configureAuth(HttpSecurity http) throws Exception {
@@ -90,35 +89,6 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public OpenAPI openAPI() {
-        return new OpenAPI().addSecurityItem(new SecurityRequirement().
-                        addList("Bearer Authentication"))
-                .components(new Components().addSecuritySchemes
-                        ("Bearer Authentication", createAPIKeyScheme()));
-    }
-
-    private SecurityScheme createAPIKeyScheme() {
-        return new SecurityScheme().type(SecurityScheme.Type.HTTP)
-                .bearerFormat("JWT")
-                .scheme("bearer");
-    }
-
-    @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        List<String> allowedOriginsList = Arrays.asList(corsProps.allowedOrigins().split(","));
-        config.setAllowedOrigins(allowedOriginsList);
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("*"));
-        config.setAllowCredentials(true);
-
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-
-        return source;
     }
 }
 

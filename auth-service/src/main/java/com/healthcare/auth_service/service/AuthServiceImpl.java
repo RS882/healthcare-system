@@ -79,8 +79,10 @@ public class AuthServiceImpl implements AuthService {
 
     private TokensDto generateAndStoreTokens(AuthUserDetails userDetails) {
 
-        TokensDto tokens = jwtService.getTokens(userDetails, userDetails.getId());
-        refreshTokenService.save(tokens.getRefreshToken(), userDetails.getId());
+        Long userId = userDetails.getId();
+
+        TokensDto tokens = jwtService.getTokens(userDetails, userId);
+        refreshTokenService.save(tokens.getRefreshToken(), userId);
         return tokens;
     }
 

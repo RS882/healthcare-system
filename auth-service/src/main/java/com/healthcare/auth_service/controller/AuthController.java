@@ -29,7 +29,7 @@ public class AuthController implements AuthAPI {
         cookieService.setRefreshTokenToCookie(response, tokens.getRefreshToken());
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new AuthResponse(tokens.getAccessToken()));
+                .body(new AuthResponse(tokens.getAccessToken(), tokens.getUserId()));
     }
 
     @Override
@@ -40,7 +40,7 @@ public class AuthController implements AuthAPI {
         cookieService.setRefreshTokenToCookie(response, tokens.getRefreshToken());
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new AuthResponse(tokens.getAccessToken()));
+                .body(new AuthResponse(tokens.getAccessToken(), tokens.getUserId()));
     }
 
     @Override
