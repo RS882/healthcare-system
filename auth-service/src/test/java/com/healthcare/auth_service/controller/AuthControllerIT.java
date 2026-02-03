@@ -5,20 +5,24 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.auth_service.config.properties.HeaderRequestIdProperties;
 import com.healthcare.auth_service.config.properties.JwtProperties;
 import com.healthcare.auth_service.config.properties.PrefixProperties;
+import com.healthcare.auth_service.domain.AuthUserDetails;
 import com.healthcare.auth_service.domain.dto.LoginDto;
 import com.healthcare.auth_service.domain.dto.TokensDto;
 import com.healthcare.auth_service.domain.dto.UserInfoDto;
 import com.healthcare.auth_service.domain.dto.ValidationDto;
 import com.healthcare.auth_service.exception_handler.dto.ErrorResponse;
+import com.healthcare.auth_service.service.AuthServiceImpl;
 import com.healthcare.auth_service.service.JwtService;
 import com.healthcare.auth_service.service.feignClient.UserClient;
 import com.healthcare.auth_service.service.interfacies.RequestIdService;
 import com.healthcare.auth_service.service.interfacies.TokenBlacklistService;
+import com.healthcare.auth_service.service.interfacies.UserClientService;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,6 +37,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
@@ -45,8 +50,7 @@ import java.util.stream.Stream;
 import static com.healthcare.auth_service.controller.API.ApiPaths.*;
 import static com.healthcare.auth_service.service.constant.RefreshTokenTitle.REFRESH_TOKEN;
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -93,6 +97,11 @@ class AuthControllerIT {
     @MockBean
     private UserClient userClient;
 
+    @Mock
+    private UserClientService userClientService;
+
+    @MockitoSpyBean
+    private AuthServiceImpl authService;
 
     private String refreshPrefix;
     private int maxTokens;
@@ -253,7 +262,7 @@ class AuthControllerIT {
 
             assertTrue(jwtService.validateAccessToken(accessToken, userDetail));
             assertTrue(jwtService.validateRefreshToken(refreshToken, userDetail));
-            assertEquals(USER_ID,userId);
+            assertEquals(USER_ID, userId);
 
             assertTrue(redis.hasKey(getKey() + ":" + refreshToken));
         }
@@ -326,89 +335,6 @@ class AuthControllerIT {
                                     .password("Qsdasdlwe8qwe")
                                     .build())
             );
-        }
-
-        @Test
-        public void login_user_should_return_404_when_user_service_get_exception() throws Exception {
-
-            when(userClient.getUserByEmail(any(String.class)))
-                    .thenThrow(new RuntimeException("Something went wrong"));
-
-            LoginDto loginDto = LoginDto.builder()
-                    .password(PASSWORD)
-                    .userEmail(EMAIL)
-                    .build();
-
-            String dtoJson = mapper.writeValueAsString(loginDto);
-
-            requestId = requestIdService.getRequestId();
-
-            MvcResult result = mockMvc.perform(post(LOGIN_URL)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .header(headerRequestIdProps.name(), requestId.toString())
-                            .content(dtoJson))
-                    .andExpect(status().isNotFound())
-                    .andReturn();
-
-            checkErrorResponseResult(result, HttpStatus.NOT_FOUND);
-        }
-
-        @Test
-        public void login_user_should_return_404_when_user_service_get_null() throws Exception {
-
-            when(userClient.getUserByEmail(any(String.class)))
-                    .thenReturn(null);
-
-            LoginDto loginDto = LoginDto.builder()
-                    .password(PASSWORD)
-                    .userEmail(EMAIL)
-                    .build();
-
-            String dtoJson = mapper.writeValueAsString(loginDto);
-
-            requestId = requestIdService.getRequestId();
-
-            MvcResult result = mockMvc.perform(post(LOGIN_URL)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .header(headerRequestIdProps.name(), requestId.toString())
-                            .content(dtoJson))
-                    .andExpect(status().isNotFound())
-                    .andReturn();
-
-            checkErrorResponseResult(result, HttpStatus.NOT_FOUND);
-        }
-
-        @Test
-        public void login_user_should_return_403_when_user_is_disable() throws Exception {
-
-            UserInfoDto userInfoDto = UserInfoDto.builder()
-                    .email(EMAIL)
-                    .password(passwordEncoder.encode(PASSWORD))
-                    .id(USER_ID)
-                    .enabled(false)
-                    .roles(Set.of(USER_ROLE))
-                    .build();
-
-            when(userClient.getUserByEmail(any(String.class)))
-                    .thenReturn(userInfoDto);
-
-            LoginDto loginDto = LoginDto.builder()
-                    .password(PASSWORD)
-                    .userEmail(EMAIL)
-                    .build();
-
-            String dtoJson = mapper.writeValueAsString(loginDto);
-
-            requestId = requestIdService.getRequestId();
-
-            MvcResult result = mockMvc.perform(post(LOGIN_URL)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .header(headerRequestIdProps.name(), requestId.toString())
-                            .content(dtoJson))
-                    .andExpect(status().isForbidden())
-                    .andReturn();
-
-            checkErrorResponseResult(result, HttpStatus.FORBIDDEN);
         }
 
         @ParameterizedTest(name = "Тест {index}: login_with_status_400_when_user_service_get_incorrect_user_info_dto[{arguments}]")
@@ -504,6 +430,71 @@ class AuthControllerIT {
             );
         }
 
+        @Test
+        public void login_user_should_return_401_when_password_is_wrong() throws Exception {
+
+            UserInfoDto userInfoDto = UserInfoDto.builder()
+                    .email(EMAIL)
+                    .password(passwordEncoder.encode(PASSWORD))
+                    .id(USER_ID)
+                    .enabled(true)
+                    .roles(Set.of(USER_ROLE))
+                    .build();
+
+            when(userClient.getUserByEmail(any(String.class)))
+                    .thenReturn(userInfoDto);
+
+            LoginDto loginDto = LoginDto.builder()
+                    .password(PASSWORD + "wrong")
+                    .userEmail(EMAIL)
+                    .build();
+
+            String dtoJson = mapper.writeValueAsString(loginDto);
+
+            requestId = requestIdService.getRequestId();
+
+            MvcResult result = mockMvc.perform(post(LOGIN_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header(headerRequestIdProps.name(), requestId.toString())
+                            .content(dtoJson))
+                    .andExpect(status().isUnauthorized())
+                    .andReturn();
+
+            checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
+        }
+
+        @Test
+        public void login_user_should_return_403_when_user_is_disable() throws Exception {
+
+            UserInfoDto userInfoDto = UserInfoDto.builder()
+                    .email(EMAIL)
+                    .password(passwordEncoder.encode(PASSWORD))
+                    .id(USER_ID)
+                    .enabled(false)
+                    .roles(Set.of(USER_ROLE))
+                    .build();
+
+            when(userClient.getUserByEmail(any(String.class)))
+                    .thenReturn(userInfoDto);
+
+            LoginDto loginDto = LoginDto.builder()
+                    .password(PASSWORD)
+                    .userEmail(EMAIL)
+                    .build();
+
+            String dtoJson = mapper.writeValueAsString(loginDto);
+
+            requestId = requestIdService.getRequestId();
+
+            MvcResult result = mockMvc.perform(post(LOGIN_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header(headerRequestIdProps.name(), requestId.toString())
+                            .content(dtoJson))
+                    .andExpect(status().isForbidden())
+                    .andReturn();
+
+            checkErrorResponseResult(result, HttpStatus.FORBIDDEN);
+        }
 
         @Test
         public void login_user_should_return_403_when_user_is_blocked() throws Exception {
@@ -551,23 +542,14 @@ class AuthControllerIT {
             checkErrorResponseResult(result, HttpStatus.FORBIDDEN);
         }
 
-
         @Test
-        public void login_user_should_return_401_when_password_is_wrong() throws Exception {
-
-            UserInfoDto userInfoDto = UserInfoDto.builder()
-                    .email(EMAIL)
-                    .password(passwordEncoder.encode(PASSWORD))
-                    .id(USER_ID)
-                    .enabled(true)
-                    .roles(Set.of(USER_ROLE))
-                    .build();
+        public void login_user_should_return_404_when_user_service_get_null() throws Exception {
 
             when(userClient.getUserByEmail(any(String.class)))
-                    .thenReturn(userInfoDto);
+                    .thenReturn(null);
 
             LoginDto loginDto = LoginDto.builder()
-                    .password(PASSWORD + "wrong")
+                    .password(PASSWORD)
                     .userEmail(EMAIL)
                     .build();
 
@@ -579,10 +561,74 @@ class AuthControllerIT {
                             .contentType(MediaType.APPLICATION_JSON)
                             .header(headerRequestIdProps.name(), requestId.toString())
                             .content(dtoJson))
-                    .andExpect(status().isUnauthorized())
+                    .andExpect(status().isNotFound())
                     .andReturn();
 
-            checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
+            checkErrorResponseResult(result, HttpStatus.NOT_FOUND);
+        }
+
+        @Test
+        void login_user_should_return_500_when_service_throws_exception() throws Exception {
+            try {
+                UserInfoDto userInfoDto = UserInfoDto.builder()
+                        .email(EMAIL)
+                        .password(passwordEncoder.encode(PASSWORD))
+                        .id(USER_ID)
+                        .enabled(true)
+                        .roles(Set.of(USER_ROLE))
+                        .build();
+
+                LoginDto loginDto = LoginDto.builder()
+                        .password(PASSWORD)
+                        .userEmail(EMAIL)
+                        .build();
+
+                String dtoJson = mapper.writeValueAsString(loginDto);
+
+                requestId = requestIdService.getRequestId();
+
+                doThrow(new RuntimeException("Temporary service error."))
+                        .when(authService).login(loginDto);
+
+                when(userClient.getUserByEmail(any(String.class)))
+                        .thenReturn(userInfoDto);
+
+                MvcResult result = mockMvc.perform(post(LOGIN_URL)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header(headerRequestIdProps.name(), requestId.toString())
+                                .content(dtoJson))
+                        .andExpect(status().isInternalServerError())
+                        .andReturn();
+
+                checkErrorResponseResult(result, HttpStatus.INTERNAL_SERVER_ERROR);
+            } finally {
+                reset(authService);
+            }
+        }
+
+        @Test
+        public void login_user_should_return_503_when_user_service_get_exception() throws Exception {
+
+            when(userClient.getUserByEmail(any(String.class)))
+                    .thenThrow(new RuntimeException("Something went wrong"));
+
+            LoginDto loginDto = LoginDto.builder()
+                    .password(PASSWORD)
+                    .userEmail(EMAIL)
+                    .build();
+
+            String dtoJson = mapper.writeValueAsString(loginDto);
+
+            requestId = requestIdService.getRequestId();
+
+            MvcResult result = mockMvc.perform(post(LOGIN_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header(headerRequestIdProps.name(), requestId.toString())
+                            .content(dtoJson))
+                    .andExpect(status().isServiceUnavailable())
+                    .andReturn();
+
+            checkErrorResponseResult(result, HttpStatus.SERVICE_UNAVAILABLE);
         }
     }
 
@@ -719,6 +765,153 @@ class AuthControllerIT {
 
             checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
         }
+
+        @Test
+        public void refresh_with_401_when_user_is_blocked() throws Exception {
+
+            UserInfoDto userInfoDto = UserInfoDto.builder()
+                    .email(EMAIL)
+                    .password(passwordEncoder.encode(PASSWORD))
+                    .id(USER_ID)
+                    .enabled(true)
+                    .roles(Set.of(USER_ROLE))
+                    .build();
+
+            when(userClient.getUserByEmail(any(String.class)))
+                    .thenReturn(userInfoDto);
+
+            LoginDto loginDto = LoginDto.builder()
+                    .password(PASSWORD)
+                    .userEmail(EMAIL)
+                    .build();
+
+            String dtoJson = mapper.writeValueAsString(loginDto);
+
+            MvcResult result = null;
+
+            for (int i = 0; i < maxTokens; i++) {
+
+                Thread.sleep(1000);
+
+                requestId = requestIdService.getRequestId();
+
+                result = mockMvc.perform(post(LOGIN_URL)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .header(headerRequestIdProps.name(), requestId.toString())
+                                .content(dtoJson))
+                        .andExpect(status().isOk()).andReturn();
+            }
+
+            Thread.sleep(1000);
+
+            requestId = requestIdService.getRequestId();
+
+            mockMvc.perform(post(LOGIN_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .header(headerRequestIdProps.name(), requestId.toString())
+                            .content(dtoJson))
+                    .andExpect(status().isForbidden());
+
+
+            assert result != null;
+            Cookie cookie = result.getResponse().getCookie(REFRESH_TOKEN);
+
+            requestId = requestIdService.getRequestId();
+
+            MvcResult refreshResult = mockMvc.perform(post(REFRESH_URL)
+                            .header(headerRequestIdProps.name(), requestId.toString())
+                            .cookie(cookie))
+                    .andExpect(status().isUnauthorized())
+                    .andReturn();
+
+            checkErrorResponseResult(refreshResult, HttpStatus.UNAUTHORIZED);
+        }
+
+        @Test
+        public void refresh_with_404_when_user_service_get_null() throws Exception {
+
+            Cookie cookie = getCookie();
+
+            when(userClient.getUserByEmail(any(String.class)))
+                    .thenReturn(null);
+
+            Thread.sleep(1000);
+
+            requestId = requestIdService.getRequestId();
+            MvcResult result = mockMvc.perform(post(REFRESH_URL)
+                            .header(headerRequestIdProps.name(), requestId.toString())
+                            .cookie(cookie))
+                    .andExpect(status().isNotFound())
+                    .andReturn();
+
+            String responseBody = result.getResponse().getContentAsString();
+            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
+            assertNotNull(error.getMessage());
+            assertEquals(error.getStatus(), HttpStatus.NOT_FOUND.value());
+            assertEquals(error.getError(), HttpStatus.NOT_FOUND.getReasonPhrase());
+            assertEquals(error.getPath(), REFRESH_URL);
+        }
+
+        @Test
+        void refresh_with_500_when_service_throws_exception() throws Exception {
+            try {
+                UserInfoDto userInfoDto = UserInfoDto.builder()
+                        .email(EMAIL)
+                        .password(passwordEncoder.encode(PASSWORD))
+                        .id(USER_ID)
+                        .enabled(true)
+                        .roles(Set.of(USER_ROLE))
+                        .build();
+
+                requestId = requestIdService.getRequestId();
+
+                doThrow(new RuntimeException("Temporary service error."))
+                        .when(authService).refresh(any(String.class));
+
+                when(userClient.getUserByEmail(any(String.class)))
+                        .thenReturn(userInfoDto);
+
+                Cookie cookie = getCookie();
+
+                MvcResult result = mockMvc.perform(post(REFRESH_URL)
+                                .header(headerRequestIdProps.name(), requestId.toString())
+                                .cookie(cookie))
+                        .andExpect(status().isInternalServerError())
+                        .andReturn();
+
+                String responseBody = result.getResponse().getContentAsString();
+                ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
+                assertNotNull(error.getMessage());
+                assertEquals(error.getStatus(), HttpStatus.INTERNAL_SERVER_ERROR.value());
+                assertEquals(error.getError(), HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
+                assertEquals(error.getPath(), REFRESH_URL);
+            } finally {
+                reset(authService);
+            }
+        }
+
+        @Test
+        public void refresh_with_503_when_user_service_get_exception() throws Exception {
+
+            Cookie cookie = getCookie();
+
+            when(userClient.getUserByEmail(any(String.class)))
+                    .thenThrow(new RuntimeException("Something went wrong"));
+
+            MvcResult result = mockMvc.perform(post(REFRESH_URL)
+                            .header(headerRequestIdProps.name(), requestId.toString())
+                            .cookie(cookie))
+                    .andExpect(status().isServiceUnavailable())
+                    .andReturn();
+
+            String responseBody = result.getResponse().getContentAsString();
+            ErrorResponse error = mapper.readValue(responseBody, ErrorResponse.class);
+            assertNotNull(error.getMessage());
+            assertEquals(error.getStatus(), HttpStatus.SERVICE_UNAVAILABLE.value());
+            assertEquals(error.getError(), HttpStatus.SERVICE_UNAVAILABLE.getReasonPhrase());
+            assertEquals(error.getPath(), REFRESH_URL);
+
+        }
     }
 
     @Nested
@@ -748,6 +941,33 @@ class AuthControllerIT {
             assertTrue(tokenBlacklistService.isBlacklisted(accessToken));
 
             assertNull(SecurityContextHolder.getContext().getAuthentication());
+        }
+
+        @Test
+        public void logout_with_status_400_cookie_is_incorrect() throws Exception {
+            TokensDto tokens = loginUser();
+
+            String accessToken = tokens.getAccessToken();
+
+            Cookie cookie = new Cookie("test", "test");
+            mockMvc.perform(post(LOGOUT_URL)
+                            .cookie(cookie)
+                            .header(headerRequestIdProps.name(), requestId.toString())
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                    .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        public void logout_should_return_400_when_cookie_is_null() throws Exception {
+            TokensDto tokens = loginUser();
+
+            String accessToken = tokens.getAccessToken();
+
+            mockMvc.perform(post(LOGOUT_URL)
+                            .header(headerRequestIdProps.name(), requestId.toString())
+                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                    .andExpect(status().isBadRequest())
+                    .andDo(print());
         }
 
         @Test
@@ -793,7 +1013,6 @@ class AuthControllerIT {
             assertFalse(tokenBlacklistService.isBlacklisted(accessToken));
         }
 
-
         @Test
         public void logout_should_return_401_token_is_incorrect() throws Exception {
             TokensDto tokens = loginUser();
@@ -814,33 +1033,6 @@ class AuthControllerIT {
 
             assertTrue(redis.hasKey(getKey() + ":" + refreshToken));
             assertFalse(tokenBlacklistService.isBlacklisted(accessToken));
-        }
-
-        @Test
-        public void logout_should_return_400_when_cookie_is_null() throws Exception {
-            TokensDto tokens = loginUser();
-
-            String accessToken = tokens.getAccessToken();
-
-            mockMvc.perform(post(LOGOUT_URL)
-                            .header(headerRequestIdProps.name(), requestId.toString())
-                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
-                    .andExpect(status().isBadRequest())
-                    .andDo(print());
-        }
-
-        @Test
-        public void logout_with_status_400_cookie_is_incorrect() throws Exception {
-            TokensDto tokens = loginUser();
-
-            String accessToken = tokens.getAccessToken();
-
-            Cookie cookie = new Cookie("test", "test");
-            mockMvc.perform(post(LOGOUT_URL)
-                            .cookie(cookie)
-                            .header(headerRequestIdProps.name(), requestId.toString())
-                            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
-                    .andExpect(status().isBadRequest());
         }
 
         @Test
@@ -880,6 +1072,33 @@ class AuthControllerIT {
 
             checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
         }
+
+        @Test
+        void logout_with_status_500_when_service_throws_exception() throws Exception {
+            try {
+                TokensDto tokens = loginUser();
+                String accessToken = tokens.getAccessToken();
+                String refreshToken = tokens.getRefreshToken();
+
+                Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
+
+                doThrow(new RuntimeException("Temporary service error."))
+                        .when(authService).logout(refreshToken, accessToken);
+
+                requestId = requestIdService.getRequestId();
+
+                MvcResult result = mockMvc.perform(post(LOGOUT_URL)
+                                .cookie(cookie)
+                                .header(headerRequestIdProps.name(), requestId.toString())
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                        .andExpect(status().isInternalServerError())
+                        .andReturn();
+
+                checkErrorResponseResult(result, HttpStatus.INTERNAL_SERVER_ERROR);
+            } finally {
+                reset(authService);
+            }
+        }
     }
 
     @Nested
@@ -895,6 +1114,7 @@ class AuthControllerIT {
 
             TokensDto tokens = loginUser();
             String accessToken = tokens.getAccessToken();
+            requestId = requestIdService.getRequestId();
 
             MvcResult result = mockMvc.perform(get(VALIDATION_URL)
                             .header(headerRequestIdProps.name(), requestId.toString())
@@ -912,7 +1132,7 @@ class AuthControllerIT {
 
         @Test
         public void validation_should_return_401_header_authorization_is_null() throws Exception {
-            TokensDto tokens = loginUser();
+            requestId = requestIdService.getRequestId();
 
             MvcResult result = mockMvc.perform(get(VALIDATION_URL)
                             .header(headerRequestIdProps.name(), requestId.toString()))
@@ -928,6 +1148,8 @@ class AuthControllerIT {
 
             String accessToken = tokens.getAccessToken();
 
+            requestId = requestIdService.getRequestId();
+
             MvcResult result = mockMvc.perform(get(VALIDATION_URL)
                             .header(headerRequestIdProps.name(), requestId.toString())
                             .header(HttpHeaders.AUTHORIZATION, "Test " + accessToken))
@@ -937,15 +1159,10 @@ class AuthControllerIT {
             checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
         }
 
-
         @Test
         public void validation_should_return_401_token_is_incorrect() throws Exception {
-            TokensDto tokens = loginUser();
 
-            String accessToken = tokens.getAccessToken();
-            String refreshToken = tokens.getRefreshToken();
-
-            Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
+            requestId = requestIdService.getRequestId();
 
             MvcResult result = mockMvc.perform(get(VALIDATION_URL)
                             .header(headerRequestIdProps.name(), requestId.toString())
@@ -954,6 +1171,39 @@ class AuthControllerIT {
                     .andReturn();
 
             checkErrorResponseResult(result, HttpStatus.UNAUTHORIZED);
+        }
+
+        @Test
+        void validation_should_return_500_when_service_throws_exception() throws Exception {
+            try {
+                UserInfoDto userInfoDto = UserInfoDto.builder()
+                        .email(EMAIL)
+                        .password(passwordEncoder.encode(PASSWORD))
+                        .id(USER_ID)
+                        .enabled(true)
+                        .roles(Set.of(USER_ROLE))
+                        .build();
+
+                TokensDto tokens = loginUser();
+                String accessToken = tokens.getAccessToken();
+                requestId = requestIdService.getRequestId();
+
+                doThrow(new RuntimeException("Temporary service error."))
+                        .when(authService).getValidationDto(any(AuthUserDetails.class));
+
+                when(userClient.getUserByEmail(any(String.class)))
+                        .thenReturn(userInfoDto);
+
+                MvcResult result = mockMvc.perform(get(VALIDATION_URL)
+                                .header(headerRequestIdProps.name(), requestId.toString())
+                                .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken))
+                        .andExpect(status().isInternalServerError())
+                        .andReturn();
+
+                checkErrorResponseResult(result, HttpStatus.INTERNAL_SERVER_ERROR);
+            } finally {
+                reset(authService);
+            }
         }
     }
 }

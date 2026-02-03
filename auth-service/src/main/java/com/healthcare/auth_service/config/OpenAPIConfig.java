@@ -37,11 +37,9 @@ public class OpenAPIConfig {
                 .addExamples("Error401ValidationTokenIsIncorrect", ex401(VALIDATION_URL))
                 // 403
                 .addExamples("Error403LoginUserIsBlocked", ex403(LOGIN_URL))
-                .addExamples("Error403RefreshUserIsBlocked", ex403(REFRESH_URL))
                 // 404
                 .addExamples("Error404LoginUserIsNotFound", ex404(LOGIN_URL))
                 .addExamples("Error404RefreshUserIsNotFound", ex404(REFRESH_URL))
-                .addExamples("Error404ValidationUserIsNotFound", ex404(VALIDATION_URL))
                 // 500
                 .addExamples("Error500LoginTemporaryServiceError", ex500(LOGIN_URL))
                 .addExamples("Error500RefreshTemporaryServiceError", ex500(REFRESH_URL))
@@ -140,7 +138,6 @@ public class OpenAPIConfig {
                 errorExample(HttpStatus.FORBIDDEN, url,
                         "User s blocked."));
     }
-
 
     private static Example ex404(String url) {
         return ex(

@@ -167,18 +167,6 @@ public interface AuthAPI {
                                     )
                             }
                     )),
-            @ApiResponse(responseCode = "403",
-                    description = "The user does not have access",
-                    content = @Content(
-                            mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = {
-                                    @ExampleObject(
-                                            name = "Error403RefreshUserIsBlocked",
-                                            ref = "#/components/examples/Error403RefreshUserIsBlocked"
-                                    )
-                            }
-                    )),
             @ApiResponse(responseCode = "404",
                     description = "The user is not found",
                     content = @Content(
@@ -316,18 +304,6 @@ public interface AuthAPI {
                                     @ExampleObject(
                                             name = "Error401ValidationTokenIsIncorrect",
                                             ref = "#/components/examples/Error401ValidationTokenIsIncorrect"
-                                    )
-                            }
-                    )),
-            @ApiResponse(responseCode = "404",
-                    description = "The user is not found",
-                    content = @Content(
-                            mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponse.class),
-                            examples = {
-                                    @ExampleObject(
-                                            name = "Error404ValidationUserIsNotFound",
-                                            ref = "#/components/examples/Error404ValidationUserIsNotFound"
                                     )
                             }
                     )),

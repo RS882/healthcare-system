@@ -3,6 +3,7 @@ package com.healthcare.auth_service.service;
 import com.healthcare.auth_service.domain.AuthUserDetails;
 import com.healthcare.auth_service.domain.dto.UserInfoDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
+import com.healthcare.auth_service.exception_handler.exception.ServiceUnavailableException;
 import com.healthcare.auth_service.exception_handler.exception.UserNotFoundException;
 import com.healthcare.auth_service.service.feignClient.UserClient;
 import com.healthcare.auth_service.validator.UserInfoDtoValidator;
@@ -100,7 +101,7 @@ class UserClientServiceTest {
             when(userClient.getUserByEmail(EMAIL))
                     .thenThrow(new RuntimeException("Unexpected"));
 
-            assertThrows(UserNotFoundException.class, () -> service.getUserByEmail(EMAIL));
+            assertThrows(ServiceUnavailableException.class, () -> service.getUserByEmail(EMAIL));
         }
     }
 }
