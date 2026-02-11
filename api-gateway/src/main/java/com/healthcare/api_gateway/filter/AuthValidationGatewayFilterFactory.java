@@ -1,14 +1,13 @@
 package com.healthcare.api_gateway.filter;
 
+import com.healthcare.api_gateway.config.properties.AuthValidationProperties;
 import com.healthcare.api_gateway.config.properties.HeaderRequestIdProperties;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -18,42 +17,53 @@ import reactor.core.publisher.Mono;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Stream;
 
 @Component
 public class AuthValidationGatewayFilterFactory
         extends AbstractGatewayFilterFactory<AuthValidationGatewayFilterFactory.Config> {
 
     private final WebClient.Builder webClientBuilder;
-    private final HeaderRequestIdProperties headerRequestIdProperties;
+
+    private final AuthValidationProperties authValidationProps;
+
+    private final HeaderRequestIdProperties headerRequestIdProps;
 
     public AuthValidationGatewayFilterFactory(WebClient.Builder webClientBuilder,
-                                              HeaderRequestIdProperties headerRequestIdProperties) {
+                                              AuthValidationProperties authValidationProps,
+                                              HeaderRequestIdProperties headerRequestIdProps) {
         super(Config.class);
         this.webClientBuilder = webClientBuilder;
-        this.headerRequestIdProperties = headerRequestIdProperties;
+        this.authValidationProps = authValidationProps;
+        this.headerRequestIdProps = headerRequestIdProps;
     }
 
     @Getter
     @Setter
     public static class Config {
-
-        private String validatePath = "/api/v1/auth/validation";
-
-        private HttpMethod method = HttpMethod.GET;
-
-        private List<String> forwardHeaders = Stream.of(
-                HttpHeaders.AUTHORIZATION,
-                        "x-request-id")
-                .map(h -> h.toLowerCase(Locale.ROOT))
-                .toList();
-
-        private String userIdHeader = "X-User-Id";
-        private String rolesHeader = "X-User-Roles";
+        private String validatePath;
+        private HttpMethod method;
+        private List<String> forwardHeaders;
+        private String userIdHeader;
+        private String rolesHeader;
+        private String authServiceUri;
     }
 
     @Override
     public GatewayFilter apply(Config config) {
+
+        if (config.getAuthServiceUri() == null) config.setAuthServiceUri(authValidationProps.authServiceUri());
+        if (config.getValidatePath() == null) config.setValidatePath(authValidationProps.validatePath());
+        if (config.getMethod() == null) config.setMethod(HttpMethod.GET);
+
+        if (config.getForwardHeaders() == null || config.getForwardHeaders().isEmpty()) {
+            config.setForwardHeaders(List.of(HttpHeaders.AUTHORIZATION, headerRequestIdProps.name()));
+        }
+        config.setForwardHeaders(config.getForwardHeaders().stream()
+                .map(h -> h.toLowerCase(Locale.ROOT))
+                .toList());
+
+        if (config.getUserIdHeader() == null) config.setUserIdHeader(authValidationProps.userIdHeader());
+        if (config.getRolesHeader() == null) config.setRolesHeader(authValidationProps.rolesHeader());
 
         return (exchange, chain) -> callAuth(exchange, config)
                 .flatMap(ctx -> {
@@ -76,10 +86,12 @@ public class AuthValidationGatewayFilterFactory
         HttpHeaders incoming = exchange.getRequest().getHeaders();
         WebClient client = webClientBuilder.build();
 
+        String fullAuthValidationUri = config.getAuthServiceUri() + config.getValidatePath();
+
         WebClient.RequestHeadersSpec<?> spec =
                 (config.getMethod() == HttpMethod.POST)
-                        ? client.post().uri("lb://auth-service" + config.getValidatePath())
-                        : client.get().uri("lb://auth-service" + config.getValidatePath());
+                        ? client.post().uri(fullAuthValidationUri)
+                        : client.get().uri(fullAuthValidationUri);
 
         return spec
                 .accept(MediaType.APPLICATION_JSON)
