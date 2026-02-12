@@ -15,8 +15,13 @@ class HeaderRequestIdPropertiesValidationIT {
             .withConfiguration(AutoConfigurations.of(ValidationAutoConfiguration.class))
             .withUserConfiguration(TestConfig.class);
 
-    @EnableConfigurationProperties(HeaderRequestIdProperties.class)
-    static class TestConfig {}
+    private final String REQUEST_HEADER_ID_PROPS = "header-request-id.name";
+    private final String REQUEST_HEADER_ID_VALUE = "X-Request-Id";
+    private final String REQUEST_HEADER_ID_PROPS_NAME = "name";
+
+    @EnableConfigurationProperties({HeaderRequestIdProperties.class})
+    static class TestConfig {
+    }
 
     @Test
     void shouldFailStartup_whenPropertyMissing() {
@@ -30,15 +35,15 @@ class HeaderRequestIdPropertiesValidationIT {
             }
 
             assertThat(root.getMessage())
-                    .contains("gateway.request-id.header")
-                    .contains("name");
+                    .contains(REQUEST_HEADER_ID_PROPS)
+                    .contains(REQUEST_HEADER_ID_PROPS_NAME);
         });
     }
 
     @Test
     void shouldFailStartup_whenPropertyBlank() {
         contextRunner
-                .withPropertyValues("gateway.request-id.header.name=   ")
+                .withPropertyValues(REQUEST_HEADER_ID_PROPS + "." + REQUEST_HEADER_ID_PROPS_NAME + "=   ")
                 .run(context -> {
                     assertThat(context).hasFailed();
 
@@ -49,8 +54,8 @@ class HeaderRequestIdPropertiesValidationIT {
                     }
 
                     assertThat(root.getMessage())
-                            .contains("gateway.request-id.header")
-                            .contains("name");
+                            .contains(REQUEST_HEADER_ID_PROPS)
+                            .contains(REQUEST_HEADER_ID_PROPS_NAME);
                 });
     }
 
@@ -58,11 +63,11 @@ class HeaderRequestIdPropertiesValidationIT {
     @Test
     void shouldStart_whenPropertyPresent() {
         contextRunner
-                .withPropertyValues("gateway.request-id.header.name=X-Request-Id")
+                .withPropertyValues(REQUEST_HEADER_ID_PROPS + "=" + REQUEST_HEADER_ID_VALUE)
                 .run(context -> {
                     assertThat(context).hasNotFailed();
                     HeaderRequestIdProperties props = context.getBean(HeaderRequestIdProperties.class);
-                    assertThat(props.name()).isEqualTo("X-Request-Id");
+                    assertThat(props.name()).isEqualTo(REQUEST_HEADER_ID_VALUE);
                 });
     }
 }

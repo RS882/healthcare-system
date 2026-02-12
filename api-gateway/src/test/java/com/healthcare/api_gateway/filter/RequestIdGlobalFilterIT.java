@@ -1,6 +1,8 @@
 package com.healthcare.api_gateway.filter;
 
+import com.healthcare.api_gateway.config.properties.AuthValidationProperties;
 import com.healthcare.api_gateway.config.properties.HeaderRequestIdProperties;
+import com.healthcare.api_gateway.config.properties.RequestIdProperties;
 import com.healthcare.api_gateway.service.interfaces.RequestIdReactiveService;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,10 +34,14 @@ import static com.healthcare.api_gateway.filter.constant.RequestIdContextKeys.RE
         classes = RequestIdGlobalFilterIT.TestApp.class
 )
 @TestPropertySource(properties = {
-        "gateway.request-id.header.name=X-Request-Id"
+        "header-request-id.name=X-Request-Id",
+
+        "auth-validation.auth-service-uri=lb://auth-service",
+        "auth-validation.validate-path=/api/v1/auth/validation",
+        "auth-validation.user-id-header=X-User-Id",
+        "auth-validation.roles-header=X-User-Roles"
 })
 @ActiveProfiles("test")
-@AutoConfigureMockMvc
 @DisplayName("Request ID global filter integration tests: ")
 @DisplayNameGeneration(value = DisplayNameGenerator.ReplaceUnderscores.class)
 class RequestIdGlobalFilterIT {
@@ -71,7 +77,8 @@ class RequestIdGlobalFilterIT {
     }
 
     @SpringBootApplication
-    @EnableConfigurationProperties(HeaderRequestIdProperties.class)
+    @EnableConfigurationProperties({HeaderRequestIdProperties.class,
+            AuthValidationProperties.class})
     static class TestApp {
 
         @Bean
