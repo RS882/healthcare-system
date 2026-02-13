@@ -4,8 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.user_service.constant.Role;
 import com.healthcare.user_service.exception_handler.dto.ErrorResponse;
 import com.healthcare.user_service.model.dto.RegistrationDto;
-import com.healthcare.user_service.model.dto.UserInfoDto;
-import com.healthcare.user_service.model.dto.UserRegDto;
+import com.healthcare.user_service.model.dto.UserAuthDto;
+import com.healthcare.user_service.model.dto.UserDto;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -103,7 +103,7 @@ class UserControllerTest {
             MvcResult result = regTestUser(email);
 
             String jsonResponse = result.getResponse().getContentAsString();
-            UserRegDto responseDto = mapper.readValue(jsonResponse, UserRegDto.class);
+            UserDto responseDto = mapper.readValue(jsonResponse, UserDto.class);
 
             Long id = responseDto.getId();
             assertThat(id).isNotNull();
@@ -208,7 +208,7 @@ class UserControllerTest {
                     .andReturn();
 
             String jsonResponse = result.getResponse().getContentAsString();
-            UserInfoDto responseDto = mapper.readValue(jsonResponse, UserInfoDto.class);
+            UserAuthDto responseDto = mapper.readValue(jsonResponse, UserAuthDto.class);
 
             Long id = responseDto.getId();
             assertThat(id).isNotNull();

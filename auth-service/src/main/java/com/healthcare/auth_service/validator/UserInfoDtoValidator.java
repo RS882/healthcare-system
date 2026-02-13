@@ -1,6 +1,6 @@
 package com.healthcare.auth_service.validator;
 
-import com.healthcare.auth_service.domain.dto.UserInfoDto;
+import com.healthcare.auth_service.domain.dto.UserAuthDto;
 import com.healthcare.auth_service.exception_handler.dto.ValidationError;
 import com.healthcare.auth_service.exception_handler.exception.ValidationException;
 import jakarta.validation.ConstraintViolation;
@@ -17,8 +17,8 @@ public class UserInfoDtoValidator {
 
     public final Validator validator;
 
-    public void validateUser(UserInfoDto dto) {
-        Set<ConstraintViolation<UserInfoDto>> violations = validator.validate(dto);
+    public void validateUser(UserAuthDto dto) {
+        Set<ConstraintViolation<UserAuthDto>> violations = validator.validate(dto);
         if (!violations.isEmpty()) {
 
             Set<ValidationError> errors = violations.stream()

@@ -8,6 +8,7 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static com.healthcare.user_service.controller.API.ApiPaths.*;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
@@ -29,9 +30,9 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/error"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/users/registration").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/email/{email}").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/users/id/{id}").permitAll()
+                        .requestMatchers(HttpMethod.POST, REGISTRATION_URL).permitAll()
+                        .requestMatchers(HttpMethod.GET, BY_EMAIL_URL).permitAll()
+                        .requestMatchers(HttpMethod.GET, BY_ID_URL).permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)

@@ -1,10 +1,9 @@
 package com.healthcare.auth_service.service;
 
 import com.healthcare.auth_service.domain.AuthUserDetails;
-import com.healthcare.auth_service.domain.dto.UserInfoDto;
+import com.healthcare.auth_service.domain.dto.UserAuthDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.exception_handler.exception.ServiceUnavailableException;
-import com.healthcare.auth_service.exception_handler.exception.UserNotFoundException;
 import com.healthcare.auth_service.service.feignClient.UserClient;
 import com.healthcare.auth_service.validator.UserInfoDtoValidator;
 import org.junit.jupiter.api.*;
@@ -39,13 +38,13 @@ class UserClientServiceTest {
     private final String USER_ROLE = "ROLE_TEST";
     private final String PASSWORD = "password";
 
-    private UserInfoDto activeUser;
-    private UserInfoDto inactiveUser;
+    private UserAuthDto activeUser;
+    private UserAuthDto inactiveUser;
 
     @BeforeEach
     void setUp() {
 
-        activeUser = UserInfoDto.builder()
+        activeUser = UserAuthDto.builder()
                 .id(USER_ID)
                 .email(EMAIL)
                 .password(PASSWORD)
@@ -53,7 +52,7 @@ class UserClientServiceTest {
                 .enabled(true)
                 .build();
 
-        inactiveUser = UserInfoDto.builder()
+        inactiveUser = UserAuthDto.builder()
                 .id(USER_ID)
                 .email(EMAIL)
                 .password(PASSWORD)

@@ -1,14 +1,16 @@
-package com.healthcare.user_service.controller;
+package com.healthcare.user_service.controller.API;
 
 import com.healthcare.user_service.exception_handler.dto.ErrorResponse;
 import com.healthcare.user_service.model.dto.RegistrationDto;
-import com.healthcare.user_service.model.dto.UserInfoDto;
-import com.healthcare.user_service.model.dto.UserRegDto;
+import com.healthcare.user_service.model.dto.UserAuthDto;
+import com.healthcare.user_service.model.dto.UserDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotNull;
@@ -21,11 +23,15 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@RequestMapping("/api/v1/users")
+import static com.healthcare.user_service.controller.API.ApiPaths.REGISTRATION;
+import static com.healthcare.user_service.controller.API.ApiPaths.USER_BASIC_URL;
+
+@RequestMapping(USER_BASIC_URL)
+@Tag(name = "User controller", description = "Controller for registration and CRUD operation of user")
 public interface UserAPI {
 
     @Operation(summary = "Registration new user",
-            description = "This method registers new user from RegistrationDto, returns UserRegDto " +
+            description = "This method registers new user from RegistrationDto, returns UserDto " +
                     "with user information.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -34,19 +40,43 @@ public interface UserAPI {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User registered successfully",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UserRegDto.class))),
+                            schema = @Schema(implementation = UserDto.class))),
             @ApiResponse(responseCode = "400", description = "Request is wrong",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponse.class))),
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Error400RegMissingField",
+                                            ref = "#/components/examples/Error400RegMissingField"
+                                    )
+                            })),
             @ApiResponse(responseCode = "500",
                     description = "Temporary error when registering user",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = ErrorResponse.class)
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Error500RegTemporaryServiceError",
+                                            ref = "#/components/examples/Error500RegTemporaryServiceError"
+                                    )
+                            }
+                    )),
+            @ApiResponse(responseCode = "503",
+                    description = "The server is currently overloaded or under maintenance.",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Error503RegServiceUnavailable",
+                                            ref = "#/components/examples/Error503RegServiceUnavailable"
+                                    )
+                            }
                     ))
     })
-    @PostMapping("/registration")
-    ResponseEntity<UserRegDto> registerUser(
+    @PostMapping(REGISTRATION)
+    ResponseEntity<UserDto> registerUser(
             @Valid
             @org.springframework.web.bind.annotation.RequestBody
             RegistrationDto dto);
@@ -61,7 +91,7 @@ public interface UserAPI {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Request is successfully",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UserInfoDto.class))),
+                            schema = @Schema(implementation = UserAuthDto.class))),
             @ApiResponse(responseCode = "400", description = "Request is wrong",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class))),
@@ -76,7 +106,7 @@ public interface UserAPI {
                     ))
     })
     @GetMapping("/email/{email}")
-    public ResponseEntity<UserInfoDto> getUserInfoByEmail(
+    public ResponseEntity<UserAuthDto> getUserInfoByEmail(
             @NotNull
             @Email
             @PathVariable String email);

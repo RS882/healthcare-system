@@ -2,15 +2,9 @@ package com.healthcare.auth_service.config;
 
 import com.healthcare.auth_service.config.configs_components.CustomAccessDeniedHandler;
 import com.healthcare.auth_service.config.configs_components.CustomAuthenticationEntryPoint;
-import com.healthcare.auth_service.config.properties.CorsProperties;
 import com.healthcare.auth_service.filter.JwtAuthFilter;
 import com.healthcare.auth_service.filter.RequestIdFilter;
-import io.swagger.v3.oas.models.Components;
-import io.swagger.v3.oas.models.OpenAPI;
-import io.swagger.v3.oas.models.security.SecurityRequirement;
-import io.swagger.v3.oas.models.security.SecurityScheme;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -26,12 +20,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
-import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.Arrays;
-import java.util.List;
 
 import static com.healthcare.auth_service.controller.API.ApiPaths.*;
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -54,7 +42,11 @@ public class SecurityConfig {
                 .sessionManagement(s ->
                         s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html", "/error").permitAll()
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/swagger-ui.html",
+                                "/error").permitAll()
                         .requestMatchers(HttpMethod.POST, LOGIN_URL).permitAll()
                         .requestMatchers(HttpMethod.POST, REFRESH_URL).permitAll()
                         .requestMatchers(HttpMethod.POST, LOGOUT_URL).authenticated()

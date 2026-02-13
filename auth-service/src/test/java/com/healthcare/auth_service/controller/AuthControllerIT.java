@@ -8,7 +8,7 @@ import com.healthcare.auth_service.config.properties.PrefixProperties;
 import com.healthcare.auth_service.domain.AuthUserDetails;
 import com.healthcare.auth_service.domain.dto.LoginDto;
 import com.healthcare.auth_service.domain.dto.TokensDto;
-import com.healthcare.auth_service.domain.dto.UserInfoDto;
+import com.healthcare.auth_service.domain.dto.UserAuthDto;
 import com.healthcare.auth_service.domain.dto.ValidationDto;
 import com.healthcare.auth_service.exception_handler.dto.ErrorResponse;
 import com.healthcare.auth_service.service.AuthServiceImpl;
@@ -127,7 +127,7 @@ class AuthControllerIT {
 
     private Cookie getCookie() throws Exception {
 
-        UserInfoDto userInfoDto = UserInfoDto.builder()
+        UserAuthDto userInfoDto = UserAuthDto.builder()
                 .email(EMAIL)
                 .password(passwordEncoder.encode(PASSWORD))
                 .id(USER_ID)
@@ -158,7 +158,7 @@ class AuthControllerIT {
     }
 
     private TokensDto loginUser() throws Exception {
-        UserInfoDto userInfoDto = UserInfoDto.builder()
+        UserAuthDto userInfoDto = UserAuthDto.builder()
                 .email(EMAIL)
                 .password(passwordEncoder.encode(PASSWORD))
                 .id(USER_ID)
@@ -339,7 +339,7 @@ class AuthControllerIT {
 
         @ParameterizedTest(name = "Тест {index}: login_with_status_400_when_user_service_get_incorrect_user_info_dto[{arguments}]")
         @MethodSource("incorrectUserInfo")
-        public void login_user_should_return_400_when_user_service_get_incorrect_user_info_dto(UserInfoDto userInfoDto) throws Exception {
+        public void login_user_should_return_400_when_user_service_get_incorrect_user_info_dto(UserAuthDto userInfoDto) throws Exception {
 
             when(userClient.getUserByEmail(any(String.class)))
                     .thenReturn(userInfoDto);
@@ -366,62 +366,62 @@ class AuthControllerIT {
         private static Stream<Arguments> incorrectUserInfo() {
 
             return Stream.of(Arguments.of(
-                            UserInfoDto.builder()
+                            UserAuthDto.builder()
                                     .email(EMAIL)
                                     .password(PASSWORD)
                                     .enabled(true)
                                     .roles(Set.of(USER_ROLE))
                                     .build()),
-                    Arguments.of(UserInfoDto.builder()
+                    Arguments.of(UserAuthDto.builder()
                             .password(PASSWORD)
                             .id(USER_ID)
                             .enabled(true)
                             .roles(Set.of(USER_ROLE))
                             .build()),
-                    Arguments.of(UserInfoDto.builder()
+                    Arguments.of(UserAuthDto.builder()
                             .email("testexample?com")
                             .password(PASSWORD)
                             .id(USER_ID)
                             .enabled(true)
                             .roles(Set.of(USER_ROLE))
                             .build()),
-                    Arguments.of(UserInfoDto.builder()
+                    Arguments.of(UserAuthDto.builder()
                             .email(EMAIL)
                             .id(USER_ID)
                             .enabled(true)
                             .roles(Set.of(USER_ROLE))
                             .build()),
-                    Arguments.of(UserInfoDto.builder()
+                    Arguments.of(UserAuthDto.builder()
                             .email(EMAIL)
                             .password("")
                             .id(USER_ID)
                             .enabled(true)
                             .roles(Set.of(USER_ROLE))
                             .build()),
-                    Arguments.of(UserInfoDto.builder()
+                    Arguments.of(UserAuthDto.builder()
                             .email(EMAIL)
                             .password("         ")
                             .id(USER_ID)
                             .enabled(true)
                             .roles(Set.of(USER_ROLE))
                             .build()),
-                    Arguments.of(UserInfoDto.builder()
+                    Arguments.of(UserAuthDto.builder()
                             .email(EMAIL)
                             .password(PASSWORD)
                             .id(USER_ID)
                             .enabled(true)
                             .roles(new HashSet<>())
                             .build()),
-                    Arguments.of(UserInfoDto.builder()
+                    Arguments.of(UserAuthDto.builder()
                             .email(EMAIL)
                             .password(PASSWORD)
                             .id(USER_ID)
                             .enabled(true)
                             .build()),
-                    Arguments.of(UserInfoDto.builder()
+                    Arguments.of(UserAuthDto.builder()
                             .enabled(true)
                             .build()),
-                    Arguments.of(UserInfoDto.builder()
+                    Arguments.of(UserAuthDto.builder()
                             .email("EMAIL")
                             .password("")
                             .enabled(true)
@@ -433,7 +433,7 @@ class AuthControllerIT {
         @Test
         public void login_user_should_return_401_when_password_is_wrong() throws Exception {
 
-            UserInfoDto userInfoDto = UserInfoDto.builder()
+            UserAuthDto userInfoDto = UserAuthDto.builder()
                     .email(EMAIL)
                     .password(passwordEncoder.encode(PASSWORD))
                     .id(USER_ID)
@@ -466,7 +466,7 @@ class AuthControllerIT {
         @Test
         public void login_user_should_return_403_when_user_is_disable() throws Exception {
 
-            UserInfoDto userInfoDto = UserInfoDto.builder()
+            UserAuthDto userInfoDto = UserAuthDto.builder()
                     .email(EMAIL)
                     .password(passwordEncoder.encode(PASSWORD))
                     .id(USER_ID)
@@ -499,7 +499,7 @@ class AuthControllerIT {
         @Test
         public void login_user_should_return_403_when_user_is_blocked() throws Exception {
 
-            UserInfoDto userInfoDto = UserInfoDto.builder()
+            UserAuthDto userInfoDto = UserAuthDto.builder()
                     .email(EMAIL)
                     .password(passwordEncoder.encode(PASSWORD))
                     .id(USER_ID)
@@ -570,7 +570,7 @@ class AuthControllerIT {
         @Test
         void login_user_should_return_500_when_service_throws_exception() throws Exception {
             try {
-                UserInfoDto userInfoDto = UserInfoDto.builder()
+                UserAuthDto userInfoDto = UserAuthDto.builder()
                         .email(EMAIL)
                         .password(passwordEncoder.encode(PASSWORD))
                         .id(USER_ID)
@@ -645,7 +645,7 @@ class AuthControllerIT {
         @Test
         public void refresh_should_return_200() throws Exception {
 
-            UserInfoDto userInfoDto = UserInfoDto.builder()
+            UserAuthDto userInfoDto = UserAuthDto.builder()
                     .email(EMAIL)
                     .password(passwordEncoder.encode(PASSWORD))
                     .id(USER_ID)
@@ -769,7 +769,7 @@ class AuthControllerIT {
         @Test
         public void refresh_with_401_when_user_is_blocked() throws Exception {
 
-            UserInfoDto userInfoDto = UserInfoDto.builder()
+            UserAuthDto userInfoDto = UserAuthDto.builder()
                     .email(EMAIL)
                     .password(passwordEncoder.encode(PASSWORD))
                     .id(USER_ID)
@@ -855,7 +855,7 @@ class AuthControllerIT {
         @Test
         void refresh_with_500_when_service_throws_exception() throws Exception {
             try {
-                UserInfoDto userInfoDto = UserInfoDto.builder()
+                UserAuthDto userInfoDto = UserAuthDto.builder()
                         .email(EMAIL)
                         .password(passwordEncoder.encode(PASSWORD))
                         .id(USER_ID)
@@ -1176,7 +1176,7 @@ class AuthControllerIT {
         @Test
         void validation_should_return_500_when_service_throws_exception() throws Exception {
             try {
-                UserInfoDto userInfoDto = UserInfoDto.builder()
+                UserAuthDto userInfoDto = UserAuthDto.builder()
                         .email(EMAIL)
                         .password(passwordEncoder.encode(PASSWORD))
                         .id(USER_ID)

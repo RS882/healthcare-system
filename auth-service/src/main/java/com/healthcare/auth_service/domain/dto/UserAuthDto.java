@@ -9,7 +9,7 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class UserInfoDto {
+public class UserAuthDto {
 
     @NotNull(message = "User id cannot be null")
     private Long id;

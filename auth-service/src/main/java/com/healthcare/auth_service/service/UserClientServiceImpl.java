@@ -1,7 +1,7 @@
 package com.healthcare.auth_service.service;
 
 import com.healthcare.auth_service.domain.AuthUserDetails;
-import com.healthcare.auth_service.domain.dto.UserInfoDto;
+import com.healthcare.auth_service.domain.dto.UserAuthDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.exception_handler.exception.ServiceUnavailableException;
 import com.healthcare.auth_service.exception_handler.exception.UserNotFoundException;
@@ -27,7 +27,7 @@ public class UserClientServiceImpl implements UserClientService {
 
     @Override
     public AuthUserDetails getUserByEmail(String email) {
-        UserInfoDto dto;
+        UserAuthDto dto;
         try {
             dto = userClient.getUserByEmail(email);
         } catch (Exception e) {

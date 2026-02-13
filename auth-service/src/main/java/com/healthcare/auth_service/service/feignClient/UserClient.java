@@ -1,13 +1,10 @@
 package com.healthcare.auth_service.service.feignClient;
 
 import com.healthcare.auth_service.config.FeignRequestIdConfig;
-import com.healthcare.auth_service.domain.dto.UserInfoDto;
+import com.healthcare.auth_service.domain.dto.UserAuthDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
-
-import java.util.UUID;
 
 @FeignClient(
         name = "user-service",
@@ -17,7 +14,7 @@ import java.util.UUID;
 public interface UserClient {
 
     @GetMapping("/email/{email}")
-    UserInfoDto getUserByEmail(
+    UserAuthDto getUserByEmail(
             @PathVariable("email") String email);
 }
 

@@ -1,7 +1,7 @@
 package com.healthcare.auth_service.service.mapper;
 
 import com.healthcare.auth_service.domain.AuthUserDetails;
-import com.healthcare.auth_service.domain.dto.UserInfoDto;
+import com.healthcare.auth_service.domain.dto.UserAuthDto;
 import com.healthcare.auth_service.domain.dto.ValidationDto;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -12,7 +12,7 @@ import java.util.stream.Collectors;
 
 public class AuthUserMapper {
 
-    public static AuthUserDetails toAuthUser(UserInfoDto dto) {
+    public static AuthUserDetails toAuthUser(UserAuthDto dto) {
 
         List<SimpleGrantedAuthority> authorities = dto.getRoles().stream()
                 .map(SimpleGrantedAuthority::new)

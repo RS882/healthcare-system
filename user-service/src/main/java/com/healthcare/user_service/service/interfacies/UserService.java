@@ -1,13 +1,12 @@
 package com.healthcare.user_service.service.interfacies;
 
 
-import com.healthcare.user_service.model.User;
 import com.healthcare.user_service.model.dto.RegistrationDto;
-import com.healthcare.user_service.model.dto.UserInfoDto;
-import com.healthcare.user_service.model.dto.UserRegDto;
+import com.healthcare.user_service.model.dto.UserAuthDto;
+import com.healthcare.user_service.model.dto.UserDto;
 
 public interface UserService {
 
-    UserInfoDto getUserInfoByEmail(String email);
-    UserRegDto registration(RegistrationDto dto);
+    UserAuthDto getUserInfoByEmail(String email);
+    UserDto registration(RegistrationDto dto);
 }

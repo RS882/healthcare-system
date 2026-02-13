@@ -6,8 +6,8 @@ import com.healthcare.user_service.exception_handler.exception.UserNotFoundExcep
 import com.healthcare.user_service.model.User;
 import com.healthcare.user_service.model.UserRole;
 import com.healthcare.user_service.model.dto.RegistrationDto;
-import com.healthcare.user_service.model.dto.UserInfoDto;
-import com.healthcare.user_service.model.dto.UserRegDto;
+import com.healthcare.user_service.model.dto.UserAuthDto;
+import com.healthcare.user_service.model.dto.UserDto;
 import com.healthcare.user_service.repository.UserRepository;
 import com.healthcare.user_service.service.interfacies.UserService;
 import lombok.RequiredArgsConstructor;
@@ -16,8 +16,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Set;
 
-import static com.healthcare.user_service.model.dto.UserInfoDto.getUserInfoDto;
-import static com.healthcare.user_service.model.dto.UserRegDto.getUserRegDto;
+import static com.healthcare.user_service.model.dto.UserAuthDto.getUserAuthDto;
+import static com.healthcare.user_service.model.dto.UserDto.getUserDto;
 
 @Service
 @RequiredArgsConstructor
@@ -27,17 +27,17 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
 
     @Override
-    public UserInfoDto getUserInfoByEmail(String email) {
+    public UserAuthDto getUserInfoByEmail(String email) {
         User user = repository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
 
-        return getUserInfoDto(user);
+        return getUserAuthDto(user);
     }
 
     @Override
-    public UserRegDto registration(RegistrationDto dto) {
-        User user = repository.save(getUser(dto));
-        return getUserRegDto(user);
+    public UserDto registration(RegistrationDto dto) {
+        User user = repository.saveAndFlush(getUser(dto));
+        return getUserDto(user);
     }
 
     private User getUser(RegistrationDto dto) {
