@@ -13,7 +13,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.healthcare.user_service.controller.API.ApiPaths.REGISTRATION_URL;
+import static com.healthcare.user_service.controller.API.ApiPaths.*;
 
 @Configuration
 public class OpenApiConfig {
@@ -28,7 +28,7 @@ public class OpenApiConfig {
                 .addSecuritySchemes(BEARER_SCHEME_NAME, createAPIKeyScheme())
                 // 400
                 .addExamples("Error400RegMissingField", ex400Reg())
-//                .addExamples("Error400RefreshIncorrectCookie", ex400(REFRESH_URL))
+                .addExamples("Error400LookupEmailIsWrong", ex400LookUp())
 //                .addExamples("Error400LogoutIncorrectCookie", ex400(LOGOUT_URL))
                 // 401
 //                .addExamples("Error401LoginIncorrectField", ex401Login())
@@ -38,16 +38,16 @@ public class OpenApiConfig {
                 // 403
 //                .addExamples("Error403LoginUserIsBlocked", ex403(LOGIN_URL))
                 // 404
-//                .addExamples("Error404LoginUserIsNotFound", ex404(LOGIN_URL))
+                .addExamples("Error404LookupUserIsNotFound", ex404(LOOKUP_URL))
 //                .addExamples("Error404RefreshUserIsNotFound", ex404(REFRESH_URL))
                 // 500
                 .addExamples("Error500RegTemporaryServiceError", ex500(REGISTRATION_URL))
-//                .addExamples("Error500RefreshTemporaryServiceError", ex500(REFRESH_URL))
+                .addExamples("Error500LookupTemporaryServiceError", ex500(LOOKUP_URL))
 //                .addExamples("Error500LogoutTemporaryServiceError", ex500(LOGOUT_URL))
 //                .addExamples("Error500ValidationTemporaryServiceError", ex500(VALIDATION_URL))
                 // 503
                 .addExamples("Error503RegServiceUnavailable", ex503(REGISTRATION_URL))
-//                .addExamples("Error503RefreshServiceUnavailable", ex503(REFRESH_URL))
+                .addExamples("Error503LookupServiceUnavailable", ex503(LOOKUP_URL))
 //                .addExamples("Error503ValidationServiceUnavailable", ex503(VALIDATION_URL))
                     ;
 
@@ -106,6 +106,15 @@ public class OpenApiConfig {
                         "Password cannot be empty.",
                         "password", "Password cannot be empty.")
         );
+    }
+
+
+    private static Example ex400LookUp() {
+        return ex(
+                "Email is not valid.",
+                "Email is not valid.",
+                errorExample(HttpStatus.BAD_REQUEST, LOOKUP_URL,
+                        "Email is not valid"));
     }
 
     private static Example ex400(String url) {

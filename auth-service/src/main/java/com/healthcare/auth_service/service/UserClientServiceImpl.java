@@ -2,6 +2,7 @@ package com.healthcare.auth_service.service;
 
 import com.healthcare.auth_service.domain.AuthUserDetails;
 import com.healthcare.auth_service.domain.dto.UserAuthDto;
+import com.healthcare.auth_service.domain.dto.UserLookupDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.exception_handler.exception.ServiceUnavailableException;
 import com.healthcare.auth_service.exception_handler.exception.UserNotFoundException;
@@ -29,7 +30,7 @@ public class UserClientServiceImpl implements UserClientService {
     public AuthUserDetails getUserByEmail(String email) {
         UserAuthDto dto;
         try {
-            dto = userClient.getUserByEmail(email);
+            dto = userClient.lookupUser(new UserLookupDto(email));
         } catch (Exception e) {
             log.warn("User service is temporarily unavailable");
             throw new ServiceUnavailableException(e.getMessage(), e);

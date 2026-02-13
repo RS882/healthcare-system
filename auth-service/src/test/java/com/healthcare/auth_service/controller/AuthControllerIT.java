@@ -6,10 +6,7 @@ import com.healthcare.auth_service.config.properties.HeaderRequestIdProperties;
 import com.healthcare.auth_service.config.properties.JwtProperties;
 import com.healthcare.auth_service.config.properties.PrefixProperties;
 import com.healthcare.auth_service.domain.AuthUserDetails;
-import com.healthcare.auth_service.domain.dto.LoginDto;
-import com.healthcare.auth_service.domain.dto.TokensDto;
-import com.healthcare.auth_service.domain.dto.UserAuthDto;
-import com.healthcare.auth_service.domain.dto.ValidationDto;
+import com.healthcare.auth_service.domain.dto.*;
 import com.healthcare.auth_service.exception_handler.dto.ErrorResponse;
 import com.healthcare.auth_service.service.AuthServiceImpl;
 import com.healthcare.auth_service.service.JwtService;
@@ -140,7 +137,7 @@ class AuthControllerIT {
                 .userEmail(EMAIL)
                 .build();
 
-        when(userClient.getUserByEmail(any(String.class)))
+        when(userClient.lookupUser(any(UserLookupDto.class)))
                 .thenReturn(userInfoDto);
 
         String dtoJson = mapper.writeValueAsString(loginDto);
@@ -171,7 +168,7 @@ class AuthControllerIT {
                 .userEmail(EMAIL)
                 .build();
 
-        when(userClient.getUserByEmail(any(String.class)))
+        when(userClient.lookupUser(any(UserLookupDto.class)))
                 .thenReturn(userInfoDto);
 
         String dtoJson = mapper.writeValueAsString(loginDto);
@@ -341,7 +338,7 @@ class AuthControllerIT {
         @MethodSource("incorrectUserInfo")
         public void login_user_should_return_400_when_user_service_get_incorrect_user_info_dto(UserAuthDto userInfoDto) throws Exception {
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.lookupUser(any(UserLookupDto.class)))
                     .thenReturn(userInfoDto);
 
             LoginDto loginDto = LoginDto.builder()
@@ -441,7 +438,7 @@ class AuthControllerIT {
                     .roles(Set.of(USER_ROLE))
                     .build();
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.lookupUser(any(UserLookupDto.class)))
                     .thenReturn(userInfoDto);
 
             LoginDto loginDto = LoginDto.builder()
@@ -474,7 +471,7 @@ class AuthControllerIT {
                     .roles(Set.of(USER_ROLE))
                     .build();
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.lookupUser(any(UserLookupDto.class)))
                     .thenReturn(userInfoDto);
 
             LoginDto loginDto = LoginDto.builder()
@@ -507,7 +504,7 @@ class AuthControllerIT {
                     .roles(Set.of(USER_ROLE))
                     .build();
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.lookupUser(any(UserLookupDto.class)))
                     .thenReturn(userInfoDto);
 
             LoginDto loginDto = LoginDto.builder()
@@ -545,7 +542,7 @@ class AuthControllerIT {
         @Test
         public void login_user_should_return_404_when_user_service_get_null() throws Exception {
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.lookupUser(any(UserLookupDto.class)))
                     .thenReturn(null);
 
             LoginDto loginDto = LoginDto.builder()
@@ -590,7 +587,7 @@ class AuthControllerIT {
                 doThrow(new RuntimeException("Temporary service error."))
                         .when(authService).login(loginDto);
 
-                when(userClient.getUserByEmail(any(String.class)))
+                when(userClient.lookupUser(any(UserLookupDto.class)))
                         .thenReturn(userInfoDto);
 
                 MvcResult result = mockMvc.perform(post(LOGIN_URL)
@@ -609,7 +606,7 @@ class AuthControllerIT {
         @Test
         public void login_user_should_return_503_when_user_service_get_exception() throws Exception {
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.lookupUser(any(UserLookupDto.class)))
                     .thenThrow(new RuntimeException("Something went wrong"));
 
             LoginDto loginDto = LoginDto.builder()
@@ -666,7 +663,7 @@ class AuthControllerIT {
 
             Cookie cookie = getCookie();
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.lookupUser(any(UserLookupDto.class)))
                     .thenReturn(userInfoDto);
 
             Thread.sleep(1000);
@@ -777,7 +774,7 @@ class AuthControllerIT {
                     .roles(Set.of(USER_ROLE))
                     .build();
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.lookupUser(any(UserLookupDto.class)))
                     .thenReturn(userInfoDto);
 
             LoginDto loginDto = LoginDto.builder()
@@ -832,7 +829,7 @@ class AuthControllerIT {
 
             Cookie cookie = getCookie();
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.lookupUser(any(UserLookupDto.class)))
                     .thenReturn(null);
 
             Thread.sleep(1000);
@@ -868,7 +865,7 @@ class AuthControllerIT {
                 doThrow(new RuntimeException("Temporary service error."))
                         .when(authService).refresh(any(String.class));
 
-                when(userClient.getUserByEmail(any(String.class)))
+                when(userClient.lookupUser(any(UserLookupDto.class)))
                         .thenReturn(userInfoDto);
 
                 Cookie cookie = getCookie();
@@ -895,7 +892,7 @@ class AuthControllerIT {
 
             Cookie cookie = getCookie();
 
-            when(userClient.getUserByEmail(any(String.class)))
+            when(userClient.lookupUser(any(UserLookupDto.class)))
                     .thenThrow(new RuntimeException("Something went wrong"));
 
             MvcResult result = mockMvc.perform(post(REFRESH_URL)
@@ -1191,7 +1188,7 @@ class AuthControllerIT {
                 doThrow(new RuntimeException("Temporary service error."))
                         .when(authService).getValidationDto(any(AuthUserDetails.class));
 
-                when(userClient.getUserByEmail(any(String.class)))
+                when(userClient.lookupUser(any(UserLookupDto.class)))
                         .thenReturn(userInfoDto);
 
                 MvcResult result = mockMvc.perform(get(VALIDATION_URL)

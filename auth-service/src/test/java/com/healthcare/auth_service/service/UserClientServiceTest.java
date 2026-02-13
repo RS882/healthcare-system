@@ -2,6 +2,7 @@ package com.healthcare.auth_service.service;
 
 import com.healthcare.auth_service.domain.AuthUserDetails;
 import com.healthcare.auth_service.domain.dto.UserAuthDto;
+import com.healthcare.auth_service.domain.dto.UserLookupDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.exception_handler.exception.ServiceUnavailableException;
 import com.healthcare.auth_service.service.feignClient.UserClient;
@@ -67,7 +68,7 @@ class UserClientServiceTest {
         @Test
         void positive_should_return_authUserDetails_when_active() {
 
-            when(userClient.getUserByEmail(EMAIL))
+            when(userClient.lookupUser(new UserLookupDto(EMAIL)))
                     .thenReturn(activeUser);
 
             AuthUserDetails result = service.getUserByEmail(EMAIL);
@@ -88,7 +89,7 @@ class UserClientServiceTest {
         @Test
         void negative_should_throw_when_inactive() {
 
-            when(userClient.getUserByEmail(EMAIL))
+            when(userClient.lookupUser(new UserLookupDto(EMAIL)))
                     .thenReturn(inactiveUser);
 
             assertThrows(AccessDeniedException.class, () -> service.getUserByEmail(EMAIL));
@@ -97,7 +98,7 @@ class UserClientServiceTest {
         @Test
         void negative_should_throw_UserNotFoundException_on_error() {
 
-            when(userClient.getUserByEmail(EMAIL))
+            when(userClient.lookupUser(new UserLookupDto(EMAIL)))
                     .thenThrow(new RuntimeException("Unexpected"));
 
             assertThrows(ServiceUnavailableException.class, () -> service.getUserByEmail(EMAIL));

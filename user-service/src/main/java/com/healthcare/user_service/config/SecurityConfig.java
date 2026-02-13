@@ -31,7 +31,7 @@ public class SecurityConfig {
                                 "/error"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, REGISTRATION_URL).permitAll()
-                        .requestMatchers(HttpMethod.GET, BY_EMAIL_URL).permitAll()
+                        .requestMatchers(HttpMethod.POST, LOOKUP_URL).permitAll()
                         .requestMatchers(HttpMethod.GET, BY_ID_URL).permitAll()
                         .anyRequest().authenticated()
                 )

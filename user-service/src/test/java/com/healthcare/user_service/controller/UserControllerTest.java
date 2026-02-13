@@ -6,6 +6,7 @@ import com.healthcare.user_service.exception_handler.dto.ErrorResponse;
 import com.healthcare.user_service.model.dto.RegistrationDto;
 import com.healthcare.user_service.model.dto.UserAuthDto;
 import com.healthcare.user_service.model.dto.UserDto;
+import com.healthcare.user_service.model.dto.UserLookupDto;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -22,6 +23,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+import static com.healthcare.user_service.controller.API.ApiPaths.LOOKUP_URL;
+import static com.healthcare.user_service.controller.API.ApiPaths.REGISTRATION_URL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -42,9 +45,6 @@ class UserControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
-
-    private final String REG_URL = "/api/v1/users/registration";
-    private final String USER_BY_EMAIL_URL = "/api/v1/users/email/{email}";
 
     private static final String TEST_USER_NAME = "Test user";
     private static final String TEST_USER_EMAIL = "testexample@gmail.com";
@@ -81,7 +81,7 @@ class UserControllerTest {
 
         String dtoJson = mapper.writeValueAsString(dto);
 
-        return mockMvc.perform(post(REG_URL)
+        return mockMvc.perform(post(REGISTRATION_URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(dtoJson))
                 .andExpect(status().isCreated())
@@ -89,11 +89,11 @@ class UserControllerTest {
     }
 
     @Nested
-    @DisplayName("POST " + REG_URL)
+    @DisplayName("POST " + REGISTRATION_URL)
     class RegUserTest {
 
         private void checkErrorResponseResultWithValidationErrors(MvcResult result, HttpStatus status) throws Exception {
-            UserControllerTest.this.checkErrorResponseResultWithValidationErrors(result, status, REG_URL);
+            UserControllerTest.this.checkErrorResponseResultWithValidationErrors(result, status, REGISTRATION_URL);
         }
 
         @Test
@@ -110,9 +110,9 @@ class UserControllerTest {
             assertThat(id).isInstanceOf(Long.class);
             assertEquals(email, responseDto.getEmail());
             assertEquals(TEST_USER_NAME, responseDto.getName());
-            Optional<Role> firstRole = responseDto.getRoles().stream().findFirst();
+            Optional<String> firstRole = responseDto.getRoles().stream().findFirst();
             assertTrue(firstRole.isPresent());
-            assertEquals(Role.ROLE_PATIENT, firstRole.get());
+            assertEquals(Role.ROLE_PATIENT.name().toLowerCase(), firstRole.get().toLowerCase());
             assertTrue(responseDto.isEnabled());
         }
 
@@ -123,7 +123,7 @@ class UserControllerTest {
 
             String dtoJson = mapper.writeValueAsString(dto);
 
-            MvcResult result = mockMvc.perform(post(REG_URL)
+            MvcResult result = mockMvc.perform(post(REGISTRATION_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(dtoJson))
                     .andExpect(status().isBadRequest())
@@ -194,16 +194,20 @@ class UserControllerTest {
     }
 
     @Nested
-    @DisplayName("GET " + USER_BY_EMAIL_URL)
+    @DisplayName("POST " + LOOKUP_URL)
     class UserByEmailTest {
 
         @Test
-        public void get_user_by_email_should_return_200() throws Exception {
+        public void get_user_auth_should_return_200() throws Exception {
             regTestUser();
 
-            MvcResult result = mockMvc.perform(get(USER_BY_EMAIL_URL, TEST_USER_EMAIL)
+            UserLookupDto dto = new UserLookupDto(TEST_USER_EMAIL);
+
+            String dtoJson = mapper.writeValueAsString(dto);
+
+            MvcResult result = mockMvc.perform(post(LOOKUP_URL)
                             .contentType(MediaType.APPLICATION_JSON)
-                    )
+                            .content(dtoJson))
                     .andExpect(status().isOk())
                     .andReturn();
 
@@ -236,8 +240,14 @@ class UserControllerTest {
         @Test
         public void get_user_by_email_should_return_400_when_email_is_wrong() throws Exception {
             regTestUser(TEST_USER_EMAIL + 1);
-            MvcResult result = mockMvc.perform(get(USER_BY_EMAIL_URL, "test")
-                            .contentType(MediaType.APPLICATION_JSON))
+
+            UserLookupDto dto = new UserLookupDto("test");
+
+            String dtoJson = mapper.writeValueAsString(dto);
+
+            MvcResult result = mockMvc.perform(post(LOOKUP_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(dtoJson))
                     .andExpect(status().isBadRequest())
                     .andReturn();
             String responseBody = result.getResponse().getContentAsString();
@@ -246,15 +256,20 @@ class UserControllerTest {
             assertNotNull(error.getMessage());
             assertEquals(error.getStatus(), status.value());
             assertEquals(error.getError(), status.getReasonPhrase());
-            assertEquals(error.getPath(), "/api/v1/users/email/test");
+            assertEquals(error.getPath(), LOOKUP_URL);
         }
 
         @Test
         public void get_user_by_email_should_return_404_user_not_found() throws Exception {
             regTestUser(TEST_USER_EMAIL + 2);
             String email = "exampleemail@email.com";
-            MvcResult result = mockMvc.perform(get(USER_BY_EMAIL_URL, email)
-                            .contentType(MediaType.APPLICATION_JSON))
+
+            UserLookupDto dto = new UserLookupDto(email);
+
+            String dtoJson = mapper.writeValueAsString(dto);
+            MvcResult result = mockMvc.perform(post(LOOKUP_URL)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(dtoJson))
                     .andExpect(status().isNotFound())
                     .andReturn();
             String responseBody = result.getResponse().getContentAsString();
@@ -263,10 +278,7 @@ class UserControllerTest {
             assertNotNull(error.getMessage());
             assertEquals(error.getStatus(), status.value());
             assertEquals(error.getError(), status.getReasonPhrase());
-            assertEquals(error.getPath(), "/api/v1/users/email/" + email);
+            assertEquals(error.getPath(), LOOKUP_URL);
         }
-
-
     }
-
 }
