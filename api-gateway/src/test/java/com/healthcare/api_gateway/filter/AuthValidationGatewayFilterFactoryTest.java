@@ -72,7 +72,7 @@ class AuthValidationGatewayFilterFactoryTest {
                 .setResponseCode(200)
                 .addHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .setBody("""
-                        {"userId":42,"roles":["ADMIN","USER"]}
+                        {"userId":42,"userRoles":["ADMIN","USER"]}
                         """));
 
         AuthValidationGatewayFilterFactory.Config cfg = new AuthValidationGatewayFilterFactory.Config();

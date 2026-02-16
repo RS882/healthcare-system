@@ -2,23 +2,26 @@ package com.healthcare.api_gateway.filter;
 
 import com.healthcare.api_gateway.config.properties.HeaderRequestIdProperties;
 import com.healthcare.api_gateway.service.interfaces.RequestIdReactiveService;
+import com.healthcare.api_gateway.utilite.ExchangeAttrs;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import static com.healthcare.api_gateway.filter.constant.AttrRequestId.ATTR_REQUEST_ID;
-import static com.healthcare.api_gateway.filter.constant.RequestIdContextKeys.REQUEST_ID;
+import static com.healthcare.api_gateway.filter.constant.AttrKeys.REQUEST_ID_ATTR_KEY;
+import static com.healthcare.api_gateway.filter.constant.RequestIdContextKeys.REQUEST_ID_CONTEXT_KEY_NAME;
+import static com.healthcare.api_gateway.utilite.GatewaySecurityHeaders.removeByNames;
+import static com.healthcare.api_gateway.utilite.GatewaySecurityHeaders.setTrusted;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
 
     private static final int ORDER = -1000;
@@ -30,7 +33,7 @@ public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
     public Mono<Void> filter(ServerWebExchange exchange,
                              GatewayFilterChain chain) {
 
-        String headerValue = exchange.getRequest().getHeaders().getFirst(props.name());
+        String headerValue = getCheckedHeaderValue(exchange.getRequest().getHeaders(), props.name());
 
         String requestId = requestIdService.resolveOrGenerate(headerValue);
 
@@ -39,52 +42,45 @@ public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
         return requestIdService.save(requestId)
                 .onErrorResume(e -> Mono.empty())
                 .then(chain.filter(mutatedExchange))
-                .contextWrite(ctx -> ctx.put(REQUEST_ID, requestId));
+                .contextWrite(ctx -> ctx.put(REQUEST_ID_CONTEXT_KEY_NAME, requestId));
     }
 
     private ServerWebExchange mutateExchangeRequest(ServerWebExchange exchange, String requestId) {
 
-        ServerHttpRequest mutatedRequest = mutateRequestHeaders(exchange, requestId);
+        ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
+                .headers(h -> {
+                    removeByNames(h, props.name());
+                    setTrusted(h, props.name(), requestId);
+                })
+                .build();
 
         ServerWebExchange mutatedExchange = exchange.mutate()
                 .request(mutatedRequest)
                 .build();
 
-        mutatedExchange.getAttributes().put(ATTR_REQUEST_ID, requestId);
+        ExchangeAttrs.put(mutatedExchange, REQUEST_ID_ATTR_KEY, requestId);
 
         return mutatedExchange;
-    }
-
-    private ServerHttpRequest mutateRequestHeaders(ServerWebExchange exchange, String requestId) {
-
-        Map<String, String> headers = new HashMap<>();
-        headers.put(props.name(), requestId);
-
-        return mutateRequestHeaders(exchange, headers);
-    }
-
-    private ServerHttpRequest mutateRequestHeaders(ServerWebExchange exchange, Map<String, String> headers) {
-
-        if (headers == null || headers.isEmpty()) {
-            return exchange.getRequest();
-        }
-
-        return exchange.getRequest()
-                .mutate()
-                .headers(httpHeaders -> {
-                    headers.forEach((key, value) -> {
-                        if (key != null && !key.isBlank() && value != null && !value.isBlank()) {
-                            httpHeaders.remove(key);
-                            httpHeaders.add(key, value);
-                        }
-                    });
-                })
-                .build();
     }
 
     @Override
     public int getOrder() {
         return ORDER;
+    }
+
+    private String getCheckedHeaderValue(HttpHeaders headers, String headerName) {
+        if (headerName == null || headerName.isBlank()) return null;
+        String headerValue = headers.getFirst(headerName);
+
+        headerValue = headerValue != null ? headerValue.trim() : null;
+        if (headerValue != null && headerValue.isBlank()) {
+            return null;
+        }
+        if (headerValue != null && headerValue.length() > 128) {
+            log.debug("Incoming {} header too long: {} chars. Ignored.", headerName, headerValue.length());
+            return null;
+        }
+        return headerValue;
     }
 }
 

@@ -2,9 +2,11 @@ package com.healthcare.api_gateway.filter;
 
 import com.healthcare.api_gateway.config.properties.AuthValidationProperties;
 import com.healthcare.api_gateway.config.properties.HeaderRequestIdProperties;
+import com.healthcare.api_gateway.utilite.ExchangeAttrs;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
+import org.springframework.cloud.gateway.filter.OrderedGatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -14,119 +16,160 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
+import static com.healthcare.api_gateway.filter.constant.AttrKeys.USER_ID_ATTR_KEY;
+import static com.healthcare.api_gateway.filter.constant.AttrKeys.USER_ROLES_ATTR_KEY;
+
+/**
+ * Calls auth-service validation endpoint. On success stores userId/userRoles in exchange attributes.
+ * Does NOT add X-User-* headers (that is responsibility of Signed User Context filter).
+ */
 @Component
 public class AuthValidationGatewayFilterFactory
         extends AbstractGatewayFilterFactory<AuthValidationGatewayFilterFactory.Config> {
 
-    private final WebClient.Builder webClientBuilder;
+    private static final int ORDER = -900;
 
-    private final AuthValidationProperties authValidationProps;
-
-    private final HeaderRequestIdProperties headerRequestIdProps;
+    private final WebClient client;
+    private final AuthValidationProperties authProps;
+    private final HeaderRequestIdProperties requestIdHeaderProps;
 
     public AuthValidationGatewayFilterFactory(WebClient.Builder webClientBuilder,
-                                              AuthValidationProperties authValidationProps,
-                                              HeaderRequestIdProperties headerRequestIdProps) {
+                                              AuthValidationProperties authProps,
+                                              HeaderRequestIdProperties requestIdHeaderProps) {
         super(Config.class);
-        this.webClientBuilder = webClientBuilder;
-        this.authValidationProps = authValidationProps;
-        this.headerRequestIdProps = headerRequestIdProps;
+        this.client = webClientBuilder.build();
+        this.authProps = authProps;
+        this.requestIdHeaderProps = requestIdHeaderProps;
     }
 
     @Getter
     @Setter
     public static class Config {
+        /**
+         * e.g. "/api/v1/auth/validate"
+         */
         private String validatePath;
+
+        /**
+         * GET or POST (default GET)
+         */
         private HttpMethod method;
+
+        /**
+         * Headers to forward to auth-service.
+         * Default: Authorization + RequestId header name.
+         */
         private List<String> forwardHeaders;
-        private String userIdHeader;
-        private String rolesHeader;
+
+        /**
+         * e.g. "<a href="http://auth-service:8081">...</a>" (or via LB if you prefer)
+         */
         private String authServiceUri;
     }
 
     @Override
     public GatewayFilter apply(Config config) {
 
-        if (config.getAuthServiceUri() == null) config.setAuthServiceUri(authValidationProps.authServiceUri());
-        if (config.getValidatePath() == null) config.setValidatePath(authValidationProps.validatePath());
-        if (config.getMethod() == null) config.setMethod(HttpMethod.GET);
+        // defaults (do not assume user filled config)
+        String authServiceUri = (config.getAuthServiceUri() == null || config.getAuthServiceUri().isBlank())
+                ? authProps.authServiceUri()
+                : config.getAuthServiceUri();
 
-        if (config.getForwardHeaders() == null || config.getForwardHeaders().isEmpty()) {
-            config.setForwardHeaders(List.of(HttpHeaders.AUTHORIZATION, headerRequestIdProps.name()));
-        }
-        config.setForwardHeaders(config.getForwardHeaders().stream()
-                .map(h -> h.toLowerCase(Locale.ROOT))
-                .toList());
+        String validatePath = (config.getValidatePath() == null || config.getValidatePath().isBlank())
+                ? authProps.validatePath()
+                : config.getValidatePath();
 
-        if (config.getUserIdHeader() == null) config.setUserIdHeader(authValidationProps.userIdHeader());
-        if (config.getRolesHeader() == null) config.setRolesHeader(authValidationProps.rolesHeader());
+        HttpMethod method = (config.getMethod() == null) ? HttpMethod.GET : config.getMethod();
 
-        return (exchange, chain) -> callAuth(exchange, config)
-                .flatMap(ctx -> {
-                    if (ctx == null) {
-                        return Mono.empty();
-                    }
+        Set<String> allowedLower = normalizeAllowedHeaders(
+                (config.getForwardHeaders() == null || config.getForwardHeaders().isEmpty())
+                        ? List.of(HttpHeaders.AUTHORIZATION, requestIdHeaderProps.name())
+                        : config.getForwardHeaders()
+        );
 
-                    String rolesCsv = (ctx.roles() == null) ? "" : String.join(",", ctx.roles());
+        final String fullUri = joinUri(authServiceUri, validatePath);
 
-                    var mutatedRequest = exchange.getRequest().mutate()
-                            .header(config.getUserIdHeader(), String.valueOf(ctx.userId()))
-                            .header(config.getRolesHeader(), rolesCsv)
-                            .build();
+        GatewayFilter filter = (exchange, chain) ->
+                callAuth(exchange, fullUri, method, allowedLower)
+                        .flatMap(ctx -> {
+                            // store structured data (no CSV)
+                            ExchangeAttrs.put(exchange, USER_ID_ATTR_KEY, ctx.userId());
+                            ExchangeAttrs.put(exchange, USER_ROLES_ATTR_KEY, ctx.userRoles());
+                            return chain.filter(exchange);
+                        });
+        // NOTE: if callAuth() completed the response (401/403/other error),
+        // it returns Mono.empty() and chain won't be executed.
 
-                    return chain.filter(exchange.mutate().request(mutatedRequest).build());
-                });
+        return new OrderedGatewayFilter(filter, ORDER);
     }
 
-    private Mono<AuthContext> callAuth(ServerWebExchange exchange, Config config) {
-        HttpHeaders incoming = exchange.getRequest().getHeaders();
-        WebClient client = webClientBuilder.build();
+    private Mono<AuthContext> callAuth(ServerWebExchange exchange,
+                                       String fullUri,
+                                       HttpMethod method,
+                                       Set<String> allowedLower) {
 
-        String fullAuthValidationUri = config.getAuthServiceUri() + config.getValidatePath();
+        HttpHeaders incoming = exchange.getRequest().getHeaders();
 
         WebClient.RequestHeadersSpec<?> spec =
-                (config.getMethod() == HttpMethod.POST)
-                        ? client.post().uri(fullAuthValidationUri)
-                        : client.get().uri(fullAuthValidationUri);
+                (method == HttpMethod.POST)
+                        ? client.post().uri(fullUri)
+                        : client.get().uri(fullUri);
 
         return spec
                 .accept(MediaType.APPLICATION_JSON)
-                .headers(out -> copySelectedHeaders(incoming, out, config.getForwardHeaders()))
+                .headers(out -> copySelectedHeaders(incoming, out, allowedLower))
                 .exchangeToMono(resp -> {
-                    int code = resp.statusCode().value();
-
-                    if (code == 401 || code == 403) {
+                    if (resp.statusCode().isError()) {
+                        // propagate status to client and stop filter chain
                         exchange.getResponse().setStatusCode(resp.statusCode());
                         return exchange.getResponse().setComplete().then(Mono.empty());
                     }
-
-                    if (code >= 400) {
-                        exchange.getResponse().setStatusCode(resp.statusCode());
-                        return exchange.getResponse().setComplete().then(Mono.empty());
-                    }
-
                     return resp.bodyToMono(AuthContext.class);
                 });
     }
 
-    private void copySelectedHeaders(HttpHeaders from, HttpHeaders to, List<String> allowedLowercase) {
-        if (allowedLowercase == null || allowedLowercase.isEmpty()) {
-            for (Map.Entry<String, List<String>> e : from.entrySet()) {
-                to.put(e.getKey(), e.getValue());
-            }
+    private void copySelectedHeaders(HttpHeaders from, HttpHeaders to, Set<String> allowedLower) {
+        if (allowedLower == null || allowedLower.isEmpty()) {
+            // Not recommended, but keep safe behavior:
+            // do NOT blindly forward all headers by default.
             return;
         }
 
         for (Map.Entry<String, List<String>> e : from.entrySet()) {
             String name = e.getKey();
-            if (allowedLowercase.contains(name.toLowerCase(Locale.ROOT))) {
-                to.put(name, e.getValue());
+            if (name == null) continue;
+
+            if (allowedLower.contains(name.toLowerCase(Locale.ROOT))) {
+                // copy values (defensive copy)
+                to.put(name, List.copyOf(e.getValue()));
             }
         }
     }
-}
 
+    private static Set<String> normalizeAllowedHeaders(List<String> headers) {
+        // LinkedHashSet keeps deterministic order (useful in tests/debug)
+        return headers.stream()
+                .filter(h -> h != null && !h.isBlank())
+                .map(h -> h.toLowerCase(Locale.ROOT))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    private static String joinUri(String base, String path) {
+        String b = (base == null) ? "" : base.trim();
+        String p = (path == null) ? "" : path.trim();
+
+        if (b.endsWith("/") && p.startsWith("/")) return b.substring(0, b.length() - 1) + p;
+        if (!b.endsWith("/") && !p.startsWith("/")) return b + "/" + p;
+        return b + p;
+    }
+
+    /**
+     * Expected response from auth-service validate endpoint.
+     * Replace with your actual DTO/record if you already have one.
+     */
+    public record AuthContext(Long userId, List<String> userRoles) {
+    }
+}

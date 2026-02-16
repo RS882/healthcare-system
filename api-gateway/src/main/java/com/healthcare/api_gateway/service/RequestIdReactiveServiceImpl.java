@@ -47,10 +47,13 @@ public class RequestIdReactiveServiceImpl implements RequestIdReactiveService {
             return Mono.just(false);
         }
 
+        Duration ttl = Optional.ofNullable(props.ttl()).filter(d -> !d.isNegative() && !d.isZero())
+                .orElse(Duration.ofSeconds(30));
+
         String redisKey = toRedisKey(requestId);
 
         return redis.opsForValue()
-                .setIfAbsent(redisKey, props.value(), props.ttl())
+                .setIfAbsent(redisKey, props.value(), ttl)
                 .doOnError(ex -> log.warn("Failed to save requestId {} to Redis", requestId, ex))
                 .onErrorReturn(false);
     }

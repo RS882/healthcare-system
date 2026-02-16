@@ -2,13 +2,11 @@ package com.healthcare.api_gateway.filter;
 
 import com.healthcare.api_gateway.config.properties.AuthValidationProperties;
 import com.healthcare.api_gateway.config.properties.HeaderRequestIdProperties;
-import com.healthcare.api_gateway.config.properties.RequestIdProperties;
 import com.healthcare.api_gateway.service.interfaces.RequestIdReactiveService;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
@@ -26,8 +24,8 @@ import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static com.healthcare.api_gateway.filter.constant.AttrRequestId.ATTR_REQUEST_ID;
-import static com.healthcare.api_gateway.filter.constant.RequestIdContextKeys.REQUEST_ID;
+import static com.healthcare.api_gateway.filter.constant.ContextAttrNames.ATTR_REQUEST_ID;
+import static com.healthcare.api_gateway.filter.constant.RequestIdContextKeys.REQUEST_ID_CONTEXT_KEY_NAME;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -39,7 +37,7 @@ import static com.healthcare.api_gateway.filter.constant.RequestIdContextKeys.RE
         "auth-validation.auth-service-uri=lb://auth-service",
         "auth-validation.validate-path=/api/v1/auth/validation",
         "auth-validation.user-id-header=X-User-Id",
-        "auth-validation.roles-header=X-User-Roles"
+        "auth-validation.userRoles-header=X-User-Roles"
 })
 @ActiveProfiles("test")
 @DisplayName("Request ID global filter integration tests: ")
@@ -137,7 +135,7 @@ class RequestIdGlobalFilterIT {
                 String attr = exchange.getAttribute(ATTR_REQUEST_ID);
 
                 return Mono.deferContextual(ctx -> {
-                    String ctxId = ctx.getOrDefault(REQUEST_ID, "n/a");
+                    String ctxId = ctx.getOrDefault(REQUEST_ID_CONTEXT_KEY_NAME, "n/a");
                     Map<String, String> result = new LinkedHashMap<>();
                     result.put("header", header);
                     result.put("attr", attr);
