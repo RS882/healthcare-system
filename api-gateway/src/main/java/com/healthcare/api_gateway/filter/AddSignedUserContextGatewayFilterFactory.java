@@ -1,7 +1,8 @@
 package com.healthcare.api_gateway.filter;
 
 import com.healthcare.api_gateway.config.properties.UserContextProperties;
-import com.healthcare.api_gateway.filter.signing.UserContextSigner;
+import com.healthcare.api_gateway.filter.signing.interfaces.UserContextSigner;
+import com.healthcare.api_gateway.security.SecurityGuard;
 import com.healthcare.api_gateway.utilite.ExchangeAttrs;
 import com.healthcare.api_gateway.utilite.GatewaySecurityHeaders;
 import lombok.Getter;
@@ -9,7 +10,6 @@ import lombok.Setter;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.OrderedGatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
@@ -54,12 +54,6 @@ public class AddSignedUserContextGatewayFilterFactory
          * If set to null or <= 0 -> properties value.
          */
         private Duration ttl;
-
-        /**
-         * If true: missing attrs => 401 (fail-closed). Default: true.
-         * If false: missing attrs => pass-through (fail-open).
-         */
-        private Boolean failClosed;
     }
 
     @Override
@@ -71,42 +65,40 @@ public class AddSignedUserContextGatewayFilterFactory
 
         final Duration ttl = normalizeTtl(config.getTtl(), contextProps.ttl());
 
-        final boolean failClosed = config.getFailClosed() == null || config.getFailClosed();
+        GatewayFilter delegate = (exchange, chain) ->
 
-        GatewayFilter delegate = (exchange, chain) -> {
-            Optional<UserAttrs> attrsOpt = readRequiredAttrs(exchange);
+                SecurityGuard.require(exchange, readRequiredAttrs(exchange))
+                        .flatMap(attrs -> {
 
-            if (attrsOpt.isEmpty()) {
-                if (!failClosed) {
-                    return chain.filter(exchange);
-                }
-                exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
-                return exchange.getResponse().setComplete();
-            }
+                            String signed = signer.sign(
+                                    attrs.userId(),
+                                    attrs.roles(),
+                                    attrs.requestId(),
+                                    ttl
+                            );
 
-            UserAttrs attrs = attrsOpt.get();
+                            ServerHttpRequest mutatedRequest =
+                                    exchange.getRequest().mutate()
+                                            .headers(h -> {
+                                                GatewaySecurityHeaders.removeByPrefixes(h, PROTECTED_PREFIXES);
+                                                GatewaySecurityHeaders.setTrusted(h, ctxHeader, signed);
+                                            })
+                                            .build();
 
-            String signed = signer.sign(attrs.userId(), attrs.roles(), attrs.requestId(), ttl);
+                            ServerWebExchange mutated =
+                                    exchange.mutate().request(mutatedRequest).build();
 
-            ServerHttpRequest mutatedRequest = exchange.getRequest().mutate()
-                    .headers(h -> {
-                        GatewaySecurityHeaders.removeByPrefixes(h, PROTECTED_PREFIXES);
-                        GatewaySecurityHeaders.setTrusted(h, ctxHeader, signed);
-                    })
-                    .build();
+                            return chain.filter(mutated);
+                        });
 
-            ServerWebExchange mutatedExchange = exchange.mutate()
-                    .request(mutatedRequest)
-                    .build();
-
-            return chain.filter(mutatedExchange);
-        };
 
         return new OrderedGatewayFilter(delegate, ORDER);
     }
 
     private static Duration normalizeTtl(Duration configured, Duration fallback) {
-        Duration base = (fallback == null) ? Duration.ofSeconds(30) : fallback;
+        Duration base = (fallback == null || fallback.isZero() || fallback.isNegative())
+                ? Duration.ofSeconds(30)
+                : fallback;
 
         if (configured == null) {
             return base;
@@ -135,7 +127,7 @@ public class AddSignedUserContextGatewayFilterFactory
         }
 
         return Optional.of(
-                UserAttrs.get(
+                UserAttrs.of(
                         String.valueOf(userId),
                         roles,
                         requestId
@@ -144,12 +136,15 @@ public class AddSignedUserContextGatewayFilterFactory
     }
 
     private record UserAttrs(
-                             String userId,
-                             List<String> roles,
-                             String requestId) {
-        static UserAttrs get(String userId, List<String> roles, String requestId) {
-            return new UserAttrs( userId, List.copyOf(roles), requestId);
+            String userId,
+            List<String> roles,
+            String requestId) {
+
+        static UserAttrs of(String userId, List<String> roles, String requestId) {
+            List<String> safeRoles = (roles == null) ? List.of() : List.copyOf(roles);
+            return new UserAttrs(userId, safeRoles, requestId);
         }
+
     }
 }
 
