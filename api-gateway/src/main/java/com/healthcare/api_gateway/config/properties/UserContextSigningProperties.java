@@ -13,8 +13,8 @@ import java.time.Duration;
 public record UserContextSigningProperties(
         @NotBlank String issuer,
         @NotBlank String keyId,
-        @NotBlank    String privateKeyPem,
-        @NotBlank  String privateKeyPath,
+        String privateKeyPem,
+        String privateKeyPath,
         @NotNull
         @DurationMin(seconds = 1)
         Duration defaultTtl

@@ -17,7 +17,6 @@ import java.util.List;
 
 @Slf4j
 @Component
-@AllArgsConstructor
 public class RsaJwsUserContextSigner implements UserContextSigner {
 
     private final UserContextSigningProperties props;
@@ -28,6 +27,12 @@ public class RsaJwsUserContextSigner implements UserContextSigner {
 
     public RsaJwsUserContextSigner(UserContextSigningProperties props, PrivateKey userContextPrivateKey) {
         this(props, userContextPrivateKey, Clock.systemUTC());
+    }
+
+    public RsaJwsUserContextSigner(UserContextSigningProperties props, PrivateKey privateKey, Clock clock) {
+        this.props = props;
+        this.privateKey = privateKey;
+        this.clock = clock;
     }
 
     @Override
