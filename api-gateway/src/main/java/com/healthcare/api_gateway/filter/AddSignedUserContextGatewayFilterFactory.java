@@ -7,6 +7,7 @@ import com.healthcare.api_gateway.utilite.ExchangeAttrs;
 import com.healthcare.api_gateway.utilite.GatewaySecurityHeaders;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.OrderedGatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
@@ -26,6 +27,10 @@ import static com.healthcare.api_gateway.filter.constant.ProtectedPrefixes.PROTE
  * Must be used only on secured routes (after AuthValidation filter).
  */
 @Component
+@ConditionalOnProperty(
+        name="gateway.user-context.enabled",
+        havingValue="true",
+        matchIfMissing = true)
 public class AddSignedUserContextGatewayFilterFactory
         extends AbstractGatewayFilterFactory<AddSignedUserContextGatewayFilterFactory.Config> {
 

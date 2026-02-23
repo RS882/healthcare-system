@@ -4,8 +4,9 @@ import com.healthcare.api_gateway.config.properties.UserContextSigningProperties
 import com.healthcare.api_gateway.filter.signing.interfaces.UserContextSigner;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.SignatureException;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
 import java.security.PrivateKey;
@@ -17,14 +18,20 @@ import java.util.List;
 
 @Slf4j
 @Component
+@ConditionalOnProperty(
+        name = "gateway.user-context.enabled",
+        havingValue = "true",
+        matchIfMissing = true
+)
 public class RsaJwsUserContextSigner implements UserContextSigner {
 
     private final UserContextSigningProperties props;
     private final PrivateKey privateKey;
     private final Clock clock;
 
-    private final String VERSION_OF_SIGN = "1.0";
+    private static final String VERSION_OF_SIGN = "1.0";
 
+    @Autowired
     public RsaJwsUserContextSigner(UserContextSigningProperties props, PrivateKey userContextPrivateKey) {
         this(props, userContextPrivateKey, Clock.systemUTC());
     }
