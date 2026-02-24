@@ -3,10 +3,7 @@ package com.healthcare.api_gateway.filter;
 import com.healthcare.api_gateway.config.properties.AuthValidationProperties;
 import com.healthcare.api_gateway.config.properties.HeaderRequestIdProperties;
 import com.healthcare.api_gateway.service.interfaces.RequestIdReactiveService;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.DisplayNameGenerator;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -29,6 +26,9 @@ import java.util.Map;
 
 import static com.healthcare.api_gateway.filter.constant.ContextAttrNames.ATTR_REQUEST_ID;
 import static com.healthcare.api_gateway.filter.constant.RequestIdContextKeys.REQUEST_ID_CONTEXT_KEY_NAME;
+import static com.healthcare.api_gateway.filter.support.TestDataFactory.contextDefaultValue;
+import static com.healthcare.api_gateway.filter.support.TestDataFactory.requestId;
+import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.*;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
@@ -51,36 +51,48 @@ import static com.healthcare.api_gateway.filter.constant.RequestIdContextKeys.RE
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class RequestIdGlobalFilterIT {
 
-    private static final String HEADER_NAME = "Test-X-Request-Id";
-
     @Autowired
     WebTestClient webTestClient;
+
+    private static String generatedRid = null;
+
+    private final String FIELD_HEADER="$.header";
+    private final String FIELD_ATTR="$.attr";
+    private final String FIELD_CTX="$.ctx";
+
+    @BeforeEach
+    void setUp() {
+        generatedRid = requestId();
+    }
 
     @Test
     void when_Header_Missing_should_Generate_And_Propagate_To_HeaderAttrAndContext() {
         webTestClient.get()
-                .uri("/test")
+                .uri(TEST_PATH)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.header").isEqualTo("generated-id")
-                .jsonPath("$.attr").isEqualTo("generated-id")
-                .jsonPath("$.ctx").isEqualTo("generated-id");
+                .jsonPath(FIELD_HEADER).isEqualTo(generatedRid)
+                .jsonPath(FIELD_ATTR).isEqualTo(generatedRid)
+                .jsonPath(FIELD_CTX).isEqualTo(generatedRid);
     }
 
     @Test
     void when_Header_Present_should_Reuse_And_Propagate_To_HeaderAttrAndContext() {
+
+        String clientRid = requestId();
+
         webTestClient.get()
-                .uri("/test")
-                .header(HEADER_NAME, "client-id")
+                .uri(TEST_PATH)
+                .header(HEADER_REQUEST_ID, clientRid)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
                 .expectBody()
-                .jsonPath("$.header").isEqualTo("client-id")
-                .jsonPath("$.attr").isEqualTo("client-id")
-                .jsonPath("$.ctx").isEqualTo("client-id");
+                .jsonPath(FIELD_HEADER).isEqualTo(clientRid)
+                .jsonPath(FIELD_ATTR).isEqualTo(clientRid)
+                .jsonPath(FIELD_CTX).isEqualTo(clientRid);
     }
 
     @SpringBootApplication
@@ -93,7 +105,7 @@ class RequestIdGlobalFilterIT {
         @Bean
         RouteLocator testRoutes(RouteLocatorBuilder builder) {
             return builder.routes()
-                    .route("test-route", r -> r.path("/test")
+                    .route("test-route", r -> r.path(TEST_PATH)
                             .uri("forward:/echo"))
                     .build();
         }
@@ -110,7 +122,7 @@ class RequestIdGlobalFilterIT {
                 @Override
                 public String resolveOrGenerate(String headerValue) {
                     if (headerValue == null || headerValue.isBlank()) {
-                        return "generated-id";
+                        return generatedRid;
                     }
                     return headerValue;
                 }
@@ -132,7 +144,7 @@ class RequestIdGlobalFilterIT {
 
                 @Override
                 public String toRedisKey(String requestId) {
-                    return "testPrefix:" + requestId;
+                    return REDIS_REQUEST_ID_PREFIX + requestId;
                 }
             };
         }
@@ -143,11 +155,11 @@ class RequestIdGlobalFilterIT {
             @GetMapping(value = "/echo", produces = MediaType.APPLICATION_JSON_VALUE)
             public Mono<Map<String, String>> echo(ServerWebExchange exchange) {
 
-                String header = exchange.getRequest().getHeaders().getFirst(HEADER_NAME);
+                String header = exchange.getRequest().getHeaders().getFirst(HEADER_REQUEST_ID);
                 String attr = exchange.getAttribute(ATTR_REQUEST_ID);
 
                 return Mono.deferContextual(ctx -> {
-                    String ctxId = ctx.getOrDefault(REQUEST_ID_CONTEXT_KEY_NAME, "n/a");
+                    String ctxId = ctx.getOrDefault(REQUEST_ID_CONTEXT_KEY_NAME, contextDefaultValue());
                     Map<String, String> result = new LinkedHashMap<>();
                     result.put("header", header);
                     result.put("attr", attr);

@@ -2,6 +2,7 @@ package com.healthcare.api_gateway.filter.support;
 
 
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 public final class TestDataFactory {
 
@@ -17,5 +18,21 @@ public final class TestDataFactory {
 
     public static String headerTooLong(int len) {
         return "a".repeat(len);
+    }
+
+    public static String contextDefaultValue() {
+        return "n/a";
+    }
+
+    public static String roleUser() {
+        return "ROLE_USER_TEST";
+    }
+
+    public static String roleAdmin() {
+        return "ROLE_ADMIN_TEST";
+    }
+
+    public static Long randomUserId() {
+        return ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
     }
 }

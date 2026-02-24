@@ -182,7 +182,7 @@ class RequestIdGlobalFilterTest {
 
             return Mono.deferContextual(ctx -> {
                 this.capturedRequestIdFromContext =
-                        ctx.getOrDefault(REQUEST_ID_CONTEXT_KEY_NAME, "n/a");
+                        ctx.getOrDefault(REQUEST_ID_CONTEXT_KEY_NAME, contextDefaultValue());
                 return Mono.empty();
             });
         }
