@@ -13,7 +13,7 @@ import reactor.test.StepVerifier;
 import static com.healthcare.api_gateway.filter.constant.AttrKeys.REQUEST_ID_ATTR_KEY;
 import static com.healthcare.api_gateway.filter.constant.RequestIdContextKeys.REQUEST_ID_CONTEXT_KEY_NAME;
 import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.HEADER_REQUEST_ID;
-import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.TEST_PATH;
+import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.TEST_URI;
 import static com.healthcare.api_gateway.filter.support.TestDataFactory.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
@@ -158,7 +158,7 @@ class RequestIdGlobalFilterTest {
     // ============================================================
 
     private static ServerWebExchange createExchange(String headerValue) {
-        MockServerHttpRequest.BaseBuilder<?> builder = MockServerHttpRequest.get(TEST_PATH);
+        MockServerHttpRequest.BaseBuilder<?> builder = MockServerHttpRequest.get(TEST_URI);
 
         if (headerValue != null) {
             builder.header(HEADER_REQUEST_ID, headerValue);

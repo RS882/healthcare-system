@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.healthcare.api_gateway.filter.constant.AttrKeys.USER_ID_ATTR_KEY;
 import static com.healthcare.api_gateway.filter.constant.AttrKeys.USER_ROLES_ATTR_KEY;
 import static com.healthcare.api_gateway.filter.support.TestDataFactory.*;
-import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.HEADER_REQUEST_ID;
+import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -40,9 +40,6 @@ class AuthValidationGatewayFilterFactoryTest {
 
     private AuthValidationProperties authProps;
     private HeaderRequestIdProperties requestIdProps;
-
-    private final String BEARER = "Bearer ";
-    final String MOCK_VALIDATION_URL = "/secure";
 
     @BeforeEach
     void setUp() {
@@ -97,7 +94,7 @@ class AuthValidationGatewayFilterFactoryTest {
         GatewayFilter filter = factory.apply(cfg);
 
         ServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.get(MOCK_VALIDATION_URL)
+                MockServerHttpRequest.get(AUTH_VALIDATION_URI)
                         .header(HttpHeaders.AUTHORIZATION, BEARER + BEARER_TOKEN)
                         .header(HEADER_REQUEST_ID, REQUEST_ID)
                         .header(NOT_ALLOWED_HEADER, "nope")
@@ -151,7 +148,7 @@ class AuthValidationGatewayFilterFactoryTest {
         GatewayFilter filter = factory.apply(new AuthValidationGatewayFilterFactory.Config()); // defaults
 
         ServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.get(MOCK_VALIDATION_URL)
+                MockServerHttpRequest.get(AUTH_VALIDATION_URI)
                         .header(HttpHeaders.AUTHORIZATION, BEARER + BEARER_BAD_TOKEN)
                         .header(HEADER_REQUEST_ID, requestId())
                         .build()
@@ -193,7 +190,7 @@ class AuthValidationGatewayFilterFactoryTest {
         GatewayFilter filter = factory.apply(new AuthValidationGatewayFilterFactory.Config()); // all null -> defaults
 
         ServerWebExchange exchange = MockServerWebExchange.from(
-                MockServerHttpRequest.get(MOCK_VALIDATION_URL)
+                MockServerHttpRequest.get(AUTH_VALIDATION_URI)
                         .header(HttpHeaders.AUTHORIZATION, BEARER + BEARER_TOKEN)
                         .header(HEADER_REQUEST_ID, REQUEST_ID)
                         .build()

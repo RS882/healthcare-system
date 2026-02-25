@@ -37,7 +37,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static com.healthcare.api_gateway.filter.constant.AttrKeys.USER_ID_ATTR_KEY;
 import static com.healthcare.api_gateway.filter.constant.AttrKeys.USER_ROLES_ATTR_KEY;
 import static com.healthcare.api_gateway.filter.support.TestDataFactory.*;
-import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.HEADER_REQUEST_ID;
+import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.mockito.ArgumentMatchers.any;
@@ -49,7 +49,8 @@ import static org.mockito.Mockito.when;
 )
 @ActiveProfiles("test")
 @TestPropertySource(properties = {
-        "header-request-id.name=X-Request-Id",
+        "header-request-id.name=" + HEADER_REQUEST_ID,
+
         "auth-validation.validate-path=/validate",
         "gateway.user-context.enabled=false"
 })
@@ -65,9 +66,6 @@ class AuthValidationGatewayFilterFactoryIT {
 
     static DisposableServer authServer;
     static final AtomicReference<HttpHeaders> lastAuthHeaders = new AtomicReference<>();
-
-    private static final String MOCK_VALIDATION_URL = "/secured";
-    private static final String BEARER = "Bearer ";
 
     private static final String NOT_ALLOWED_HEADER = "X-Not-Allowed";
 
@@ -147,7 +145,7 @@ class AuthValidationGatewayFilterFactoryIT {
         final String FIELD_ROLES = "$.roles";
 
         webTestClient.get()
-                .uri(MOCK_VALIDATION_URL)
+                .uri(AUTH_VALIDATION_URI)
                 .header(HttpHeaders.AUTHORIZATION, BEARER + BEARER_OK_TOKEN)
                 .header(HEADER_REQUEST_ID, REQUEST_ID)
                 .header(NOT_ALLOWED_HEADER, "nope")
@@ -170,7 +168,7 @@ class AuthValidationGatewayFilterFactoryIT {
         final String REQUEST_ID = requestId();
 
         webTestClient.get()
-                .uri(MOCK_VALIDATION_URL)
+                .uri(AUTH_VALIDATION_URI)
                 .header(HttpHeaders.AUTHORIZATION, BEARER + BEARER_BAD_TOKEN)
                 .header(HEADER_REQUEST_ID, REQUEST_ID)
                 .exchange()
@@ -193,7 +191,7 @@ class AuthValidationGatewayFilterFactoryIT {
             cfg.setForwardHeaders(List.of(HttpHeaders.AUTHORIZATION, HEADER_REQUEST_ID));
 
             return builder.routes()
-                    .route("secured", r -> r.path(MOCK_VALIDATION_URL)
+                    .route("secured", r -> r.path(AUTH_VALIDATION_URI)
                             .filters(f -> f.filter(authFactory.apply(cfg)))
                             .uri("forward:/echo"))
                     .build();

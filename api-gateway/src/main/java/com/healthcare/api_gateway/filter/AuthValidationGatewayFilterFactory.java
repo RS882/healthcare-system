@@ -5,6 +5,7 @@ import com.healthcare.api_gateway.config.properties.HeaderRequestIdProperties;
 import com.healthcare.api_gateway.utilite.ExchangeAttrs;
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.OrderedGatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
@@ -27,6 +28,10 @@ import static com.healthcare.api_gateway.filter.constant.AttrKeys.USER_ROLES_ATT
  * Does NOT add X-User-* headers (that is responsibility of Signed User Context filter).
  */
 @Component
+@ConditionalOnProperty(
+        name="gateway.auth-validation.enabled",
+        havingValue="true",
+        matchIfMissing=true)
 public class AuthValidationGatewayFilterFactory
         extends AbstractGatewayFilterFactory<AuthValidationGatewayFilterFactory.Config> {
 

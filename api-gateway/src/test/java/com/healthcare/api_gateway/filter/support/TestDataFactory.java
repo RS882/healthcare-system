@@ -35,4 +35,8 @@ public final class TestDataFactory {
     public static Long randomUserId() {
         return ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
     }
+
+    public static String singedJws() {
+        return UUID.randomUUID().toString();
+    }
 }

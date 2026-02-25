@@ -37,12 +37,12 @@ import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.*;
 @TestPropertySource(properties = {
         "gateway.user-context.enabled=false",
 
-        "header-request-id.name=Test-X-Request-Id",
+        "header-request-id.name=" + HEADER_REQUEST_ID,
 
         "auth-validation.auth-service-uri=lb://auth-service",
         "auth-validation.validate-path=/api/v1/auth/validation",
 
-        "request-id.prefix=testPrefix:",
+        "request-id.prefix="+REDIS_REQUEST_ID_PREFIX,
         "request-id.ttl=PT30S",
         "request-id.value=test"
 })
@@ -68,7 +68,7 @@ class RequestIdGlobalFilterIT {
     @Test
     void when_Header_Missing_should_Generate_And_Propagate_To_HeaderAttrAndContext() {
         webTestClient.get()
-                .uri(TEST_PATH)
+                .uri(TEST_URI)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
                 .expectStatus().isOk()
@@ -84,7 +84,7 @@ class RequestIdGlobalFilterIT {
         String clientRid = requestId();
 
         webTestClient.get()
-                .uri(TEST_PATH)
+                .uri(TEST_URI)
                 .header(HEADER_REQUEST_ID, clientRid)
                 .accept(MediaType.APPLICATION_JSON)
                 .exchange()
@@ -105,7 +105,7 @@ class RequestIdGlobalFilterIT {
         @Bean
         RouteLocator testRoutes(RouteLocatorBuilder builder) {
             return builder.routes()
-                    .route("test-route", r -> r.path(TEST_PATH)
+                    .route("test-route", r -> r.path(TEST_URI)
                             .uri("forward:/echo"))
                     .build();
         }

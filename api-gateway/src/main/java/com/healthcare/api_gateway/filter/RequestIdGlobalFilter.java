@@ -5,6 +5,7 @@ import com.healthcare.api_gateway.service.interfaces.RequestIdReactiveService;
 import com.healthcare.api_gateway.utilite.ExchangeAttrs;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -22,6 +23,10 @@ import static com.healthcare.api_gateway.utilite.GatewaySecurityHeaders.setTrust
 @Component
 @RequiredArgsConstructor
 @Slf4j
+@ConditionalOnProperty(
+        name="gateway.request-id.enabled",
+        havingValue="true",
+        matchIfMissing=true)
 public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
 
     private static final int ORDER = -1000;
