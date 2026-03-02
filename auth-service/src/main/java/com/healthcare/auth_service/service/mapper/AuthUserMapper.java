@@ -12,6 +12,9 @@ import java.util.stream.Collectors;
 
 public class AuthUserMapper {
 
+    private AuthUserMapper() {
+    }
+
     public static AuthUserDetails toAuthUser(UserAuthDto dto) {
 
         List<SimpleGrantedAuthority> authorities = dto.getRoles().stream()

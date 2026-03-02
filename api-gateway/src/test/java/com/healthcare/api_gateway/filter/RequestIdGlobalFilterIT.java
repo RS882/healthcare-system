@@ -26,9 +26,9 @@ import java.util.Map;
 
 import static com.healthcare.api_gateway.filter.constant.ContextAttrNames.ATTR_REQUEST_ID;
 import static com.healthcare.api_gateway.filter.constant.RequestIdContextKeys.REQUEST_ID_CONTEXT_KEY_NAME;
-import static com.healthcare.api_gateway.filter.support.TestDataFactory.contextDefaultValue;
-import static com.healthcare.api_gateway.filter.support.TestDataFactory.requestId;
-import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.*;
+import static com.healthcare.api_gateway.support.TestDataFactory.contextDefaultValue;
+import static com.healthcare.api_gateway.support.TestDataFactory.requestId;
+import static com.healthcare.api_gateway.support.TestGatewayConstants.*;
 
 @SpringBootTest(
         webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,

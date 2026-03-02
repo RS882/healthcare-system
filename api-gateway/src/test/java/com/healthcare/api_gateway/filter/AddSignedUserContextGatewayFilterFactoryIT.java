@@ -31,9 +31,9 @@ import java.util.List;
 import java.util.Map;
 
 import static com.healthcare.api_gateway.filter.constant.AttrKeys.*;
-import static com.healthcare.api_gateway.filter.support.TestDataFactory.*;
-import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.HEADER_USER_CONTEXT;
-import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.TEST_URI;
+import static com.healthcare.api_gateway.support.TestDataFactory.*;
+import static com.healthcare.api_gateway.support.TestGatewayConstants.HEADER_USER_CONTEXT;
+import static com.healthcare.api_gateway.support.TestGatewayConstants.TEST_URI;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;

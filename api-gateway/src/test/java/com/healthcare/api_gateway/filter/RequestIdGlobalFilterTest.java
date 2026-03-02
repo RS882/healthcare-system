@@ -12,9 +12,9 @@ import reactor.test.StepVerifier;
 
 import static com.healthcare.api_gateway.filter.constant.AttrKeys.REQUEST_ID_ATTR_KEY;
 import static com.healthcare.api_gateway.filter.constant.RequestIdContextKeys.REQUEST_ID_CONTEXT_KEY_NAME;
-import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.HEADER_REQUEST_ID;
-import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.TEST_URI;
-import static com.healthcare.api_gateway.filter.support.TestDataFactory.*;
+import static com.healthcare.api_gateway.support.TestDataFactory.*;
+import static com.healthcare.api_gateway.support.TestGatewayConstants.HEADER_REQUEST_ID;
+import static com.healthcare.api_gateway.support.TestGatewayConstants.TEST_URI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 

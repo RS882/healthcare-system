@@ -26,8 +26,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.healthcare.api_gateway.filter.constant.AttrKeys.USER_ID_ATTR_KEY;
 import static com.healthcare.api_gateway.filter.constant.AttrKeys.USER_ROLES_ATTR_KEY;
-import static com.healthcare.api_gateway.filter.support.TestDataFactory.*;
-import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.*;
+import static com.healthcare.api_gateway.support.TestDataFactory.*;
+import static com.healthcare.api_gateway.support.TestGatewayConstants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;

@@ -13,6 +13,9 @@ import java.util.function.Function;
 @Slf4j
 public class TokenUtilities {
 
+    private TokenUtilities() {
+    }
+
     public static String extractJwtFromRequest(HttpServletRequest request) {
         return extractJwtFromHeaders(
                 Collections.list(request.getHeaderNames()),

@@ -19,9 +19,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static com.healthcare.api_gateway.filter.constant.AttrKeys.*;
-import static com.healthcare.api_gateway.filter.support.TestDataFactory.*;
-import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.HEADER_USER_CONTEXT;
-import static com.healthcare.api_gateway.filter.support.TestGatewayConstants.TEST_URI;
+import static com.healthcare.api_gateway.support.TestDataFactory.*;
+import static com.healthcare.api_gateway.support.TestGatewayConstants.HEADER_USER_CONTEXT;
+import static com.healthcare.api_gateway.support.TestGatewayConstants.TEST_URI;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;

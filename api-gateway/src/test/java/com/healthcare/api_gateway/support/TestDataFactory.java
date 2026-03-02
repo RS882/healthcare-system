@@ -1,4 +1,4 @@
-package com.healthcare.api_gateway.filter.support;
+package com.healthcare.api_gateway.support;
 
 
 import java.util.UUID;
