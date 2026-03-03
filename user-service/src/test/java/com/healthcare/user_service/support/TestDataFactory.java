@@ -1,0 +1,54 @@
+package com.healthcare.user_service.support;
+
+
+import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+
+public final class TestDataFactory {
+
+    private TestDataFactory() {}
+
+    public static UUID requestId() {
+        return UUID.randomUUID();
+    }
+
+    public static String userName() {
+        return "Test user";
+    }
+
+    public static String userEmail() {
+        return "testexample@gmail.com";
+    }
+
+    public static String userPassword() {
+        return "136Jkn!kPu5%";
+    }
+
+    public static String requestIdWithSpaces() {
+        return "  " + requestId() + "  ";
+    }
+
+    public static String headerTooLong(int len) {
+        return "a".repeat(len);
+    }
+
+    public static String contextDefaultValue() {
+        return "n/a";
+    }
+
+    public static String roleUser() {
+        return "ROLE_USER_TEST";
+    }
+
+    public static String roleAdmin() {
+        return "ROLE_ADMIN_TEST";
+    }
+
+    public static Long randomUserId() {
+        return ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
+    }
+
+    public static String singedJws() {
+        return UUID.randomUUID().toString();
+    }
+}

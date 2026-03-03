@@ -80,6 +80,8 @@ public interface UserAPI {
             @org.springframework.web.bind.annotation.RequestBody
             RegistrationDto dto);
 
+    //=====================================
+
     @Operation(summary = "Get user for authorization",
             description = "This method get user information for authorization from UserLookupDto , returns UserAuthDto " +
                     "with full user information for authorization.",

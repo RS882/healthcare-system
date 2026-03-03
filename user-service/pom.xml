@@ -107,6 +107,12 @@
             <version>6.6.13.Final</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+            <version>3.4.4</version>
+        </dependency>
+
     </dependencies>
     <dependencyManagement>
         <dependencies>

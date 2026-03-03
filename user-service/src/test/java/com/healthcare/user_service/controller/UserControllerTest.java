@@ -1,12 +1,14 @@
 package com.healthcare.user_service.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthcare.user_service.config.properties.HeaderRequestIdProperties;
 import com.healthcare.user_service.constant.Role;
 import com.healthcare.user_service.exception_handler.dto.ErrorResponse;
 import com.healthcare.user_service.model.dto.RegistrationDto;
 import com.healthcare.user_service.model.dto.UserAuthDto;
 import com.healthcare.user_service.model.dto.UserDto;
 import com.healthcare.user_service.model.dto.UserLookupDto;
+import com.healthcare.user_service.service.interfacies.RequestIdService;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -21,10 +23,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Stream;
 
 import static com.healthcare.user_service.controller.API.ApiPaths.LOOKUP_URL;
 import static com.healthcare.user_service.controller.API.ApiPaths.REGISTRATION_URL;
+import static com.healthcare.user_service.support.TestDataFactory.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -46,9 +50,15 @@ class UserControllerTest {
     @Autowired
     private MockMvc mockMvc;
 
-    private static final String TEST_USER_NAME = "Test user";
-    private static final String TEST_USER_EMAIL = "testexample@gmail.com";
-    private static final String TEST_USER_PASSWORD = "136Jkn!kPu5%";
+    @Autowired
+    private HeaderRequestIdProperties headerRequestIdProps;
+
+    @Autowired
+    private RequestIdService requestIdService;
+
+    private static final String TEST_USER_NAME = userName();
+    private static final String TEST_USER_EMAIL = userEmail();
+    private static final String TEST_USER_PASSWORD = userPassword();
 
     private ErrorResponse checkErrorResponseResultWithoutCheckingValidationErrors(MvcResult result, HttpStatus status, String url) throws Exception {
         String responseBody = result.getResponse().getContentAsString();
@@ -59,11 +69,6 @@ class UserControllerTest {
         assertEquals(error.getPath(), url);
 
         return error;
-    }
-
-    private void checkErrorResponseResult(MvcResult result, HttpStatus status, String url) throws Exception {
-        ErrorResponse error = checkErrorResponseResultWithoutCheckingValidationErrors(result, status, url);
-        assertNull(error.getValidationErrors());
     }
 
     private void checkErrorResponseResultWithValidationErrors(MvcResult result, HttpStatus status, String url) throws Exception {
@@ -81,8 +86,11 @@ class UserControllerTest {
 
         String dtoJson = mapper.writeValueAsString(dto);
 
+        UUID requestId = requestIdService.getRequestId();
+
         return mockMvc.perform(post(REGISTRATION_URL)
                         .contentType(MediaType.APPLICATION_JSON)
+                        .header(headerRequestIdProps.name(), requestId)
                         .content(dtoJson))
                 .andExpect(status().isCreated())
                 .andReturn();
@@ -123,8 +131,11 @@ class UserControllerTest {
 
             String dtoJson = mapper.writeValueAsString(dto);
 
+            UUID requestId = requestIdService.getRequestId();
+
             MvcResult result = mockMvc.perform(post(REGISTRATION_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header(headerRequestIdProps.name(), requestId)
                             .content(dtoJson))
                     .andExpect(status().isBadRequest())
                     .andReturn();
@@ -205,8 +216,11 @@ class UserControllerTest {
 
             String dtoJson = mapper.writeValueAsString(dto);
 
+            UUID requestId = requestIdService.getRequestId();
+
             MvcResult result = mockMvc.perform(post(LOOKUP_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                                    .header(headerRequestIdProps.name(), requestId)
                             .content(dtoJson))
                     .andExpect(status().isOk())
                     .andReturn();
@@ -244,9 +258,11 @@ class UserControllerTest {
             UserLookupDto dto = new UserLookupDto("test");
 
             String dtoJson = mapper.writeValueAsString(dto);
+            UUID requestId = requestIdService.getRequestId();
 
             MvcResult result = mockMvc.perform(post(LOOKUP_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header(headerRequestIdProps.name(), requestId)
                             .content(dtoJson))
                     .andExpect(status().isBadRequest())
                     .andReturn();
@@ -267,8 +283,11 @@ class UserControllerTest {
             UserLookupDto dto = new UserLookupDto(email);
 
             String dtoJson = mapper.writeValueAsString(dto);
+            UUID requestId = requestIdService.getRequestId();
+
             MvcResult result = mockMvc.perform(post(LOOKUP_URL)
                             .contentType(MediaType.APPLICATION_JSON)
+                            .header(headerRequestIdProps.name(), requestId)
                             .content(dtoJson))
                     .andExpect(status().isNotFound())
                     .andReturn();

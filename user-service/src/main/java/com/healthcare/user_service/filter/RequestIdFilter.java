@@ -1,8 +1,9 @@
-package com.healthcare.auth_service.filter;
+package com.healthcare.user_service.filter;
 
-import com.healthcare.auth_service.config.properties.HeaderRequestIdProperties;
-import com.healthcare.auth_service.exception_handler.exception.RequestIdAuthenticationException;
-import com.healthcare.auth_service.service.interfacies.RequestIdService;
+
+import com.healthcare.user_service.config.properties.HeaderRequestIdProperties;
+import com.healthcare.user_service.exception_handler.exception.RequestIdAuthenticationException;
+import com.healthcare.user_service.service.interfacies.RequestIdService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
