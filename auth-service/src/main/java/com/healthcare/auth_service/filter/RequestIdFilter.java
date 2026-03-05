@@ -31,14 +31,14 @@ public class RequestIdFilter extends OncePerRequestFilter {
         if (requestId == null || requestId.isBlank()) {
             throw new RequestIdAuthenticationException(
                     HttpStatus.BAD_REQUEST,
-                    "Header X-Request-Id is required"
+                    "Header " + props.name() + " is required"
             );
         }
 
         if (!requestIdService.isRequestIdValid(requestId)) {
             throw new RequestIdAuthenticationException(
                     HttpStatus.BAD_REQUEST,
-                    "Header X-Request-Id must be a valid UUID"
+                    "Header " + props.name() + " must be a valid UUID"
             );
         }
         filterChain.doFilter(request, response);

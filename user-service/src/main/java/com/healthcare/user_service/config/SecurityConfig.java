@@ -1,8 +1,7 @@
 package com.healthcare.user_service.config;
 
-import com.healthcare.user_service.config.configs_components.CustomAccessDeniedHandler;
-import com.healthcare.user_service.config.configs_components.CustomAuthenticationEntryPoint;
 import com.healthcare.user_service.filter.RequestIdFilter;
+import com.healthcare.user_service.filter.UserContextFilter;
 import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,8 +20,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 
     private final RequestIdFilter requestIdFilter;
-    private final CustomAccessDeniedHandler customAccessDeniedHandler;
-    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
+    private final UserContextFilter userContextFilter;
 
     @Bean
     public SecurityFilterChain configureAuth(HttpSecurity http) throws Exception {
@@ -47,10 +45,7 @@ public class SecurityConfig {
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class)
-                .exceptionHandling(ex -> ex
-                        .authenticationEntryPoint(customAuthenticationEntryPoint)
-                        .accessDeniedHandler(customAccessDeniedHandler)
-                )
+                .addFilterAfter(userContextFilter, RequestIdFilter.class)
                 .build();
     }
 }
