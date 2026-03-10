@@ -1,8 +1,10 @@
 package com.healthcare.user_service.config;
 
+import com.healthcare.user_service.filter.AuthFilter;
 import com.healthcare.user_service.filter.RequestIdFilter;
 import com.healthcare.user_service.filter.UserContextFilter;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -20,13 +22,16 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 
     private final RequestIdFilter requestIdFilter;
-    private final UserContextFilter userContextFilter;
+    private final ObjectProvider<UserContextFilter> userContextFilterProvider;
+    private final ObjectProvider<AuthFilter> authFilterProvider;
 
     @Bean
     public SecurityFilterChain configureAuth(HttpSecurity http) throws Exception {
-        return http
+        http
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(withDefaults())
+                .formLogin(AbstractHttpConfigurer::disable)
+                .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(s ->
                         s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
@@ -40,12 +45,24 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, REGISTRATION_URL).permitAll()
                         .requestMatchers(HttpMethod.POST, LOOKUP_URL).permitAll()
-                        .requestMatchers(HttpMethod.GET, BY_ID_URL).permitAll()
+                        .requestMatchers(HttpMethod.GET, BY_ID_URL).authenticated()
                         .anyRequest().authenticated()
                 )
-                .httpBasic(AbstractHttpConfigurer::disable)
-                .addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class)
-                .addFilterAfter(userContextFilter, RequestIdFilter.class)
-                .build();
+                .addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class);
+
+        UserContextFilter userContextFilter = userContextFilterProvider.getIfAvailable();
+        if (userContextFilter != null) {
+            http.addFilterAfter(userContextFilter, RequestIdFilter.class);
+        }
+
+        AuthFilter authFilter = authFilterProvider.getIfAvailable();
+        if (authFilter != null) {
+            if (userContextFilter != null) {
+                http.addFilterAfter(authFilter, UserContextFilter.class);
+            } else {
+                http.addFilterAfter(authFilter, RequestIdFilter.class);
+            }
+        }
+        return http.build();
     }
 }

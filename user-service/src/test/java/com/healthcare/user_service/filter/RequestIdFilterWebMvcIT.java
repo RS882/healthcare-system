@@ -55,7 +55,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestPropertySource(properties = {
         "header-request-id.name=" + HEADER_REQUEST_ID,
         "spring.cloud.config.enabled=false",
-        "user-context-filter.enabled=false"
+        "user-context-filter.enabled=false",
+        "auth-filter.enabled=false"
 })
 class RequestIdFilterWebMvcIT {
 

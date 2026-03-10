@@ -7,6 +7,7 @@ import com.healthcare.user_service.model.User;
 import com.healthcare.user_service.model.UserRole;
 import com.healthcare.user_service.model.dto.RegistrationDto;
 import com.healthcare.user_service.model.dto.UserAuthDto;
+import com.healthcare.user_service.model.dto.UserAuthInfoDto;
 import com.healthcare.user_service.model.dto.UserDto;
 import com.healthcare.user_service.repository.UserRepository;
 import com.healthcare.user_service.service.interfacies.UserService;
@@ -38,6 +39,22 @@ public class UserServiceImpl implements UserService {
     public UserDto registration(RegistrationDto dto) {
         User user = repository.saveAndFlush(getUser(dto));
         return getUserDto(user);
+    }
+
+    @Override
+    public UserAuthInfoDto getUserAuthInfoDtoById(Long userId) {
+
+        if (userId == null || userId <= 0) {
+            return null;
+        }
+
+        Set<Role> roles = repository.findRolesByUserId(userId);
+
+        if (roles == null || roles.isEmpty()) {
+            return null;
+        }
+
+        return new UserAuthInfoDto(userId, roles);
     }
 
     private User getUser(RegistrationDto dto) {

@@ -2,7 +2,7 @@ package com.healthcare.user_service.filter;
 
 
 import com.healthcare.user_service.config.properties.HeaderRequestIdProperties;
-import com.healthcare.user_service.exception_handler.exception.RequestIdAuthenticationException;
+import com.healthcare.user_service.exception_handler.exception.RequestIdException;
 import com.healthcare.user_service.service.interfacies.RequestIdService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -41,28 +41,26 @@ public class RequestIdFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
-try {
-
-
-        String requestId = request.getHeader(props.name());
-        if (!StringUtils.hasText(requestId)) {
-            throw new RequestIdAuthenticationException(
-                    HttpStatus.BAD_REQUEST,
-                    "Header " + props.name() + " is required"
-            );
+        try {
+            String requestId = request.getHeader(props.name());
+            if (!StringUtils.hasText(requestId)) {
+                throw new RequestIdException(
+                        HttpStatus.BAD_REQUEST,
+                        "Header " + props.name() + " is required"
+                );
+            }
+            requestId = requestId.trim();
+            if (!requestIdService.isRequestIdValid(requestId)) {
+                throw new RequestIdException(
+                        HttpStatus.BAD_REQUEST,
+                        "Header " + props.name() + " must be a valid UUID"
+                );
+            }
+            request.setAttribute(ATTR_REQUEST_ID, requestId);
+            filterChain.doFilter(request, response);
+        } catch (RequestIdException ex) {
+            handlerExceptionResolver.resolveException(request, response, null, ex);
         }
-
-        if (!requestIdService.isRequestIdValid(requestId)) {
-            throw new RequestIdAuthenticationException(
-                    HttpStatus.BAD_REQUEST,
-                    "Header " + props.name() + " must be a valid UUID"
-            );
-        }
-        request.setAttribute(ATTR_REQUEST_ID, requestId);
-        filterChain.doFilter(request, response);
-} catch (RequestIdAuthenticationException ex) {
-    handlerExceptionResolver.resolveException(request, response, null, ex);
-}
     }
 
     @Override

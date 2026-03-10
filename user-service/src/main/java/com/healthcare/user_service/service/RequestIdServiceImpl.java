@@ -7,6 +7,7 @@ import com.healthcare.user_service.service.interfacies.RequestIdService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.UUID;
 
@@ -38,11 +39,11 @@ public class RequestIdServiceImpl implements RequestIdService {
 
     @Override
     public boolean isRequestIdValid(String id) {
-        if (id == null || id.isBlank()) {
+        if (!StringUtils.hasText(id)) {
             return false;
         }
         try {
-            UUID uuid = UUID.fromString(id);
+            UUID uuid = UUID.fromString(id.trim());
             Boolean exists = redis.hasKey(toRedisKey(uuid));
             return Boolean.TRUE.equals(exists);
         } catch (Exception e) {

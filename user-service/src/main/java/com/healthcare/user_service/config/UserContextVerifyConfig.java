@@ -3,6 +3,7 @@ package com.healthcare.user_service.config;
 
 import com.healthcare.user_service.config.properties.UserContextVerifyProperties;
 import com.healthcare.user_service.filter.security.PemPublicKeys;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -11,6 +12,11 @@ import java.nio.file.Path;
 import java.security.interfaces.RSAPublicKey;
 
 @Configuration
+@ConditionalOnProperty(
+        name = "user-context-filter.enabled",
+        havingValue = "true",
+        matchIfMissing = true
+)
 public class UserContextVerifyConfig {
 
     @Bean

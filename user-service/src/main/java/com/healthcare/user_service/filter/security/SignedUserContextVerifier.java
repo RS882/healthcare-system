@@ -7,12 +7,18 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import lombok.AllArgsConstructor;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.security.interfaces.RSAPublicKey;
 
 @Service
 @AllArgsConstructor
+@ConditionalOnProperty(
+        name = "user-context-filter.enabled",
+        havingValue = "true",
+        matchIfMissing = true
+)
 public class SignedUserContextVerifier implements UserContextVerifier {
 
     private final UserContextVerifyProperties props;
