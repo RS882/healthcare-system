@@ -43,7 +43,7 @@ public class RequestIdServiceImpl implements RequestIdService {
             return false;
         }
         try {
-            UUID uuid = UUID.fromString(id.trim());
+            UUID uuid = UUID.fromString(id.strip());
             Boolean exists = redis.hasKey(toRedisKey(uuid));
             return Boolean.TRUE.equals(exists);
         } catch (Exception e) {

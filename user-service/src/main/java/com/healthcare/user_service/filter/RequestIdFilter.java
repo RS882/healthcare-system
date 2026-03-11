@@ -49,7 +49,7 @@ public class RequestIdFilter extends OncePerRequestFilter {
                         "Header " + props.name() + " is required"
                 );
             }
-            requestId = requestId.trim();
+            requestId = requestId.strip();
             if (!requestIdService.isRequestIdValid(requestId)) {
                 throw new RequestIdException(
                         HttpStatus.BAD_REQUEST,

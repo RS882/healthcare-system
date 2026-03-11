@@ -40,7 +40,7 @@ public class UserContextFilter extends OncePerRequestFilter {
 
         if (StringUtils.hasText(userContextToken)) {
 
-            Claims claims = verifier.verifyAndGetClaims(userContextToken.trim());
+            Claims claims = verifier.verifyAndGetClaims(userContextToken.strip());
 
             SignedUserContext userContext = SignedUserContext.from(claims);
 

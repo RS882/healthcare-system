@@ -14,9 +14,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
 
     @Query("""
-       select ur.role
+       select distinct ur.role
        from UserRole ur
-       where ur.user.id = :userId
+       join ur.user u
+       where u.id = :userId
+         and u.isActive = true
        """)
-    Set<Role> findRolesByUserId(Long userId);
+    Set<Role> findRolesByUserIdIfUserActive(Long userId);
 }

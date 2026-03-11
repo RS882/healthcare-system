@@ -2,7 +2,7 @@ package com.healthcare.user_service.filter;
 
 import com.healthcare.user_service.constant.Role;
 import com.healthcare.user_service.filter.security.SignedUserContext;
-import com.healthcare.user_service.model.dto.UserAuthInfoDto;
+import com.healthcare.user_service.model.dto.auth.UserAuthInfoDto;
 import com.healthcare.user_service.service.interfacies.UserService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -80,14 +80,15 @@ public class AuthFilter extends OncePerRequestFilter {
             return null;
         }
 
-        String normalizedRequestId = requestId.trim();
-        String contextRequestId = ctx.requestId() == null ? null : ctx.requestId().trim();
+        String contextRequestId = ctx.requestId();
 
         if (!StringUtils.hasText(contextRequestId)) {
             return null;
         }
+        String normalizedContextRequestId = contextRequestId.strip();
+        String normalizedRequestId = requestId.strip();
 
-        if (!normalizedRequestId.equals(contextRequestId)) {
+        if (!normalizedRequestId.equals(normalizedContextRequestId)) {
             return null;
         }
 
@@ -95,15 +96,17 @@ public class AuthFilter extends OncePerRequestFilter {
     }
 
     private UserAuthInfoDto resolveUserAuthInfo(SignedUserContext ctx) {
-        String userCtxId = ctx.userId() == null ? null : ctx.userId().trim();
+        String userCtxId = ctx.userId();
 
         if (!StringUtils.hasText(userCtxId)) {
             return null;
         }
 
+        String normalizedUserCtxId = userCtxId.strip();
+
         long userId;
         try {
-            userId = Long.parseLong(userCtxId);
+            userId = Long.parseLong(normalizedUserCtxId);
         } catch (NumberFormatException e) {
             return null;
         }
@@ -116,20 +119,25 @@ public class AuthFilter extends OncePerRequestFilter {
     }
 
     private boolean isUserContextConsistent(SignedUserContext ctx, UserAuthInfoDto authDto) {
-        if (authDto.getId() == null) {
+
+        Long userId = authDto.userId();
+
+        if (userId == null) {
             return false;
         }
 
-        String userCtxId = ctx.userId() == null ? null : ctx.userId().trim();
+        String userCtxId = ctx.userId();
         if (!StringUtils.hasText(userCtxId)) {
             return false;
         }
 
-        if (!userCtxId.equals(String.valueOf(authDto.getId()))) {
+        String normalizedUserCtxId = userCtxId.strip();
+
+        if (!normalizedUserCtxId.equals(String.valueOf(userId))) {
             return false;
         }
 
-        Set<Role> actualRoles = authDto.getRoles();
+        Set<Role> actualRoles = authDto.roles();
         List<String> tokenRoles = ctx.roles();
 
         if (actualRoles == null || actualRoles.isEmpty() || tokenRoles == null || tokenRoles.isEmpty()) {
@@ -142,14 +150,14 @@ public class AuthFilter extends OncePerRequestFilter {
 
         Set<String> tokenRoleNames = tokenRoles.stream()
                 .filter(StringUtils::hasText)
-                .map(String::trim)
+                .map(String::strip)
                 .collect(Collectors.toSet());
 
         return actualRoleNames.equals(tokenRoleNames);
     }
 
     private void setAuthentication(HttpServletRequest request, UserAuthInfoDto authDto) {
-        List<SimpleGrantedAuthority> authorities = authDto.getRoles().stream()
+        List<SimpleGrantedAuthority> authorities = authDto.roles().stream()
                 .map(Role::name)
                 .map(SimpleGrantedAuthority::new)
                 .toList();

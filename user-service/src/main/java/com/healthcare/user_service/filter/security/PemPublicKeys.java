@@ -53,7 +53,7 @@ public final class PemPublicKeys {
     private static String normalizePem(String pem) {
         if (pem == null) return "";
 
-        String s = pem.trim();
+        String s = pem.strip();
 
         if ((s.startsWith("\"") && s.endsWith("\"")) || (s.startsWith("'") && s.endsWith("'"))) {
             s = s.substring(1, s.length() - 1);

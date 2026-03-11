@@ -3,7 +3,7 @@ package com.healthcare.user_service.exception_handler.exception;
 public class UserNotFoundException extends NotFoundException {
 
     public UserNotFoundException(Long id, Throwable cause) {
-        super("User with id <" + id + "> not found", cause);
+        super("User with userId <" + id + "> not found", cause);
     }
 
     public UserNotFoundException(Long id) {

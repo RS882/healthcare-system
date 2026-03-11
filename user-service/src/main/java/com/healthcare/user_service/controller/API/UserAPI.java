@@ -1,11 +1,13 @@
 package com.healthcare.user_service.controller.API;
 
 import com.healthcare.user_service.exception_handler.dto.ErrorResponse;
-import com.healthcare.user_service.model.dto.RegistrationDto;
-import com.healthcare.user_service.model.dto.UserAuthDto;
-import com.healthcare.user_service.model.dto.UserDto;
-import com.healthcare.user_service.model.dto.UserLookupDto;
+import com.healthcare.user_service.model.dto.auth.UserAuthDto;
+import com.healthcare.user_service.model.dto.auth.UserAuthInfoDto;
+import com.healthcare.user_service.model.dto.request.RegistrationDto;
+import com.healthcare.user_service.model.dto.request.UserLookupDto;
+import com.healthcare.user_service.model.dto.response.RegistrationResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,6 +19,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -30,7 +33,7 @@ import static com.healthcare.user_service.controller.API.ApiPaths.*;
 public interface UserAPI {
 
     @Operation(summary = "Registration new user",
-            description = "This method registers new user from RegistrationDto, returns UserDto " +
+            description = "This method registers new user from RegistrationDto, returns RegistrationResponse " +
                     "with user information.",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
@@ -39,7 +42,7 @@ public interface UserAPI {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "User registered successfully",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = UserDto.class))),
+                            schema = @Schema(implementation = RegistrationResponse.class))),
             @ApiResponse(responseCode = "400", description = "Request is wrong",
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = ErrorResponse.class),
@@ -75,7 +78,7 @@ public interface UserAPI {
                     ))
     })
     @PostMapping(REGISTRATION)
-    ResponseEntity<UserDto> registerUser(
+    ResponseEntity<RegistrationResponse> registerUser(
             @Valid
             @org.springframework.web.bind.annotation.RequestBody
             RegistrationDto dto);
@@ -146,9 +149,13 @@ public interface UserAPI {
 
     //=====================================
 
-    @GetMapping("/id/{id}")
+    @GetMapping(BY_ID)
     ResponseEntity<String> getUserInfoById(
             @NotNull
             @Positive
-            @PathVariable Long id);
+            @PathVariable Long id,
+            @AuthenticationPrincipal
+            @Parameter(hidden = true)
+            UserAuthInfoDto authDto
+    );
 }

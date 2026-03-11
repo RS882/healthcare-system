@@ -4,21 +4,20 @@ package com.healthcare.user_service.service;
 import com.healthcare.user_service.constant.Role;
 import com.healthcare.user_service.exception_handler.exception.UserNotFoundException;
 import com.healthcare.user_service.model.User;
-import com.healthcare.user_service.model.UserRole;
-import com.healthcare.user_service.model.dto.RegistrationDto;
-import com.healthcare.user_service.model.dto.UserAuthDto;
-import com.healthcare.user_service.model.dto.UserAuthInfoDto;
-import com.healthcare.user_service.model.dto.UserDto;
+import com.healthcare.user_service.model.dto.request.RegistrationDto;
+import com.healthcare.user_service.model.dto.response.RegistrationResponse;
+import com.healthcare.user_service.model.dto.auth.UserAuthDto;
+import com.healthcare.user_service.model.dto.auth.UserAuthInfoDto;
 import com.healthcare.user_service.repository.UserRepository;
 import com.healthcare.user_service.service.interfacies.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Set;
 
-import static com.healthcare.user_service.model.dto.UserAuthDto.getUserAuthDto;
-import static com.healthcare.user_service.model.dto.UserDto.getUserDto;
+import static com.healthcare.user_service.model.mapper.UserMapper.*;
 
 @Service
 @RequiredArgsConstructor
@@ -27,18 +26,31 @@ public class UserServiceImpl implements UserService {
     private final UserRepository repository;
     private final PasswordEncoder passwordEncoder;
 
-    @Override
-    public UserAuthDto getUserInfoByEmail(String email) {
-        User user = repository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException(email));
+    private final Role defaultRole = Role.ROLE_PATIENT;
 
-        return getUserAuthDto(user);
+    @Override
+    public RegistrationResponse registration(RegistrationDto dto) {
+
+        RegistrationDto prepareRegistrationDto = normalizeRegistrationData(dto);
+
+        String encodedPassword = passwordEncoder.encode(prepareRegistrationDto.password());
+
+        User newUser = toUser(prepareRegistrationDto, encodedPassword, defaultRole);
+
+        User savedUser = repository.saveAndFlush(newUser);
+
+        return toRegistrationResponse(savedUser);
     }
 
     @Override
-    public UserDto registration(RegistrationDto dto) {
-        User user = repository.saveAndFlush(getUser(dto));
-        return getUserDto(user);
+    public UserAuthDto getUserInfoByEmail(String email) {
+        String normalizedEmail = StringUtils.hasText(email) ?
+                email.toLowerCase().strip() :
+                null;
+        User user = repository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new UserNotFoundException(normalizedEmail));
+
+        return toUserAuthDto(user);
     }
 
     @Override
@@ -48,29 +60,12 @@ public class UserServiceImpl implements UserService {
             return null;
         }
 
-        Set<Role> roles = repository.findRolesByUserId(userId);
+        Set<Role> roles = repository.findRolesByUserIdIfUserActive(userId);
 
         if (roles == null || roles.isEmpty()) {
             return null;
         }
 
         return new UserAuthInfoDto(userId, roles);
-    }
-
-    private User getUser(RegistrationDto dto) {
-        User user = User.builder()
-                .email(dto.getUserEmail())
-                .password(passwordEncoder.encode(dto.getPassword()))
-                .username(dto.getUserName())
-                .isActive(true)
-                .build();
-
-        UserRole role = UserRole.builder()
-                .role(Role.ROLE_PATIENT)
-                .user(user)
-                .build();
-
-        user.setRoles(Set.of(role));
-        return user;
     }
 }
