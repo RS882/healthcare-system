@@ -7,6 +7,7 @@ import com.healthcare.user_service.model.dto.auth.UserAuthInfoDto;
 import com.healthcare.user_service.model.dto.request.RegistrationDto;
 import com.healthcare.user_service.model.dto.request.UserLookupDto;
 import com.healthcare.user_service.model.dto.response.RegistrationResponse;
+import com.healthcare.user_service.model.dto.response.UserDto;
 import com.healthcare.user_service.service.interfacies.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -36,12 +37,12 @@ public class UserController implements UserAPI {
     }
 
     @Override
-    public ResponseEntity<String> getUserInfoById(Long id, UserAuthInfoDto authDto) {
+    public ResponseEntity<UserDto> getUserInfoById(Long id, UserAuthInfoDto authDto) {
 
         System.out.println("User userId: " + authDto.userId());
         System.out.println("User roles: " + authDto.roles());
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(id.toString());
+                .body(userService.getUserDtoById(id));
     }
 }

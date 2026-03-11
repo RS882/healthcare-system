@@ -4,10 +4,12 @@ package com.healthcare.user_service.service;
 import com.healthcare.user_service.constant.Role;
 import com.healthcare.user_service.exception_handler.exception.UserNotFoundException;
 import com.healthcare.user_service.model.User;
-import com.healthcare.user_service.model.dto.request.RegistrationDto;
-import com.healthcare.user_service.model.dto.response.RegistrationResponse;
 import com.healthcare.user_service.model.dto.auth.UserAuthDto;
 import com.healthcare.user_service.model.dto.auth.UserAuthInfoDto;
+import com.healthcare.user_service.model.dto.request.RegistrationDto;
+import com.healthcare.user_service.model.dto.response.RegistrationResponse;
+import com.healthcare.user_service.model.dto.response.UserDto;
+import com.healthcare.user_service.model.mapper.UserMapper;
 import com.healthcare.user_service.repository.UserRepository;
 import com.healthcare.user_service.service.interfacies.UserService;
 import lombok.RequiredArgsConstructor;
@@ -67,5 +69,15 @@ public class UserServiceImpl implements UserService {
         }
 
         return new UserAuthInfoDto(userId, roles);
+    }
+
+    @Override
+    public UserDto getUserDtoById(Long id) {
+
+        return repository.findById(id)
+                .stream()
+                .map(UserMapper::toUserDto)
+                .findFirst()
+                .orElse(null);
     }
 }

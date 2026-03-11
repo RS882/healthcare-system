@@ -28,5 +28,4 @@ public record UserAuthDto(
     public UserAuthDto {
         roles = roles == null ? Set.of() : Set.copyOf(roles);
     }
-
 }

@@ -5,6 +5,7 @@ import com.healthcare.user_service.model.dto.request.RegistrationDto;
 import com.healthcare.user_service.model.dto.response.RegistrationResponse;
 import com.healthcare.user_service.model.dto.auth.UserAuthDto;
 import com.healthcare.user_service.model.dto.auth.UserAuthInfoDto;
+import com.healthcare.user_service.model.dto.response.UserDto;
 
 public interface UserService {
 
@@ -13,5 +14,7 @@ public interface UserService {
     UserAuthDto getUserInfoByEmail(String email);
 
     UserAuthInfoDto getUserAuthInfoDtoById(Long id);
+
+    UserDto getUserDtoById(Long id);
 
 }

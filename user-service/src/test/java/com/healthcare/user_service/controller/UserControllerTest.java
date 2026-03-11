@@ -6,6 +6,7 @@ import com.healthcare.user_service.constant.Role;
 import com.healthcare.user_service.exception_handler.dto.ErrorResponse;
 import com.healthcare.user_service.model.dto.request.RegistrationDto;
 import com.healthcare.user_service.model.dto.auth.UserAuthDto;
+import com.healthcare.user_service.model.dto.response.RegistrationResponse;
 import com.healthcare.user_service.model.dto.response.UserDto;
 import com.healthcare.user_service.model.dto.request.UserLookupDto;
 import com.healthcare.user_service.service.interfacies.RequestIdService;
@@ -117,17 +118,13 @@ class UserControllerTest {
             MvcResult result = regTestUser(email);
 
             String jsonResponse = result.getResponse().getContentAsString();
-            UserDto responseDto = mapper.readValue(jsonResponse, UserDto.class);
+            RegistrationResponse responseDto = mapper.readValue(jsonResponse, RegistrationResponse.class);
 
-            Long id = responseDto.getId();
+            Long id = responseDto.id();
             assertThat(id).isNotNull();
             assertThat(id).isInstanceOf(Long.class);
-            assertEquals(email, responseDto.getEmail());
-            assertEquals(TEST_USER_NAME, responseDto.getName());
-            Optional<String> firstRole = responseDto.getRoles().stream().findFirst();
-            assertTrue(firstRole.isPresent());
-            assertEquals(Role.ROLE_PATIENT.name().toLowerCase(), firstRole.get().toLowerCase());
-            assertTrue(responseDto.isEnabled());
+            assertEquals(email, responseDto.email());
+            assertEquals(TEST_USER_NAME, responseDto.name());
         }
 
 
@@ -234,20 +231,20 @@ class UserControllerTest {
             String jsonResponse = result.getResponse().getContentAsString();
             UserAuthDto responseDto = mapper.readValue(jsonResponse, UserAuthDto.class);
 
-            Long id = responseDto.getId();
+            Long id = responseDto.id();
             assertThat(id).isNotNull();
             assertThat(id).isInstanceOf(Long.class);
 
-            String password = responseDto.getPassword();
+            String password = responseDto.password();
             assertThat(password).isNotNull();
             assertThat(password).isInstanceOf(String.class);
 
-            assertEquals(TEST_USER_EMAIL, responseDto.getEmail());
+            assertEquals(TEST_USER_EMAIL, responseDto.email());
 
-            Optional<String> firstRole = responseDto.getRoles().stream().findFirst();
+            Optional<String> firstRole = responseDto.roles().stream().findFirst();
             assertTrue(firstRole.isPresent());
             assertEquals(Role.ROLE_PATIENT.name(), firstRole.get());
-            assertTrue(responseDto.isEnabled());
+            assertTrue(responseDto.enabled());
         }
 
         @Test

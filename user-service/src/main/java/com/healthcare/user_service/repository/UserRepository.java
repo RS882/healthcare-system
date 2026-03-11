@@ -21,4 +21,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
          and u.isActive = true
        """)
     Set<Role> findRolesByUserIdIfUserActive(Long userId);
+
+    Optional<User> findById(Long id);
 }

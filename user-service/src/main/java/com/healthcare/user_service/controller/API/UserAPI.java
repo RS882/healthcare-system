@@ -6,6 +6,7 @@ import com.healthcare.user_service.model.dto.auth.UserAuthInfoDto;
 import com.healthcare.user_service.model.dto.request.RegistrationDto;
 import com.healthcare.user_service.model.dto.request.UserLookupDto;
 import com.healthcare.user_service.model.dto.response.RegistrationResponse;
+import com.healthcare.user_service.model.dto.response.UserDto;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -150,7 +151,7 @@ public interface UserAPI {
     //=====================================
 
     @GetMapping(BY_ID)
-    ResponseEntity<String> getUserInfoById(
+    ResponseEntity<UserDto> getUserInfoById(
             @NotNull
             @Positive
             @PathVariable Long id,
