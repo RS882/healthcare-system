@@ -6,10 +6,7 @@ import com.healthcare.user_service.filter.security.interfaces.UserContextVerifie
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.DisplayNameGenerator;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -24,12 +21,13 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import java.io.IOException;
 
 import static com.healthcare.user_service.filter.security.constant.AttrNames.ATTR_USER_CONTEXT;
-import static com.healthcare.user_service.support.TestGatewayConstants.HEADER_USER_CONTEXT;
+import static com.healthcare.user_service.support.TestConstants.HEADER_USER_CONTEXT;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
+@DisplayName("User context filter tests: ")
 class UserContextFilterTest {
 
     private static final String HEADER_NAME = HEADER_USER_CONTEXT;

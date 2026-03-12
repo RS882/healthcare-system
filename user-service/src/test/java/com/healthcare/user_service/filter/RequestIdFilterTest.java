@@ -5,10 +5,7 @@ import com.healthcare.user_service.exception_handler.exception.RequestIdExceptio
 import com.healthcare.user_service.service.interfacies.RequestIdService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.DisplayNameGenerator;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullAndEmptySource;
@@ -33,6 +30,7 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
+@DisplayName("Request id filter tests: ")
 class RequestIdFilterTest {
 
     @Mock

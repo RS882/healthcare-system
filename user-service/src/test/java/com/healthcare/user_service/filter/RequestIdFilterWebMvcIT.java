@@ -5,6 +5,7 @@ import com.healthcare.user_service.config.properties.HeaderRequestIdProperties;
 import com.healthcare.user_service.exception_handler.dto.ErrorResponse;
 import com.healthcare.user_service.service.interfacies.RequestIdService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +31,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import static com.healthcare.user_service.filter.security.constant.AttrNames.ATTR_REQUEST_ID;
 import static com.healthcare.user_service.support.TestDataFactory.requestId;
-import static com.healthcare.user_service.support.TestGatewayConstants.HEADER_REQUEST_ID;
-import static com.healthcare.user_service.support.TestGatewayConstants.TEST_URI;
+import static com.healthcare.user_service.support.TestConstants.HEADER_REQUEST_ID;
+import static com.healthcare.user_service.support.TestConstants.TEST_BASE_URI;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
@@ -58,6 +59,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "user-context-filter.enabled=false",
         "auth-filter.enabled=false"
 })
+@DisplayName("Request id filter integration tests: ")
 class RequestIdFilterWebMvcIT {
 
     @Autowired
@@ -71,7 +73,7 @@ class RequestIdFilterWebMvcIT {
 
     @RestController
     public static class TestController {
-        @GetMapping(value = TEST_URI, produces = MediaType.TEXT_PLAIN_VALUE)
+        @GetMapping(value = TEST_BASE_URI, produces = MediaType.TEXT_PLAIN_VALUE)
         public String getRequestId(HttpServletRequest request) {
             Object v = request.getAttribute(ATTR_REQUEST_ID);
             return v == null ? "null" : v.toString();
@@ -102,7 +104,7 @@ class RequestIdFilterWebMvcIT {
 
     @Test
     void shouldReturn400_whenHeaderMissing() throws Exception {
-        MvcResult result = mockMvc.perform(get(TEST_URI))
+        MvcResult result = mockMvc.perform(get(TEST_BASE_URI))
                 .andExpect(status().isBadRequest())
                 .andReturn();
 
@@ -112,7 +114,7 @@ class RequestIdFilterWebMvcIT {
         assertTrue(StringUtils.hasText(error.getMessage().toString()));
         assertEquals(error.getStatus(), status.value());
         assertEquals(error.getError(), status.getReasonPhrase());
-        assertEquals(TEST_URI, error.getPath());
+        assertEquals(TEST_BASE_URI, error.getPath());
     }
 
     @Test
@@ -120,7 +122,7 @@ class RequestIdFilterWebMvcIT {
         String invalid = "not-uuid";
         Mockito.when(requestIdService.isRequestIdValid(invalid)).thenReturn(false);
 
-        MvcResult result = mockMvc.perform(get(TEST_URI)
+        MvcResult result = mockMvc.perform(get(TEST_BASE_URI)
                         .header(HEADER_REQUEST_ID, invalid))
                 .andExpect(status().isBadRequest())
                 .andReturn();
@@ -131,7 +133,7 @@ class RequestIdFilterWebMvcIT {
         assertTrue(StringUtils.hasText(error.getMessage().toString()));
         assertEquals(error.getStatus(), status.value());
         assertEquals(error.getError(), status.getReasonPhrase());
-        assertEquals(TEST_URI, error.getPath());
+        assertEquals(TEST_BASE_URI, error.getPath());
 
         verify(requestIdService).isRequestIdValid(invalid);
     }
@@ -141,7 +143,7 @@ class RequestIdFilterWebMvcIT {
         String rid = requestId().toString();
         Mockito.when(requestIdService.isRequestIdValid(rid)).thenReturn(true);
 
-        mockMvc.perform(get(TEST_URI).header(HEADER_REQUEST_ID, rid))
+        mockMvc.perform(get(TEST_BASE_URI).header(HEADER_REQUEST_ID, rid))
                 .andExpect(status().isOk())
                 .andExpect(content().string(rid));
 

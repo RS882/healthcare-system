@@ -24,8 +24,8 @@ public final class TestDataFactory {
         return "136Jkn!kPu5%";
     }
 
-    public static String requestIdWithSpaces() {
-        return "  " + requestId() + "  ";
+    public static String stringWithSpaces(String str) {
+        return "  " + str + "  ";
     }
 
     public static String headerTooLong(int len) {
