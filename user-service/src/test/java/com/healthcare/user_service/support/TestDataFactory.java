@@ -1,6 +1,8 @@
 package com.healthcare.user_service.support;
 
 
+import com.healthcare.user_service.constant.Role;
+
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -36,12 +38,12 @@ public final class TestDataFactory {
         return "n/a";
     }
 
-    public static String roleUser() {
-        return "ROLE_USER_TEST";
+    public static Role roleUser() {
+        return Role.ROLE_PATIENT;
     }
 
-    public static String roleAdmin() {
-        return "ROLE_ADMIN_TEST";
+    public static Role roleAdmin() {
+        return Role.ROLE_ADMIN;
     }
 
     public static Long randomUserId() {
