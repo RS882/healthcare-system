@@ -21,7 +21,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @AllArgsConstructor
 public class SecurityConfig {
 
-    private final RequestIdFilter requestIdFilter;
+    private final ObjectProvider<RequestIdFilter> requestIdFilterProvider;
     private final ObjectProvider<UserContextFilter> userContextFilterProvider;
     private final ObjectProvider<AuthFilter> authFilterProvider;
 
@@ -47,8 +47,12 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, LOOKUP_URL).permitAll()
                         .requestMatchers(HttpMethod.GET, BY_ID_URL).authenticated()
                         .anyRequest().authenticated()
-                )
-                .addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class);
+                );
+
+        RequestIdFilter requestIdFilter = requestIdFilterProvider.getIfAvailable();
+        if (requestIdFilter != null) {
+            http.addFilterBefore(requestIdFilter, UsernamePasswordAuthenticationFilter.class);
+        }
 
         UserContextFilter userContextFilter = userContextFilterProvider.getIfAvailable();
         if (userContextFilter != null) {
