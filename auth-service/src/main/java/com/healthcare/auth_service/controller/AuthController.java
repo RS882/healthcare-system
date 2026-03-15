@@ -2,9 +2,9 @@ package com.healthcare.auth_service.controller;
 
 import com.healthcare.auth_service.controller.API.AuthAPI;
 import com.healthcare.auth_service.domain.AuthUserDetails;
-import com.healthcare.auth_service.domain.dto.AuthResponse;
-import com.healthcare.auth_service.domain.dto.LoginDto;
-import com.healthcare.auth_service.domain.dto.ValidationDto;
+import com.healthcare.auth_service.domain.dto.auth.AuthResponse;
+import com.healthcare.auth_service.domain.dto.request.LoginDto;
+import com.healthcare.auth_service.domain.dto.response.ValidationDto;
 import com.healthcare.auth_service.service.CookieService;
 import com.healthcare.auth_service.service.interfacies.AuthService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -26,10 +26,10 @@ public class AuthController implements AuthAPI {
             HttpServletResponse response) {
 
         var tokens = authService.login(dto);
-        cookieService.setRefreshTokenToCookie(response, tokens.getRefreshToken());
+        cookieService.setRefreshTokenToCookie(response, tokens.refreshToken());
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new AuthResponse(tokens.getAccessToken(), tokens.getUserId()));
+                .body(new AuthResponse(tokens.accessToken(), tokens.userId()));
     }
 
     @Override
@@ -37,10 +37,10 @@ public class AuthController implements AuthAPI {
             HttpServletResponse response,
             String refreshToken) {
         var tokens = authService.refresh(refreshToken);
-        cookieService.setRefreshTokenToCookie(response, tokens.getRefreshToken());
+        cookieService.setRefreshTokenToCookie(response, tokens.refreshToken());
 
         return ResponseEntity.status(HttpStatus.OK)
-                .body(new AuthResponse(tokens.getAccessToken(), tokens.getUserId()));
+                .body(new AuthResponse(tokens.accessToken(), tokens.userId()));
     }
 
     @Override

@@ -2,9 +2,9 @@ package com.healthcare.auth_service.controller.API;
 
 import com.healthcare.auth_service.config.annotation.bearer_token.BearerToken;
 import com.healthcare.auth_service.domain.AuthUserDetails;
-import com.healthcare.auth_service.domain.dto.AuthResponse;
-import com.healthcare.auth_service.domain.dto.LoginDto;
-import com.healthcare.auth_service.domain.dto.ValidationDto;
+import com.healthcare.auth_service.domain.dto.auth.AuthResponse;
+import com.healthcare.auth_service.domain.dto.request.LoginDto;
+import com.healthcare.auth_service.domain.dto.response.ValidationDto;
 import com.healthcare.auth_service.exception_handler.dto.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

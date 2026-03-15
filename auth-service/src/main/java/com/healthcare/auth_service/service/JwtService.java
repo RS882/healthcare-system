@@ -1,7 +1,7 @@
 package com.healthcare.auth_service.service;
 
 import com.healthcare.auth_service.config.properties.JwtProperties;
-import com.healthcare.auth_service.domain.dto.TokensDto;
+import com.healthcare.auth_service.domain.dto.response.TokensDto;
 import com.healthcare.auth_service.exception_handler.exception.UnauthorizedException;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
@@ -10,10 +10,10 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import javax.crypto.SecretKey;
 import java.time.Instant;
@@ -76,7 +76,7 @@ public class JwtService {
                 .claims(claims)
                 .issuer(TOKENS_ISSUER)
                 .issuedAt(Date.from(Instant.now()))
-                .subject(subject)
+                .subject(subject.strip())
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(key)
                 .compact();
@@ -91,12 +91,14 @@ public class JwtService {
     }
 
     private boolean isTokenValid(String token, UserDetails userDetails, SecretKey key) {
+        if (!StringUtils.hasText(token)) return false;
+        String normalizedToken = token.strip();
         try {
             Jwts.parser()
                     .verifyWith(key)
                     .build()
-                    .parseSignedClaims(token);
-            final String username = extractUserEmail(token, key);
+                    .parseSignedClaims(normalizedToken);
+            final String username = extractUserEmail(normalizedToken, key);
             return username.equals(userDetails.getUsername());
         } catch (Exception e) {
             return false;
@@ -112,7 +114,7 @@ public class JwtService {
     }
 
     private long getRemainingTTL(String token, SecretKey key) {
-        Claims claims = extractAllClaims(token, key);
+        Claims claims = extractAllClaims(token.strip(), key);
         Date expiration = claims.getExpiration();
         long now = System.currentTimeMillis();
         return Math.max(expiration.getTime() - now, 0);
@@ -127,7 +129,7 @@ public class JwtService {
     }
 
     private String extractUserEmail(String token, SecretKey key) {
-        return extractClaim(token, Claims::getSubject, key);
+        return extractClaim(token.strip(), Claims::getSubject, key).strip();
     }
 
     public Long extractUserIdFromAccessToken(String token) {
@@ -150,7 +152,7 @@ public class JwtService {
             return Jwts.parser()
                     .verifyWith(key)
                     .build()
-                    .parseSignedClaims(token)
+                    .parseSignedClaims(token.strip())
                     .getPayload();
         } catch (Exception e) {
             throw new UnauthorizedException("Token is invalid", e);

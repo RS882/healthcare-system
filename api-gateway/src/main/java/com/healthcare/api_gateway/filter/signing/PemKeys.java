@@ -1,5 +1,7 @@
 package com.healthcare.api_gateway.filter.signing;
 
+import org.springframework.util.StringUtils;
+
 import java.security.KeyFactory;
 import java.security.PrivateKey;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -53,9 +55,9 @@ public final class PemKeys {
     }
 
     private static String normalizePem(String pem) {
-        if (pem == null) return "";
+        if (!StringUtils.hasText(pem)) return "";
 
-        String s = pem.trim();
+        String s = pem.strip();
 
         if ((s.startsWith("\"") && s.endsWith("\"")) || (s.startsWith("'") && s.endsWith("'"))) {
             s = s.substring(1, s.length() - 1);

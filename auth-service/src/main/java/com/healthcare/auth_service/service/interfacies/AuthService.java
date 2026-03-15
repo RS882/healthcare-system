@@ -1,9 +1,9 @@
 package com.healthcare.auth_service.service.interfacies;
 
 import com.healthcare.auth_service.domain.AuthUserDetails;
-import com.healthcare.auth_service.domain.dto.LoginDto;
-import com.healthcare.auth_service.domain.dto.TokensDto;
-import com.healthcare.auth_service.domain.dto.ValidationDto;
+import com.healthcare.auth_service.domain.dto.request.LoginDto;
+import com.healthcare.auth_service.domain.dto.response.TokensDto;
+import com.healthcare.auth_service.domain.dto.response.ValidationDto;
 
 public interface AuthService {
 

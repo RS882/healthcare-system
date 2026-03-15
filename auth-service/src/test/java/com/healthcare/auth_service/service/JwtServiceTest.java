@@ -64,7 +64,7 @@ class JwtServiceTest {
         when(jwtProps.accessTokenExpiration()).thenReturn(ACCESS_EXPIRATION);
         when(jwtProps.refreshTokenExpiration()).thenReturn(REFRESH_EXPIRATION);
 
-        String token = jwtService.getTokens(userDetails, USER_ID).getAccessToken();
+        String token = jwtService.getTokens(userDetails, USER_ID).accessToken();
 
         assertNotNull(token);
         assertTrue(jwtService.validateAccessToken(token, userDetails));
@@ -80,7 +80,7 @@ class JwtServiceTest {
         when(jwtProps.accessTokenExpiration()).thenReturn(ACCESS_EXPIRATION);
         when(jwtProps.refreshTokenExpiration()).thenReturn(REFRESH_EXPIRATION);
 
-        String token = jwtService.getTokens(userDetails, USER_ID).getRefreshToken();
+        String token = jwtService.getTokens(userDetails, USER_ID).refreshToken();
 
         assertNotNull(token);
         assertTrue(jwtService.validateRefreshToken(token, userDetails));

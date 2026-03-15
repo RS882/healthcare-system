@@ -1,9 +1,9 @@
 package com.healthcare.auth_service.service;
 
 import com.healthcare.auth_service.domain.AuthUserDetails;
-import com.healthcare.auth_service.domain.dto.LoginDto;
-import com.healthcare.auth_service.domain.dto.TokensDto;
-import com.healthcare.auth_service.domain.dto.ValidationDto;
+import com.healthcare.auth_service.domain.dto.request.LoginDto;
+import com.healthcare.auth_service.domain.dto.response.TokensDto;
+import com.healthcare.auth_service.domain.dto.response.ValidationDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.exception_handler.exception.UnauthorizedException;
 import com.healthcare.auth_service.service.interfacies.*;
@@ -33,13 +33,13 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public TokensDto login(LoginDto dto) {
 
-        AuthUserDetails userDetails = userClientService.getUserByEmail(dto.getUserEmail());
+        AuthUserDetails userDetails = userClientService.getUserByEmail(dto.userEmail());
 
-        if (blockService.isBlocked(userDetails.getId())) {
+        if (blockService.isBlocked(userDetails.id())) {
             throw new AccessDeniedException("The limit of active sessions is exceeded. Try it later.");
         }
 
-        var auth = new UsernamePasswordAuthenticationToken(dto.getUserEmail(), dto.getPassword());
+        var auth = new UsernamePasswordAuthenticationToken(dto.userEmail(), dto.password());
         authManager.authenticate(auth);
 
         return generateAndStoreTokens(userDetails);
@@ -51,7 +51,7 @@ public class AuthServiceImpl implements AuthService {
 
         AuthUserDetails userDetails = validateRefreshTokenAndGetUser(refreshToken);
 
-        refreshTokenService.delete(refreshToken, userDetails.getId());
+        refreshTokenService.delete(refreshToken, userDetails.id());
 
         return generateAndStoreTokens(userDetails);
     }
@@ -66,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
 
         if (StringUtils.hasText(refreshToken)) {
             AuthUserDetails userDetails = validateRefreshTokenAndGetUser(refreshToken);
-            refreshTokenService.delete(refreshToken, userDetails.getId());
+            refreshTokenService.delete(refreshToken, userDetails.id());
         }
         SecurityContextHolder.clearContext();
     }
@@ -79,10 +79,10 @@ public class AuthServiceImpl implements AuthService {
 
     private TokensDto generateAndStoreTokens(AuthUserDetails userDetails) {
 
-        Long userId = userDetails.getId();
+        Long userId = userDetails.id();
 
         TokensDto tokens = jwtService.getTokens(userDetails, userId);
-        refreshTokenService.save(tokens.getRefreshToken(), userId);
+        refreshTokenService.save(tokens.refreshToken(), userId);
         return tokens;
     }
 
@@ -105,7 +105,7 @@ public class AuthServiceImpl implements AuthService {
             throw new UnauthorizedException("Invalid or expired token");
         }
 
-        if (!refreshTokenService.isValid(refreshToken, userDetails.getId())) {
+        if (!refreshTokenService.isValid(refreshToken, userDetails.id())) {
             throw new UnauthorizedException("Refresh token not found or revoked");
         }
         return userDetails;

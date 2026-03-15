@@ -6,6 +6,7 @@ import com.healthcare.auth_service.service.interfacies.RequestIdService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.time.Duration;
 import java.util.UUID;
@@ -38,7 +39,7 @@ public class RequestIdServiceImpl implements RequestIdService {
 
     @Override
     public boolean isRequestIdValid(String id) {
-        if (id == null || id.isBlank()) {
+        if (!StringUtils.hasText(id)) {
             return false;
         }
         try {

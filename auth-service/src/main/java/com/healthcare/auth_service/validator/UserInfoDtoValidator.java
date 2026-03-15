@@ -1,6 +1,6 @@
 package com.healthcare.auth_service.validator;
 
-import com.healthcare.auth_service.domain.dto.UserAuthDto;
+import com.healthcare.auth_service.domain.dto.request.UserAuthDto;
 import com.healthcare.auth_service.exception_handler.dto.ValidationError;
 import com.healthcare.auth_service.exception_handler.exception.ValidationException;
 import jakarta.validation.ConstraintViolation;

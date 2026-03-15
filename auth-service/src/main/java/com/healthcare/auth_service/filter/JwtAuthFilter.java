@@ -39,12 +39,13 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        final String jwt = extractJwtFromRequest(request);
+        String jwt = extractJwtFromRequest(request);
         try {
             if (!StringUtils.hasText(jwt)) {
                 filterChain.doFilter(request, response);
                 return;
             }
+
             if (tokenBlacklistService.isBlacklisted(jwt)) {
                 filterChain.doFilter(request, response);
                 return;
@@ -53,9 +54,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
             userEmail = jwtService.extractUserEmailFromAccessToken(jwt);
 
-
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(userEmail.strip());
 
                 if (jwtService.validateAccessToken(jwt, userDetails)) {
                     var authToken = new UsernamePasswordAuthenticationToken(

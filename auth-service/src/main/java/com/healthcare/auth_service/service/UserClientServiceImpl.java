@@ -1,8 +1,8 @@
 package com.healthcare.auth_service.service;
 
 import com.healthcare.auth_service.domain.AuthUserDetails;
-import com.healthcare.auth_service.domain.dto.UserAuthDto;
-import com.healthcare.auth_service.domain.dto.UserLookupDto;
+import com.healthcare.auth_service.domain.dto.request.UserAuthDto;
+import com.healthcare.auth_service.domain.dto.response.UserLookupDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.exception_handler.exception.ServiceUnavailableException;
 import com.healthcare.auth_service.exception_handler.exception.UserNotFoundException;
@@ -39,7 +39,7 @@ public class UserClientServiceImpl implements UserClientService {
             log.warn("User for email {} not found. User service get null", email);
             throw new UserNotFoundException(email);
         }
-        if (!dto.isEnabled()) {
+        if (!dto.enabled()) {
             log.warn("User {} has been blocked.", email);
             throw new AccessDeniedException("User " + email + " has been blocked.");
         }

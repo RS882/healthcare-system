@@ -6,7 +6,11 @@ import com.healthcare.auth_service.config.properties.HeaderRequestIdProperties;
 import com.healthcare.auth_service.config.properties.JwtProperties;
 import com.healthcare.auth_service.config.properties.PrefixProperties;
 import com.healthcare.auth_service.domain.AuthUserDetails;
-import com.healthcare.auth_service.domain.dto.*;
+import com.healthcare.auth_service.domain.dto.response.TokensDto;
+import com.healthcare.auth_service.domain.dto.request.UserAuthDto;
+import com.healthcare.auth_service.domain.dto.response.UserLookupDto;
+import com.healthcare.auth_service.domain.dto.request.LoginDto;
+import com.healthcare.auth_service.domain.dto.response.ValidationDto;
 import com.healthcare.auth_service.exception_handler.dto.ErrorResponse;
 import com.healthcare.auth_service.service.AuthServiceImpl;
 import com.healthcare.auth_service.service.JwtService;
@@ -253,9 +257,9 @@ class AuthControllerIT {
                             .toList());
 
             TokensDto tokensDto = loginUser();
-            String accessToken = tokensDto.getAccessToken();
-            String refreshToken = tokensDto.getRefreshToken();
-            Long userId = tokensDto.getUserId();
+            String accessToken = tokensDto.accessToken();
+            String refreshToken = tokensDto.refreshToken();
+            Long userId = tokensDto.userId();
 
             assertTrue(jwtService.validateAccessToken(accessToken, userDetail));
             assertTrue(jwtService.validateRefreshToken(refreshToken, userDetail));
@@ -652,12 +656,12 @@ class AuthControllerIT {
 
             UserDetails userDetail = new User(
                     EMAIL,
-                    userInfoDto.getPassword(),
-                    userInfoDto.isEnabled(),
+                    userInfoDto.password(),
+                    userInfoDto.enabled(),
                     true,
                     true,
                     true,
-                    userInfoDto.getRoles().stream()
+                    userInfoDto.roles().stream()
                             .map(SimpleGrantedAuthority::new)
                             .toList());
 
@@ -750,7 +754,7 @@ class AuthControllerIT {
 
             TokensDto tokens = jwtService.getTokens(userDetail, USER_ID);
 
-            Cookie cookie = new Cookie(REFRESH_TOKEN, tokens.getRefreshToken());
+            Cookie cookie = new Cookie(REFRESH_TOKEN, tokens.refreshToken());
 
             requestId = requestIdService.getRequestId();
 
@@ -922,8 +926,8 @@ class AuthControllerIT {
         @Test
         public void logout_should_return_204() throws Exception {
             TokensDto tokens = loginUser();
-            String accessToken = tokens.getAccessToken();
-            String refreshToken = tokens.getRefreshToken();
+            String accessToken = tokens.accessToken();
+            String refreshToken = tokens.refreshToken();
 
             Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
 
@@ -944,7 +948,7 @@ class AuthControllerIT {
         public void logout_with_status_400_cookie_is_incorrect() throws Exception {
             TokensDto tokens = loginUser();
 
-            String accessToken = tokens.getAccessToken();
+            String accessToken = tokens.accessToken();
 
             Cookie cookie = new Cookie("test", "test");
             mockMvc.perform(post(LOGOUT_URL)
@@ -958,7 +962,7 @@ class AuthControllerIT {
         public void logout_should_return_400_when_cookie_is_null() throws Exception {
             TokensDto tokens = loginUser();
 
-            String accessToken = tokens.getAccessToken();
+            String accessToken = tokens.accessToken();
 
             mockMvc.perform(post(LOGOUT_URL)
                             .header(headerRequestIdProps.name(), requestId.toString())
@@ -971,8 +975,8 @@ class AuthControllerIT {
         public void logout_should_return_401_header_authorization_is_null() throws Exception {
             TokensDto tokens = loginUser();
 
-            String accessToken = tokens.getAccessToken();
-            String refreshToken = tokens.getRefreshToken();
+            String accessToken = tokens.accessToken();
+            String refreshToken = tokens.refreshToken();
 
             Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
 
@@ -992,8 +996,8 @@ class AuthControllerIT {
         public void logout_should_return_401_header_authorization_is_not_bearer() throws Exception {
             TokensDto tokens = loginUser();
 
-            String accessToken = tokens.getAccessToken();
-            String refreshToken = tokens.getRefreshToken();
+            String accessToken = tokens.accessToken();
+            String refreshToken = tokens.refreshToken();
 
             Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
 
@@ -1014,8 +1018,8 @@ class AuthControllerIT {
         public void logout_should_return_401_token_is_incorrect() throws Exception {
             TokensDto tokens = loginUser();
 
-            String accessToken = tokens.getAccessToken();
-            String refreshToken = tokens.getRefreshToken();
+            String accessToken = tokens.accessToken();
+            String refreshToken = tokens.refreshToken();
 
             Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
 
@@ -1036,7 +1040,7 @@ class AuthControllerIT {
         public void logout_with_status_401_token_is_incorrect() throws Exception {
             TokensDto tokens = loginUser();
 
-            String accessToken = tokens.getAccessToken();
+            String accessToken = tokens.accessToken();
 
             Cookie cookie = new Cookie(REFRESH_TOKEN, "test");
             MvcResult result = mockMvc.perform(post(LOGOUT_URL)
@@ -1053,8 +1057,8 @@ class AuthControllerIT {
         public void logout_with_status_401_token_is_not_found() throws Exception {
             TokensDto tokens = loginUser();
 
-            String accessToken = tokens.getAccessToken();
-            String refreshToken = tokens.getRefreshToken();
+            String accessToken = tokens.accessToken();
+            String refreshToken = tokens.refreshToken();
 
             redis.delete(getKey() + ":" + refreshToken);
 
@@ -1074,8 +1078,8 @@ class AuthControllerIT {
         void logout_with_status_500_when_service_throws_exception() throws Exception {
             try {
                 TokensDto tokens = loginUser();
-                String accessToken = tokens.getAccessToken();
-                String refreshToken = tokens.getRefreshToken();
+                String accessToken = tokens.accessToken();
+                String refreshToken = tokens.refreshToken();
 
                 Cookie cookie = new Cookie(REFRESH_TOKEN, refreshToken);
 
@@ -1110,7 +1114,8 @@ class AuthControllerIT {
         void validation_return_status_200_and_validation_dto() throws Exception {
 
             TokensDto tokens = loginUser();
-            String accessToken = tokens.getAccessToken();
+            String accessToken = tokens.accessToken();
+
             requestId = requestIdService.getRequestId();
 
             MvcResult result = mockMvc.perform(get(VALIDATION_URL)
@@ -1123,8 +1128,8 @@ class AuthControllerIT {
             ValidationDto responseDto = mapper.readValue(jsonResponse, ValidationDto.class);
 
             assertNotNull(responseDto);
-            assertEquals(USER_ID, responseDto.getUserId());
-            assertTrue(responseDto.getUserRoles().contains(USER_ROLE));
+            assertEquals(USER_ID, responseDto.userId());
+            assertTrue(responseDto.userRoles().contains(USER_ROLE));
         }
 
         @Test
@@ -1143,7 +1148,7 @@ class AuthControllerIT {
         public void validation_should_return_401_header_authorization_is_not_bearer() throws Exception {
             TokensDto tokens = loginUser();
 
-            String accessToken = tokens.getAccessToken();
+            String accessToken = tokens.accessToken();
 
             requestId = requestIdService.getRequestId();
 
@@ -1182,7 +1187,7 @@ class AuthControllerIT {
                         .build();
 
                 TokensDto tokens = loginUser();
-                String accessToken = tokens.getAccessToken();
+                String accessToken = tokens.accessToken();
                 requestId = requestIdService.getRequestId();
 
                 doThrow(new RuntimeException("Temporary service error."))

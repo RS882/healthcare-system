@@ -1,8 +1,8 @@
 package com.healthcare.auth_service.service.feignClient;
 
 import com.healthcare.auth_service.config.FeignRequestIdConfig;
-import com.healthcare.auth_service.domain.dto.UserAuthDto;
-import com.healthcare.auth_service.domain.dto.UserLookupDto;
+import com.healthcare.auth_service.domain.dto.request.UserAuthDto;
+import com.healthcare.auth_service.domain.dto.response.UserLookupDto;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 

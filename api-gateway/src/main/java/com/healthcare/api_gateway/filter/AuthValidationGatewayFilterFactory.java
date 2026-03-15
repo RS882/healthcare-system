@@ -13,6 +13,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -29,9 +30,9 @@ import static com.healthcare.api_gateway.filter.constant.AttrKeys.USER_ROLES_ATT
  */
 @Component
 @ConditionalOnProperty(
-        name="gateway.auth-validation.enabled",
-        havingValue="true",
-        matchIfMissing=true)
+        name = "gateway.auth-validation.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class AuthValidationGatewayFilterFactory
         extends AbstractGatewayFilterFactory<AuthValidationGatewayFilterFactory.Config> {
 
@@ -79,15 +80,19 @@ public class AuthValidationGatewayFilterFactory
     public GatewayFilter apply(Config config) {
 
         // defaults (do not assume user filled config)
-        String authServiceUri = (config.getAuthServiceUri() == null || config.getAuthServiceUri().isBlank())
+
+        final String configAuthServiceUri = config.getAuthServiceUri();
+        final String authServiceUri = (!StringUtils.hasText(configAuthServiceUri))
                 ? authProps.authServiceUri()
-                : config.getAuthServiceUri();
+                : configAuthServiceUri;
 
-        String validatePath = (config.getValidatePath() == null || config.getValidatePath().isBlank())
+        final String configValidatePath = config.getValidatePath();
+        final String validatePath = (!StringUtils.hasText(configValidatePath))
                 ? authProps.validatePath()
-                : config.getValidatePath();
+                : configValidatePath;
 
-        HttpMethod method = (config.getMethod() == null) ? HttpMethod.GET : config.getMethod();
+        final HttpMethod configMethod = config.getMethod();
+        final HttpMethod method = (configMethod == null) ? HttpMethod.GET : configMethod;
 
         Set<String> allowedLower = normalizeAllowedHeaders(
                 (config.getForwardHeaders() == null || config.getForwardHeaders().isEmpty())
@@ -157,14 +162,14 @@ public class AuthValidationGatewayFilterFactory
     private static Set<String> normalizeAllowedHeaders(List<String> headers) {
         // LinkedHashSet keeps deterministic order (useful in tests/debug)
         return headers.stream()
-                .filter(h -> h != null && !h.isBlank())
-                .map(h -> h.toLowerCase(Locale.ROOT))
+                .filter(StringUtils::hasText)
+                .map(h -> h.toLowerCase(Locale.ROOT).strip())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     private static String joinUri(String base, String path) {
-        String b = (base == null) ? "" : base.trim();
-        String p = (path == null) ? "" : path.trim();
+        String b = (base == null) ? "" : base.strip();
+        String p = (path == null) ? "" : path.strip();
 
         if (b.endsWith("/") && p.startsWith("/")) return b.substring(0, b.length() - 1) + p;
         if (!b.endsWith("/") && !p.startsWith("/")) return b + "/" + p;

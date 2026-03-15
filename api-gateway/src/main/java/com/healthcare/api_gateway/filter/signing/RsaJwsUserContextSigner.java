@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.security.PrivateKey;
 import java.time.Clock;
@@ -45,8 +46,8 @@ public class RsaJwsUserContextSigner implements UserContextSigner {
     @Override
     public String sign(String userId, List<String> roles, String requestId, Duration ttl) {
 
-        if (userId == null || userId.isBlank()) throw new IllegalArgumentException("userId is blank");
-        if (requestId == null || requestId.isBlank()) throw new IllegalArgumentException("requestId is blank");
+        if (!StringUtils.hasText(userId)) throw new IllegalArgumentException("userId is blank");
+        if (!StringUtils.hasText(requestId)) throw new IllegalArgumentException("requestId is blank");
 
         Duration effectiveTtl = normalizeTtl(ttl, props.defaultTtl());
 

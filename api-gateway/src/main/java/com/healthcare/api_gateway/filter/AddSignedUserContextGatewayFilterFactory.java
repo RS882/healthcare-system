@@ -13,6 +13,7 @@ import org.springframework.cloud.gateway.filter.OrderedGatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 
 import java.time.Duration;
@@ -63,10 +64,11 @@ public class AddSignedUserContextGatewayFilterFactory
 
     @Override
     public GatewayFilter apply(Config config) {
+        final String configUserContextHeader = config.getUserContextHeader();
 
-        final String ctxHeader = (config.getUserContextHeader() == null || config.getUserContextHeader().isBlank())
+        final String ctxHeader = (!StringUtils.hasText(configUserContextHeader))
                 ? contextProps.userContextHeader()
-                : config.getUserContextHeader();
+                : configUserContextHeader;
 
         final Duration ttl = normalizeTtl(config.getTtl(), contextProps.ttl());
 
@@ -127,7 +129,7 @@ public class AddSignedUserContextGatewayFilterFactory
         if (userId == null) {
             return Optional.empty();
         }
-        if (requestId == null || requestId.isBlank()) {
+        if (!StringUtils.hasText(requestId)) {
             return Optional.empty();
         }
 

@@ -1,8 +1,8 @@
 package com.healthcare.auth_service.service;
 
 import com.healthcare.auth_service.domain.AuthUserDetails;
-import com.healthcare.auth_service.domain.dto.UserAuthDto;
-import com.healthcare.auth_service.domain.dto.UserLookupDto;
+import com.healthcare.auth_service.domain.dto.request.UserAuthDto;
+import com.healthcare.auth_service.domain.dto.response.UserLookupDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.exception_handler.exception.ServiceUnavailableException;
 import com.healthcare.auth_service.service.feignClient.UserClient;
@@ -75,7 +75,7 @@ class UserClientServiceTest {
 
             assertNotNull(result);
             assertEquals(EMAIL, result.getUsername());
-            assertEquals(USER_ID, result.getId());
+            assertEquals(USER_ID, result.id());
             assertEquals(PASSWORD, result.getPassword());
             Set<String> actualRoles = result.getAuthorities()
                     .stream()

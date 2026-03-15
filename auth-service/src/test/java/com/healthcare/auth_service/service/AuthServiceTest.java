@@ -1,9 +1,9 @@
 package com.healthcare.auth_service.service;
 
 import com.healthcare.auth_service.domain.AuthUserDetails;
-import com.healthcare.auth_service.domain.dto.LoginDto;
-import com.healthcare.auth_service.domain.dto.TokensDto;
-import com.healthcare.auth_service.domain.dto.ValidationDto;
+import com.healthcare.auth_service.domain.dto.request.LoginDto;
+import com.healthcare.auth_service.domain.dto.response.TokensDto;
+import com.healthcare.auth_service.domain.dto.response.ValidationDto;
 import com.healthcare.auth_service.exception_handler.exception.AccessDeniedException;
 import com.healthcare.auth_service.exception_handler.exception.UnauthorizedException;
 import com.healthcare.auth_service.service.interfacies.BlockService;
@@ -191,8 +191,8 @@ class AuthServiceTest {
             ValidationDto result = authService.getValidationDto(userDetails);
 
             assertNotNull(result);
-            assertEquals( USER_ID, result.getUserId());
-            assertTrue(result.getUserRoles().contains(USER_ROLE));
+            assertEquals( USER_ID, result.userId());
+            assertTrue(result.userRoles().contains(USER_ROLE));
 
         }
     }

@@ -9,8 +9,6 @@ import org.springframework.web.context.request.NativeWebRequest;
 import java.util.*;
 import java.util.function.Function;
 
-
-@Slf4j
 public class TokenUtilities {
 
     private TokenUtilities() {
@@ -55,9 +53,9 @@ public class TokenUtilities {
 
     private static String extractJwtFromHeader(String authHeader) {
         if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
+            String token = authHeader.strip().substring(7);
             if (StringUtils.hasText(token)) {
-                return token;
+                return token.strip();
             }
         }
         return null;

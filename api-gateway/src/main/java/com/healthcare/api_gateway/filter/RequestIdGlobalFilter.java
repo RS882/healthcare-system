@@ -12,6 +12,7 @@ import org.springframework.core.Ordered;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
@@ -24,9 +25,9 @@ import static com.healthcare.api_gateway.utilite.GatewaySecurityHeaders.setTrust
 @RequiredArgsConstructor
 @Slf4j
 @ConditionalOnProperty(
-        name="gateway.request-id.enabled",
-        havingValue="true",
-        matchIfMissing=true)
+        name = "gateway.request-id.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
 
     private static final int ORDER = -1000;
@@ -74,18 +75,17 @@ public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
     }
 
     private String getCheckedHeaderValue(HttpHeaders headers, String headerName) {
-        if (headerName == null || headerName.isBlank()) return null;
-        String headerValue = headers.getFirst(headerName);
+        if (!StringUtils.hasText(headerName)) return null;
+        String headerValue = headers.getFirst(headerName.strip());
 
-        headerValue = headerValue != null ? headerValue.trim() : null;
-        if (headerValue != null && headerValue.isBlank()) {
+        if (!StringUtils.hasText(headerValue)) return null;
+        String normalizedHeaderValue = headerValue.strip();
+
+        if (normalizedHeaderValue.length() > 128) {
+            log.debug("Incoming {} header too long: {} chars. Ignored.", headerName, normalizedHeaderValue.length());
             return null;
         }
-        if (headerValue != null && headerValue.length() > 128) {
-            log.debug("Incoming {} header too long: {} chars. Ignored.", headerName, headerValue.length());
-            return null;
-        }
-        return headerValue;
+        return normalizedHeaderValue;
     }
 }
 
