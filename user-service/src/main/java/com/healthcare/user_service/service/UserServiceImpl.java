@@ -75,9 +75,7 @@ public class UserServiceImpl implements UserService {
     public UserDto getUserDtoById(Long id) {
 
         return repository.findById(id)
-                .stream()
                 .map(UserMapper::toUserDto)
-                .findFirst()
-                .orElse(null);
+                .orElseThrow(() -> new UserNotFoundException(id));
     }
 }

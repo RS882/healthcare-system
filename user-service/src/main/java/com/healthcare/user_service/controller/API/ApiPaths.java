@@ -15,7 +15,9 @@ public final class ApiPaths {
 
     public static final String LOOKUP_URL = USER_BASIC_URL + LOOKUP;
 
-    public static final String BY_ID = "/id/{id}";
+    public static final String PATH_VARIABLE_ID = "id";
+
+    public static final String BY_ID = "/id/{" + PATH_VARIABLE_ID + "}";
 
     public static final String BY_ID_URL = USER_BASIC_URL + BY_ID;
 

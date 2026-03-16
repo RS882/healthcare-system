@@ -149,14 +149,89 @@ public interface UserAPI {
 
 
     //=====================================
+    @Operation(summary = "Get user by id",
+            description = "This method get user information by user ID for this user and admin",
+            requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = UserDto.class)))
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Request is successfully",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = UserAuthDto.class))),
 
+            @ApiResponse(responseCode = "400", description = "Id is wrong",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Error400ById",
+                                            ref = "#/components/examples/Error400ById"
+                                    )
+                            })),
+            @ApiResponse(responseCode = "401",
+                    description = "User unauthorized",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Error401ById",
+                                            ref = "#/components/examples/Error401ById"
+                                    )
+                            }
+
+                    )),
+            @ApiResponse(responseCode = "403",
+                    description = "The user does not have access",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Error403ById",
+                                            ref = "#/components/examples/Error403ById"
+                                    )
+                            }
+                    )),
+            @ApiResponse(responseCode = "404", description = "User not found",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Error404ByIdUserIsNotFound",
+                                            ref = "#/components/examples/Error404ByIdUserIsNotFound"
+                                    )
+                            })),
+            @ApiResponse(responseCode = "500",
+                    description = "Temporary error when registering user",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Error500ByIdTemporaryServiceError",
+                                            ref = "#/components/examples/Error500ByIdTemporaryServiceError"
+                                    )
+                            }
+                    )),
+            @ApiResponse(responseCode = "503",
+                    description = "The server is currently overloaded or under maintenance.",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Error503ByIdServiceUnavailable",
+                                            ref = "#/components/examples/Error503ByIdServiceUnavailable"
+                                    )
+                            }
+                    ))
+    })
     @GetMapping(BY_ID)
     ResponseEntity<UserDto> getUserInfoById(
             @NotNull
             @Positive
-            @PathVariable Long id,
-            @AuthenticationPrincipal
-            @Parameter(hidden = true)
-            UserAuthInfoDto authDto
+            @PathVariable Long id
     );
 }

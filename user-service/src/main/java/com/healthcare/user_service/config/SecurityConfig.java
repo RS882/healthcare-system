@@ -1,5 +1,8 @@
 package com.healthcare.user_service.config;
 
+import com.healthcare.user_service.config.auth_manager.OwnerOrAdminAuthorizationManager;
+import com.healthcare.user_service.config.configs_components.CustomAccessDeniedHandler;
+import com.healthcare.user_service.config.configs_components.CustomAuthenticationEntryPoint;
 import com.healthcare.user_service.filter.AuthFilter;
 import com.healthcare.user_service.filter.RequestIdFilter;
 import com.healthcare.user_service.filter.UserContextFilter;
@@ -24,6 +27,9 @@ public class SecurityConfig {
     private final ObjectProvider<RequestIdFilter> requestIdFilterProvider;
     private final ObjectProvider<UserContextFilter> userContextFilterProvider;
     private final ObjectProvider<AuthFilter> authFilterProvider;
+    private final OwnerOrAdminAuthorizationManager ownerOrAdminAuthorizationManager;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
     @Bean
     public SecurityFilterChain configureAuth(HttpSecurity http) throws Exception {
@@ -44,9 +50,14 @@ public class SecurityConfig {
                                 "/error"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, REGISTRATION_URL).permitAll()
+
                         .requestMatchers(HttpMethod.POST, LOOKUP_URL).permitAll()
-                        .requestMatchers(HttpMethod.GET, BY_ID_URL).authenticated()
+
+                        .requestMatchers(HttpMethod.GET, BY_ID_URL)
+                        .access(ownerOrAdminAuthorizationManager)
+
                         .anyRequest().authenticated()
+
                 );
 
         RequestIdFilter requestIdFilter = requestIdFilterProvider.getIfAvailable();
@@ -67,6 +78,11 @@ public class SecurityConfig {
                 http.addFilterAfter(authFilter, RequestIdFilter.class);
             }
         }
+
+        http.exceptionHandling(ex -> ex
+                .authenticationEntryPoint(customAuthenticationEntryPoint)
+                .accessDeniedHandler(customAccessDeniedHandler));
+
         return http.build();
     }
 }

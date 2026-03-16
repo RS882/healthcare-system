@@ -29,26 +29,27 @@ public class OpenApiConfig {
                 // 400
                 .addExamples("Error400RegMissingField", ex400Reg())
                 .addExamples("Error400LookupEmailIsWrong", ex400LookUp())
+                .addExamples("Error400ById", ex400ById())
 //                .addExamples("Error400LogoutIncorrectCookie", ex400(LOGOUT_URL))
                 // 401
-//                .addExamples("Error401LoginIncorrectField", ex401Login())
+                .addExamples("Error401ById", ex401(BY_ID_URL))
 //                .addExamples("Error401RefreshTokenIsIncorrect", ex401(REFRESH_URL))
 //                .addExamples("Error401LogoutTokenIsIncorrect", ex401(LOGOUT_URL))
 //                .addExamples("Error401ValidationTokenIsIncorrect", ex401(VALIDATION_URL))
                 // 403
-//                .addExamples("Error403LoginUserIsBlocked", ex403(LOGIN_URL))
+                .addExamples("Error403ById", ex403(BY_ID_URL))
                 // 404
                 .addExamples("Error404LookupUserIsNotFound", ex404(LOOKUP_URL))
-//                .addExamples("Error404RefreshUserIsNotFound", ex404(REFRESH_URL))
+                .addExamples("Error404ByIdUserIsNotFound", ex404(BY_ID_URL))
                 // 500
                 .addExamples("Error500RegTemporaryServiceError", ex500(REGISTRATION_URL))
                 .addExamples("Error500LookupTemporaryServiceError", ex500(LOOKUP_URL))
-//                .addExamples("Error500LogoutTemporaryServiceError", ex500(LOGOUT_URL))
+                .addExamples("Error500ByIdTemporaryServiceError", ex500(BY_ID_URL))
 //                .addExamples("Error500ValidationTemporaryServiceError", ex500(VALIDATION_URL))
                 // 503
                 .addExamples("Error503RegServiceUnavailable", ex503(REGISTRATION_URL))
                 .addExamples("Error503LookupServiceUnavailable", ex503(LOOKUP_URL))
-//                .addExamples("Error503ValidationServiceUnavailable", ex503(VALIDATION_URL))
+                .addExamples("Error503ByIdServiceUnavailable", ex503(BY_ID_URL))
                     ;
 
         return new OpenAPI()
@@ -117,6 +118,14 @@ public class OpenApiConfig {
                         "Email is not valid"));
     }
 
+    private static Example ex400ById() {
+        return ex(
+                "Id is wrong.",
+                "Id is wrong.",
+                errorExample(HttpStatus.BAD_REQUEST, LOOKUP_URL,
+                        "Id is wrong"));
+    }
+
     private static Example ex400(String url) {
         return ex(
                 "Cookie is incorrect.",
@@ -135,10 +144,10 @@ public class OpenApiConfig {
 
     private static Example ex403(String url) {
         return ex(
-                "User is blocked.",
-                "User s blocked.",
+                "Access denied.",
+                "Access denied.",
                 errorExample(HttpStatus.FORBIDDEN, url,
-                        "User s blocked."));
+                        "Access denied."));
     }
 
     private static Example ex404(String url) {

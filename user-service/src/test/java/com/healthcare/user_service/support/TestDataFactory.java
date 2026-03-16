@@ -50,6 +50,14 @@ public final class TestDataFactory {
         return ThreadLocalRandom.current().nextLong(1, Long.MAX_VALUE);
     }
 
+    public static Long anotherUserId(Long userId) {
+        Long another = randomUserId();
+        while (another.equals(userId)) {
+            another = randomUserId();
+        }
+        return another;
+    }
+
     public static String singedJws() {
         return UUID.randomUUID().toString();
     }
