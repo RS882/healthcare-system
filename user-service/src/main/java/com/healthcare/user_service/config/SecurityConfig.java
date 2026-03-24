@@ -1,6 +1,8 @@
 package com.healthcare.user_service.config;
 
-import com.healthcare.user_service.config.auth_manager.OwnerOrAdminAuthorizationManager;
+import com.healthcare.user_service.constant.Role;
+import com.healthcare.user_service.security.auth_manager_factory.AuthManagerFactory;
+import com.healthcare.user_service.security.auth_manager_factory.RoleAuthorizationManager;
 import com.healthcare.user_service.config.configs_components.CustomAccessDeniedHandler;
 import com.healthcare.user_service.config.configs_components.CustomAuthenticationEntryPoint;
 import com.healthcare.user_service.filter.AuthFilter;
@@ -17,6 +19,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import java.util.Set;
+
 import static com.healthcare.user_service.controller.API.ApiPaths.*;
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -27,7 +31,7 @@ public class SecurityConfig {
     private final ObjectProvider<RequestIdFilter> requestIdFilterProvider;
     private final ObjectProvider<UserContextFilter> userContextFilterProvider;
     private final ObjectProvider<AuthFilter> authFilterProvider;
-    private final OwnerOrAdminAuthorizationManager ownerOrAdminAuthorizationManager;
+    private final AuthManagerFactory authManagerFactory;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CustomAuthenticationEntryPoint customAuthenticationEntryPoint;
 
@@ -54,7 +58,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, LOOKUP_URL).permitAll()
 
                         .requestMatchers(HttpMethod.GET, BY_ID_URL)
-                        .access(ownerOrAdminAuthorizationManager)
+                        .access(authManagerFactory.roleOrOwnerBased(Set.of(Role.ROLE_ADMIN)))
 
                         .anyRequest().authenticated()
 
