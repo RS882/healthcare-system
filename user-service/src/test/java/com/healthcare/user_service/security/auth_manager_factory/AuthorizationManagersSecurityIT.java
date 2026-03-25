@@ -4,6 +4,8 @@ import com.healthcare.user_service.constant.Role;
 import com.healthcare.user_service.model.dto.auth.UserAuthInfoDto;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.SpringBootConfiguration;
+import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.TestConfiguration;
@@ -11,15 +13,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.servlet.util.matcher.MvcRequestMatcher;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.handler.HandlerMappingIntrospector;
 
 import java.util.Set;
 
@@ -28,22 +32,26 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(
-        classes = AuthorizationManagersSecurityIT.TestSecurityConfig.class,
+        classes = AuthorizationManagersSecurityIT.TestApplication.class,
+        webEnvironment = SpringBootTest.WebEnvironment.MOCK,
         properties = {
                 "spring.cloud.config.enabled=false",
                 "spring.cloud.discovery.enabled=false",
                 "spring.cloud.service-registry.auto-registration.enabled=false",
                 "eureka.client.enabled=false",
-                "auth-filter.enabled=false",
+                "spring.config.import=",
+                "spring.cloud.config.import-check.enabled=false",
                 "spring.liquibase.enabled=false",
                 "spring.autoconfigure.exclude=" +
                         "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration," +
                         "org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration," +
-                        "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration"
+                        "org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration," +
+                        "org.springframework.boot.autoconfigure.liquibase.LiquibaseAutoConfiguration," +
+                        "org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration," +
+                        "org.springframework.boot.autoconfigure.data.redis.RedisRepositoriesAutoConfiguration"
         }
 )
 @AutoConfigureMockMvc
-@Import(AuthorizationManagersSecurityIT.TestSecurityConfig.class)
 class AuthorizationManagersSecurityIT {
 
     @Autowired
@@ -119,6 +127,31 @@ class AuthorizationManagersSecurityIT {
         return authentication(auth);
     }
 
+    @SpringBootConfiguration
+    @EnableAutoConfiguration
+    @Import(TestSecurityConfig.class)
+    static class TestApplication {
+    }
+
+    @RestController
+    static class TestController {
+
+        @GetMapping("/test/users/id/{id}/role")
+        public String roleEndpoint(@PathVariable Long id) {
+            return "ok";
+        }
+
+        @GetMapping("/test/users/id/{id}/owner")
+        public String ownerEndpoint(@PathVariable Long id) {
+            return "ok";
+        }
+
+        @GetMapping("/test/users/id/{id}/role-or-owner")
+        public String roleOrOwnerEndpoint(@PathVariable Long id) {
+            return "ok";
+        }
+    }
+
     @TestConfiguration
     static class TestSecurityConfig {
 
@@ -128,19 +161,28 @@ class AuthorizationManagersSecurityIT {
         }
 
         @Bean
+        TestController testController() {
+            return new TestController();
+        }
+
+        @Bean
         SecurityFilterChain testSecurityFilterChain(HttpSecurity http,
-                                                    AuthManagerFactory authManagerFactory) throws Exception {
+                                                    AuthManagerFactory authManagerFactory,
+                                                    HandlerMappingIntrospector introspector) throws Exception {
+
+            MvcRequestMatcher.Builder mvc = new MvcRequestMatcher.Builder(introspector);
+
             return http
                     .csrf(csrf -> csrf.disable())
-                    .httpBasic(Customizer.withDefaults())
+                    .exceptionHandling(ex -> ex.authenticationEntryPoint(unauthorizedEntryPoint()))
                     .authorizeHttpRequests(auth -> auth
-                            .requestMatchers(HttpMethod.GET, "/test/users/id/{id}/role")
+                            .requestMatchers(mvc.pattern(HttpMethod.GET, "/test/users/id/{id}/role"))
                             .access(authManagerFactory.roleBased(Set.of(Role.ROLE_ADMIN)))
 
-                            .requestMatchers(HttpMethod.GET, "/test/users/id/{id}/owner")
+                            .requestMatchers(mvc.pattern(HttpMethod.GET, "/test/users/id/{id}/owner"))
                             .access(authManagerFactory.ownerBased())
 
-                            .requestMatchers(HttpMethod.GET, "/test/users/id/{id}/role-or-owner")
+                            .requestMatchers(mvc.pattern(HttpMethod.GET, "/test/users/id/{id}/role-or-owner"))
                             .access(authManagerFactory.roleOrOwnerBased(Set.of(Role.ROLE_ADMIN)))
 
                             .anyRequest().authenticated()
@@ -148,23 +190,9 @@ class AuthorizationManagersSecurityIT {
                     .build();
         }
 
-        @RestController
-        static class TestController {
-
-            @GetMapping("/test/users/id/{id}/role")
-            public String roleEndpoint(@PathVariable Long id) {
-                return "ok";
-            }
-
-            @GetMapping("/test/users/id/{id}/owner")
-            public String ownerEndpoint(@PathVariable Long id) {
-                return "ok";
-            }
-
-            @GetMapping("/test/users/id/{id}/role-or-owner")
-            public String roleOrOwnerEndpoint(@PathVariable Long id) {
-                return "ok";
-            }
+        @Bean
+        AuthenticationEntryPoint unauthorizedEntryPoint() {
+            return (request, response, authException) -> response.sendError(401);
         }
     }
 }
