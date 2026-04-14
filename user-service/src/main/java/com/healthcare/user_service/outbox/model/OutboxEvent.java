@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -19,7 +21,8 @@ public class OutboxEvent {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name ="event_id", nullable = false, unique = true)
+    @JdbcTypeCode(SqlTypes.CHAR)
+    @Column(name = "event_id", nullable = false, unique = true, length = 36)
     private UUID eventId;
 
     @Column(name ="aggregate_type", nullable = false)
@@ -45,6 +48,7 @@ public class OutboxEvent {
     @Setter(AccessLevel.NONE)
     private Instant createdAt;
 
-    @Column(name ="published", nullable = false)
+    @JdbcTypeCode(SqlTypes.TINYINT)
+    @Column(name = "published", nullable = false)
     private boolean published;
 }
