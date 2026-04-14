@@ -13,7 +13,7 @@ public record KafkaCustomProperties(
         @NotBlank
         String bootstrapServers,
         Topics topics,
-        Groups consumer
+        Groups groups
 ) {
 
     public record Topics(

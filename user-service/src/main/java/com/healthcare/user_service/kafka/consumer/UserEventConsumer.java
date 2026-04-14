@@ -13,7 +13,7 @@ public class UserEventConsumer {
 
     @KafkaListener(
             topics = "${app.kafka.topics.user-registered.name}",
-            groupId = "${app.kafka.consumer.user-service.id}",
+            groupId = "${app.kafka.groups.user-service.id}",
             containerFactory = "userRegisteredKafkaListenerContainerFactory"
     )
     public void listen(UserRegisteredEvent event) {
@@ -22,7 +22,7 @@ public class UserEventConsumer {
 
     @KafkaListener(
             topics = "${app.kafka.topics.user-updated.name}",
-            groupId = "${app.kafka.consumer.user-service.id}",
+            groupId = "${app.kafka.groups.user-service.id}",
             containerFactory = "userUpdatedKafkaListenerContainerFactory"
     )
     public void listen(UserUpdatedEvent event) {
@@ -31,7 +31,7 @@ public class UserEventConsumer {
 
     @KafkaListener(
             topics = "${app.kafka.topics.user-deleted.name}",
-            groupId = "${app.kafka.consumer.user-service.id}",
+            groupId = "${app.kafka.groups.user-service.id}",
             containerFactory = "userDeletedKafkaListenerContainerFactory"
     )
     public void listen(UserDeletedEvent event) {

@@ -69,23 +69,9 @@ public class KafkaConfig {
         return buildListenerContainerFactory(userDeletedConsumerFactory());
     }
 
-    @Bean
-    public NewTopic userRegisteredTopic() {
-        return buildTopic(kafkaProperties.topics().userRegistered());
-    }
-
-    @Bean
-    public NewTopic userUpdatedTopic() {
-        return buildTopic(kafkaProperties.topics().userUpdated());
-    }
-
-    @Bean
-    public NewTopic userDeletedTopic() {
-        return buildTopic(kafkaProperties.topics().userDeleted());
-    }
 
     private <T> ConsumerFactory<String, T> buildConsumerFactory(Class<T> clazz) {
-        return buildConsumerFactory(clazz, kafkaProperties.consumer().userService().id());
+        return buildConsumerFactory(clazz, kafkaProperties.groups().userService().id());
     }
 
     private <T> ConsumerFactory<String, T> buildConsumerFactory(Class<T> clazz, String groupId) {
@@ -113,12 +99,5 @@ public class KafkaConfig {
         factory.setRecordFilterStrategy(record ->
                 !keyMessageService.getKeys().contains(record.value().eventId()));
         return factory;
-    }
-
-    private NewTopic buildTopic(KafkaCustomProperties.TopicProperties topic) {
-        return TopicBuilder.name(topic.name())
-                .partitions(topic.partitions())
-                .replicas(topic.replicas())
-                .build();
     }
 }
