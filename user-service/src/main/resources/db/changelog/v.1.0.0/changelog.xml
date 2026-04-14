@@ -13,5 +13,6 @@
     <include file="create-table-role.xml" relativeToChangelogFile="true"/>
     <include file="create-foreign-key-role-to-users.xml" relativeToChangelogFile="true"/>
     <include file="add-users.xml" relativeToChangelogFile="true"/>
+    <include file="create-table-outbox-event.xml" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
