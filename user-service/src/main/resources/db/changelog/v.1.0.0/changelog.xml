@@ -14,5 +14,11 @@
     <include file="create-foreign-key-role-to-users.xml" relativeToChangelogFile="true"/>
     <include file="add-users.xml" relativeToChangelogFile="true"/>
     <include file="create-table-outbox-event.xml" relativeToChangelogFile="true"/>
-
-</databaseChangeLog>
+    <include file="add-columns-to-outbox-event.xml" relativeToChangelogFile="true"/>
+    <include file="populate-outbox-event-attempt-and-published-at.xml" relativeToChangelogFile="true"/>
+    <include file="add-colum-outbox-status-to-outbox-event.xml" relativeToChangelogFile="true"/>
+    <include file="migrate-published-to-status-to-outbox-event.xml" relativeToChangelogFile="true"/>
+    <include file="drop-default-status-to-outbox-event.xml" relativeToChangelogFile="true"/>
+    <include file="replace-outbox-index-published-with-status-to-outbox-event.xml" relativeToChangelogFile="true"/>
+    <include file="drop-published-column-to-outbox-event.xml" relativeToChangelogFile="true"/>
+ </databaseChangeLog>

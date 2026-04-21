@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="populate_outbox_event_attempt_and_published_at" author="RsLan">
+
+        <update tableName="outbox_event">
+            <column name="attempt_count" valueNumeric="0"/>
+            <where>attempt_count IS NULL</where>
+        </update>
+
+        <update tableName="outbox_event">
+            <column name="published_at" valueComputed="created_at"/>
+            <where>published = 1 AND published_at IS NULL</where>
+        </update>
+
+    </changeSet>
+
+</databaseChangeLog>

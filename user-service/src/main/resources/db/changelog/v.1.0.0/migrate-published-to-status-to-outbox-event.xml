@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="migrate_published_to_status" author="RsLan">
+
+        <update tableName="outbox_event">
+            <column name="status" value="PUBLISHED"/>
+            <where>published = 1</where>
+        </update>
+
+        <update tableName="outbox_event">
+            <column name="status" value="FAILED"/>
+            <where>published = 0 AND attempt_count &gt;= 5</where>
+        </update>
+
+    </changeSet>
+</databaseChangeLog>

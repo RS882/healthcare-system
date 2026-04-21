@@ -1,5 +1,7 @@
 package com.healthcare.user_service.outbox.model;
 
+import com.healthcare.user_service.constant.Role;
+import com.healthcare.user_service.outbox.constant.OutboxStatus;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -50,7 +52,16 @@ public class OutboxEvent {
     @Setter(AccessLevel.NONE)
     private Instant createdAt;
 
-    @JdbcTypeCode(SqlTypes.TINYINT)
-    @Column(name = "published", nullable = false)
-    private boolean published;
+    @Column(name = "status", nullable = false)
+    @Enumerated(EnumType.STRING)
+    private OutboxStatus status;
+
+    @Column(name = "attempt_count", nullable = false)
+    private int attemptCount;
+
+    @Column(name = "last_error")
+    private String lastError;
+
+    @Column(name = "published_at")
+    private Instant publishedAt;
 }

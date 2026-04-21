@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="replace_outbox_index_published_with_status" author="RsLan">
+
+        <dropIndex indexName="idx_outbox_published_created"
+                   tableName="outbox_event"/>
+
+         <createIndex indexName="idx_outbox_status_created"
+                     tableName="outbox_event">
+            <column name="status"/>
+            <column name="created_at"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>

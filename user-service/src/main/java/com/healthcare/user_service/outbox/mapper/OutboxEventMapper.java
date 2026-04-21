@@ -3,6 +3,7 @@ package com.healthcare.user_service.outbox.mapper;
 import com.healthcare.user_service.exception_handler.exception.UnsupportedEventTypeException;
 import com.healthcare.user_service.kafka.event.DomainEvent;
 import com.healthcare.user_service.kafka.event.UserEvent;
+import com.healthcare.user_service.outbox.constant.OutboxStatus;
 import com.healthcare.user_service.outbox.model.OutboxEvent;
 
 import static com.healthcare.user_service.outbox.constant.AggregateType.AGGREGATE_TYPE_USER;
@@ -17,7 +18,10 @@ public final class OutboxEventMapper {
                 .eventId(event.eventId())
                 .eventType(event.eventType().name())
                 .occurredAt(event.occurredAt())
-                .published(false)
+                .status(OutboxStatus.NEW)
+                .attemptCount(0)
+                .lastError(null)
+                .publishedAt(null)
                 .build();
 
         if (event instanceof UserEvent userEvent) {

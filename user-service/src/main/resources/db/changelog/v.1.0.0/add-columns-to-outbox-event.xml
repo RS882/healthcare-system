@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+    <changeSet id="add_columns_to_outbox_event" author="RsLan">
+
+        <addColumn tableName="outbox_event">
+            <column name="attempt_count" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+
+        <addColumn tableName="outbox_event">
+            <column name="last_error" type="VARCHAR(2000)"/>
+        </addColumn>
+
+        <addColumn tableName="outbox_event">
+            <column name="published_at" type="TIMESTAMP"/>
+        </addColumn>
+
+    </changeSet>
+
+</databaseChangeLog>
