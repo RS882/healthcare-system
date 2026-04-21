@@ -11,5 +11,4 @@ public sealed interface DomainEvent permits
     EventType eventType();
 
     Instant occurredAt();
-
 }

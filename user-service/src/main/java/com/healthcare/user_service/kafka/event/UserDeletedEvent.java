@@ -1,7 +1,5 @@
 package com.healthcare.user_service.kafka.event;
 
-
-
 import java.time.Instant;
 import java.util.UUID;
 
@@ -11,4 +9,14 @@ public record UserDeletedEvent(
         Instant occurredAt,
         Long userId,
         String email
-) implements UserEvent {}
+) implements UserEvent {
+    public static UserDeletedEvent of(Long userId, String email) {
+        return new UserDeletedEvent(
+                UUID.randomUUID(),
+                EventType.USER_DELETED,
+                Instant.now(),
+                userId,
+                email
+        );
+    }
+}

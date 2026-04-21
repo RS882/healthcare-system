@@ -9,4 +9,15 @@ public record UserUpdatedEvent(
         Instant occurredAt,
         Long userId,
         String email
-) implements UserEvent {}
+) implements UserEvent {
+
+    public static UserUpdatedEvent of(Long userId, String email) {
+        return new UserUpdatedEvent(
+                UUID.randomUUID(),
+                EventType.USER_UPDATED,
+                Instant.now(),
+                userId,
+                email
+        );
+    }
+}

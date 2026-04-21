@@ -1,9 +1,7 @@
 package com.healthcare.user_service.outbox.model;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -15,6 +13,10 @@ import java.util.UUID;
 @Table(name = "outbox_event")
 @Getter
 @Setter
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
+@ToString
 public class OutboxEvent {
 
     @Id

@@ -30,7 +30,6 @@ public class User {
     private String email;
 
     @Column(name = "username", nullable = false)
-
     private String username;
 
     @Column(name ="password", nullable = false)
