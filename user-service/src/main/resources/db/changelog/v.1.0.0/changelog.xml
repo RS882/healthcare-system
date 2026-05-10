@@ -23,5 +23,6 @@
     <include file="drop-published-column-to-outbox-event.xml" relativeToChangelogFile="true"/>
     <include file="replace-outbox-index-status-created-with-status-created-id-to-outbox-event.xml" relativeToChangelogFile="true"/>
     <include file="create-outbox-status-published-at-index.xml" relativeToChangelogFile="true"/>
+    <include file="create-processed-event-table.xml" relativeToChangelogFile="true"/>
 
  </databaseChangeLog>

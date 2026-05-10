@@ -1,15 +1,21 @@
 package com.healthcare.user_service.kafka.consumer;
 
 import com.healthcare.user_service.kafka.event.UserDeletedEvent;
+import com.healthcare.user_service.kafka.event.UserEvent;
 import com.healthcare.user_service.kafka.event.UserRegisteredEvent;
 import com.healthcare.user_service.kafka.event.UserUpdatedEvent;
+import com.healthcare.user_service.kafka.idempotency.service.interfacies.ProcessedEventService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class UserEventConsumer {
+
+    private final ProcessedEventService processedEventService;
 
     @KafkaListener(
             topics = "${app.kafka.topics.user-registered.name}",
@@ -17,7 +23,7 @@ public class UserEventConsumer {
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listen(UserRegisteredEvent event) {
-        log.info("Received user registered event: {}", event);
+        handle(event, () -> handleUserRegistered(event));
     }
 
     @KafkaListener(
@@ -26,7 +32,7 @@ public class UserEventConsumer {
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listen(UserUpdatedEvent event) {
-        log.info("Received user updated event: {}", event);
+        handle(event, () -> handleUserUpdated(event));
     }
 
     @KafkaListener(
@@ -35,6 +41,33 @@ public class UserEventConsumer {
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listen(UserDeletedEvent event) {
-        log.info("Received user deleted event: {}", event);
+        handle(event, () -> handleUserDeleted(event));
     }
+
+    private void handle(UserEvent event, Runnable businessLogic) {
+        if (processedEventService.isProcessed(event.eventId())) {
+            log.warn("Duplicate event skipped: eventId={}", event.eventId());
+            return;
+        }
+
+        businessLogic.run();
+
+        processedEventService.markProcessed(event.eventId());
+    }
+
+    private void handleUserRegistered(UserRegisteredEvent event) {
+        log.info("Handle user registered: userId={}, email={}", event.userId(), event.email());
+        // TODO: welcome notification / audit / analytics
+    }
+
+    private void handleUserUpdated(UserUpdatedEvent event) {
+        log.info("Handle user updated: userId={}", event.userId());
+        // TODO: update projection / audit
+    }
+
+    private void handleUserDeleted(UserDeletedEvent event) {
+        log.info("Handle user deleted: userId={}", event.userId());
+        // TODO: cleanup / audit
+    }
+
 }
