@@ -1,0 +1,42 @@
+package com.healthcare.user_service.outbox.cleanup;
+
+
+import com.healthcare.user_service.outbox.constant.OutboxStatus;
+import com.healthcare.user_service.outbox.repository.OutboxEventRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
+
+import static com.healthcare.user_service.outbox.constant.OutboxConstant.RETENTION_DAYS;
+
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class OutboxCleanupJob {
+
+    private final OutboxEventRepository repository;
+
+    @Scheduled(cron = "0 0 3 * * *")
+    @Transactional
+    public void cleanupPublishedEvents() {
+        Instant threshold = Instant.now().minus(RETENTION_DAYS, ChronoUnit.DAYS);
+
+        long deletedCount = repository.deleteByStatusAndPublishedAtBefore(
+                OutboxStatus.PUBLISHED,
+                threshold
+        );
+
+        if (deletedCount > 0) {
+            log.info(
+                    "Outbox cleanup completed: deleted {} published events older than {} days",
+                    deletedCount,
+                    RETENTION_DAYS
+            );
+        }
+    }
+}

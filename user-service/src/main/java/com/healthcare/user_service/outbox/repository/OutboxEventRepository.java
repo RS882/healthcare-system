@@ -3,11 +3,16 @@ package com.healthcare.user_service.outbox.repository;
 
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
 import com.healthcare.user_service.outbox.model.OutboxEvent;
+import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> {
 
     List<OutboxEvent> findTop100ByStatusOrderByCreatedAtAsc(OutboxStatus status);
+
+    @Transactional
+    long deleteByStatusAndPublishedAtBefore(OutboxStatus status, Instant threshold);
 }

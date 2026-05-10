@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import static com.healthcare.user_service.outbox.constant.PublisherConstant.MAX_ATTEMPTS;
+import static com.healthcare.user_service.outbox.constant.OutboxConstant.MAX_ATTEMPTS;
 
 @Slf4j
 @Component
