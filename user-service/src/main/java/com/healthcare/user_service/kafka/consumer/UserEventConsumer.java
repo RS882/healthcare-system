@@ -1,5 +1,6 @@
 package com.healthcare.user_service.kafka.consumer;
 
+import com.healthcare.user_service.audit.service.interfacies.AuditService;
 import com.healthcare.user_service.kafka.event.UserDeletedEvent;
 import com.healthcare.user_service.kafka.event.UserEvent;
 import com.healthcare.user_service.kafka.event.UserRegisteredEvent;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
 public class UserEventConsumer {
 
     private final ProcessedEventService processedEventService;
+    private final AuditService auditService;
 
     @KafkaListener(
             topics = "${app.kafka.topics.user-registered.name}",
@@ -23,6 +25,7 @@ public class UserEventConsumer {
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listen(UserRegisteredEvent event) {
+
         handle(event, () -> handleUserRegistered(event));
     }
 
@@ -32,6 +35,7 @@ public class UserEventConsumer {
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listen(UserUpdatedEvent event) {
+
         handle(event, () -> handleUserUpdated(event));
     }
 
@@ -41,6 +45,7 @@ public class UserEventConsumer {
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listen(UserDeletedEvent event) {
+
         handle(event, () -> handleUserDeleted(event));
     }
 
@@ -57,17 +62,20 @@ public class UserEventConsumer {
 
     private void handleUserRegistered(UserRegisteredEvent event) {
         log.info("Handle user registered: userId={}, email={}", event.userId(), event.email());
-        // TODO: welcome notification / audit / analytics
+        auditService.recordEvent(event);
+        // TODO: welcome notification / analytics
     }
 
     private void handleUserUpdated(UserUpdatedEvent event) {
         log.info("Handle user updated: userId={}", event.userId());
-        // TODO: update projection / audit
+        auditService.recordEvent(event);
+        // TODO: update projection
     }
 
     private void handleUserDeleted(UserDeletedEvent event) {
         log.info("Handle user deleted: userId={}", event.userId());
-        // TODO: cleanup / audit
+        auditService.recordEvent(event);
+        // TODO: cleanup
     }
 
 }
