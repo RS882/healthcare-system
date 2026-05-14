@@ -7,6 +7,7 @@ import com.healthcare.user_service.audit.repository.AuditLogRepository;
 
 import com.healthcare.user_service.audit.resolver.CompositeAuditAggregateResolver;
 import com.healthcare.user_service.audit.resolver.dto.AuditAggregate;
+import com.healthcare.user_service.audit.service.interfacies.AuditService;
 import com.healthcare.user_service.exception_handler.exception.SerializeEventException;
 import com.healthcare.user_service.kafka.event.DomainEvent;
 import lombok.RequiredArgsConstructor;
@@ -14,12 +15,13 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class AuditServiceImpl {
+public class AuditServiceImpl implements AuditService {
 
     private final AuditLogRepository repository;
     private final ObjectMapper objectMapper;
     private final CompositeAuditAggregateResolver aggregateResolver;
 
+    @Override
     public void recordEvent(DomainEvent event) {
         AuditAggregate aggregate = aggregateResolver.resolve(event);
 

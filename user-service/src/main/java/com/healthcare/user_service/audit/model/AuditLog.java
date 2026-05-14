@@ -38,7 +38,6 @@ public class AuditLog {
     @Column(name = "message", nullable = false, length = 500)
     private String message;
 
-    @Lob
     @Column(name = "payload")
     private String payload;
 
