@@ -8,6 +8,7 @@ import com.healthcare.user_service.model.dto.auth.UserAuthDto;
 import com.healthcare.user_service.model.dto.auth.UserAuthInfoDto;
 import com.healthcare.user_service.model.dto.request.RegistrationDto;
 import com.healthcare.user_service.model.dto.response.RegistrationResponse;
+import com.healthcare.user_service.outbox.service.intrefacies.OutboxEventService;
 import com.healthcare.user_service.repository.UserRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -35,6 +36,9 @@ class UserServiceImplTest {
 
     @Mock
     private UserRepository repository;
+
+    @Mock
+    private  OutboxEventService outboxEventService;
 
     @Mock
     private PasswordEncoder passwordEncoder;

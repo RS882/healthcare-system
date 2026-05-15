@@ -5,7 +5,9 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.type.SqlTypes;
 
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -35,7 +37,8 @@ public class User {
     @Column(name ="password", nullable = false)
     private String password;
 
-    @Column(name = "is_active")
+    @JdbcTypeCode(SqlTypes.TINYINT)
+    @Column(name = "is_active", nullable = false)
     private boolean isActive;
 
     @CreationTimestamp

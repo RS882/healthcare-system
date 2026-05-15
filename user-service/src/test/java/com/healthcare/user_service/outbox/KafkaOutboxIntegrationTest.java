@@ -1,24 +1,22 @@
 package com.healthcare.user_service.outbox;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.user_service.audit.repository.AuditLogRepository;
+import com.healthcare.user_service.kafka.event.UserRegisteredEvent;
 import com.healthcare.user_service.kafka.idempotency.repository.ProcessedEventRepository;
+import com.healthcare.user_service.kafka.properties.KafkaCustomProperties;
+import com.healthcare.user_service.model.dto.request.RegistrationDto;
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
 import com.healthcare.user_service.outbox.model.OutboxEvent;
 import com.healthcare.user_service.outbox.repository.OutboxEventRepository;
-
-import com.healthcare.user_service.user.dto.RegistrationRequest;
-import org.junit.jupiter.api.Test;
+import com.healthcare.user_service.service.interfacies.UserService;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.DynamicPropertyRegistry;
-import org.springframework.test.context.DynamicPropertySource;
-import org.testcontainers.containers.KafkaContainer;
-import org.testcontainers.containers.MySQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
-import org.testcontainers.utility.DockerImageName;
+import org.springframework.test.context.TestPropertySource;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -27,34 +25,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
-@Testcontainers
-@ActiveProfiles("test")
-class KafkaOutboxIntegrationTest {
-
-    @Container
-    static final MySQLContainer<?> mysql = new MySQLContainer<>("mysql:9.0.1")
-            .withDatabaseName("healthcare_user_test")
-            .withUsername("test")
-            .withPassword("test");
-
-    @Container
-    static final KafkaContainer kafka = new KafkaContainer(
-            DockerImageName.parse("confluentinc/cp-kafka:7.6.1")
-    );
-
-    @DynamicPropertySource
-    static void registerProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", mysql::getJdbcUrl);
-        registry.add("spring.datasource.username", mysql::getUsername);
-        registry.add("spring.datasource.password", mysql::getPassword);
-        registry.add("spring.datasource.driver-class-name", mysql::getDriverClassName);
-
-        registry.add("app.kafka.bootstrap-servers", kafka::getBootstrapServers);
-        registry.add("spring.kafka.bootstrap-servers", kafka::getBootstrapServers);
-
-        registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
-        registry.add("spring.liquibase.enabled", () -> "true");
-    }
+@ActiveProfiles("it")
+@TestPropertySource(properties = {
+        "user-context-filter.enabled=false"
+})
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
+@DisplayName("Kafka outbox integration test")
+class KafkaOutboxIntegrationTest extends  AbstractKafkaMsqlTestContainer {
 
     @Autowired
     private UserService userService;
@@ -68,18 +45,32 @@ class KafkaOutboxIntegrationTest {
     @Autowired
     private ProcessedEventRepository processedEventRepository;
 
+    @Autowired
+    private KafkaTemplate<String, String> stringKafkaTemplate;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private KafkaCustomProperties kafkaProperties;
+
+    @BeforeEach
+    void cleanDatabase() {
+        auditLogRepository.deleteAll();
+        processedEventRepository.deleteAll();
+        outboxEventRepository.deleteAll();
+    }
+
     @Test
-    void shouldPublishUserRegisteredEventAndProcessIt() {
-        // given
-        RegistrationRequest request = new RegistrationRequest(
+    void should_publish_user_registered_event_and_process() {
+        RegistrationDto request = new RegistrationDto(
                 "test@example.com",
+                "Test User",
                 "Password123!"
         );
 
-        // when
         userService.registration(request);
 
-        // then
         await()
                 .atMost(15, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
@@ -90,23 +81,52 @@ class KafkaOutboxIntegrationTest {
 
                     OutboxEvent outboxEvent = outboxEvents.get(0);
 
-                    assertThat(outboxEvent.getStatus())
-                            .isEqualTo(OutboxStatus.PUBLISHED);
+                    assertThat(outboxEvent.getStatus()).isEqualTo(OutboxStatus.PUBLISHED);
+                    assertThat(outboxEvent.getPublishedAt()).isNotNull();
+                    assertThat(outboxEvent.getAttemptCount()).isGreaterThanOrEqualTo(1);
+                    assertThat(outboxEvent.getLastError()).isNull();
 
-                    assertThat(outboxEvent.getPublishedAt())
-                            .isNotNull();
+                    assertThat(auditLogRepository.findAll()).hasSize(1);
+                    assertThat(processedEventRepository.findAll()).hasSize(1);
+                });
+    }
 
-                    assertThat(outboxEvent.getAttemptCount())
-                            .isGreaterThanOrEqualTo(1);
+    @Test
+    void should_not_create_second_audit_log_for_duplicate_event() throws Exception {
+        UserRegisteredEvent event = UserRegisteredEvent.of(
+                100L,
+                "duplicate@example.com"
+        );
 
-                    assertThat(outboxEvent.getLastError())
-                            .isNull();
+        String payload = objectMapper.writeValueAsString(event);
 
-                    assertThat(auditLogRepository.findAll())
-                            .hasSize(1);
+        stringKafkaTemplate.send(
+                kafkaProperties.topics().userRegistered().name(),
+                String.valueOf(event.userId()),
+                payload
+        ).get(5, TimeUnit.SECONDS);
 
-                    assertThat(processedEventRepository.findAll())
-                            .hasSize(1);
+        await()
+                .atMost(10, TimeUnit.SECONDS)
+                .pollInterval(500, TimeUnit.MILLISECONDS)
+                .untilAsserted(() -> {
+                    assertThat(auditLogRepository.findAll()).hasSize(1);
+                    assertThat(processedEventRepository.findAll()).hasSize(1);
+                });
+
+        stringKafkaTemplate.send(
+                kafkaProperties.topics().userRegistered().name(),
+                String.valueOf(event.userId()),
+                payload
+        ).get(5, TimeUnit.SECONDS);
+
+        await()
+                .during(3, TimeUnit.SECONDS)
+                .atMost(5, TimeUnit.SECONDS)
+                .pollInterval(500, TimeUnit.MILLISECONDS)
+                .untilAsserted(() -> {
+                    assertThat(auditLogRepository.findAll()).hasSize(1);
+                    assertThat(processedEventRepository.findAll()).hasSize(1);
                 });
     }
 }
