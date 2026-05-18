@@ -20,23 +20,23 @@ import static com.healthcare.user_service.outbox.constant.OutboxConstant.RETENTI
 public class OutboxCleanupJob {
 
     private final OutboxEventRepository repository;
+    private final OutboxCleanupProperties properties;
 
-    @Scheduled(cron = "0 0 3 * * *")
+    @Scheduled(cron = "${app.outbox.cleanup.cron}")
     @Transactional
     public void cleanupPublishedEvents() {
-        Instant threshold = Instant.now().minus(RETENTION_DAYS, ChronoUnit.DAYS);
+        Instant threshold = Instant.now()
+                .minus(properties.retentionDays(), ChronoUnit.DAYS);
 
         long deletedCount = repository.deleteByStatusAndPublishedAtBefore(
                 OutboxStatus.PUBLISHED,
                 threshold
         );
 
-        if (deletedCount > 0) {
-            log.info(
-                    "Outbox cleanup completed: deleted {} published events older than {} days",
-                    deletedCount,
-                    RETENTION_DAYS
-            );
-        }
+        log.info(
+                "Outbox cleanup completed: deleted {} published events older than {} days",
+                deletedCount,
+                properties.retentionDays()
+        );
     }
 }
