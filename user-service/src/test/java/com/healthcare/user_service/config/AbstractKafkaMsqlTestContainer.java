@@ -1,4 +1,4 @@
-package com.healthcare.user_service.outbox;
+package com.healthcare.user_service.config;
 
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;

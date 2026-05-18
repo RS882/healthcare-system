@@ -1,6 +1,7 @@
-package com.healthcare.user_service.outbox;
+package com.healthcare.user_service.kafka;
 
 
+import com.healthcare.user_service.config.AbstractKafkaMsqlTestContainer;
 import com.healthcare.user_service.kafka.properties.KafkaCustomProperties;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;

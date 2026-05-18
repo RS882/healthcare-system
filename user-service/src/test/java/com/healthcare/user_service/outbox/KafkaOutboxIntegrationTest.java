@@ -3,6 +3,7 @@ package com.healthcare.user_service.outbox;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.user_service.audit.repository.AuditLogRepository;
+import com.healthcare.user_service.config.AbstractKafkaMsqlTestContainer;
 import com.healthcare.user_service.kafka.event.UserRegisteredEvent;
 import com.healthcare.user_service.kafka.idempotency.repository.ProcessedEventRepository;
 import com.healthcare.user_service.kafka.properties.KafkaCustomProperties;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
@@ -31,7 +33,8 @@ import static org.awaitility.Awaitility.await;
 })
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Kafka outbox integration test")
-class KafkaOutboxIntegrationTest extends  AbstractKafkaMsqlTestContainer {
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+class KafkaOutboxIntegrationTest extends AbstractKafkaMsqlTestContainer {
 
     @Autowired
     private UserService userService;

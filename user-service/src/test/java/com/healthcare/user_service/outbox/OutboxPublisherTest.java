@@ -1,5 +1,6 @@
 package com.healthcare.user_service.outbox;
 
+import com.healthcare.user_service.config.AbstractMySqlTestContainer;
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
 import com.healthcare.user_service.outbox.model.OutboxEvent;
 import com.healthcare.user_service.outbox.publisher.OutboxPublisher;
