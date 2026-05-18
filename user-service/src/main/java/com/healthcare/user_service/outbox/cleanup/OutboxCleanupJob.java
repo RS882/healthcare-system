@@ -12,8 +12,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 
-import static com.healthcare.user_service.outbox.constant.OutboxConstant.RETENTION_DAYS;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor

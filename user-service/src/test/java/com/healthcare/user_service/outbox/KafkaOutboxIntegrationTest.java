@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.user_service.audit.repository.AuditLogRepository;
 import com.healthcare.user_service.config.AbstractKafkaMsqlTestContainer;
 import com.healthcare.user_service.kafka.event.UserRegisteredEvent;
+import com.healthcare.user_service.kafka.idempotency.model.ProcessedEventId;
 import com.healthcare.user_service.kafka.idempotency.repository.ProcessedEventRepository;
 import com.healthcare.user_service.kafka.properties.KafkaCustomProperties;
 import com.healthcare.user_service.model.dto.request.RegistrationDto;
@@ -23,13 +24,18 @@ import org.springframework.test.context.TestPropertySource;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static com.healthcare.user_service.kafka.consumer.ConsumerNames.USER_EVENT_CONSUMER;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
 @ActiveProfiles("it")
 @TestPropertySource(properties = {
-        "user-context-filter.enabled=false"
+        "user-context-filter.enabled=false",
+        "app.kafka.topics.user-registered.name=user.registered.outbox-test.v1",
+        "app.kafka.topics.user-updated.name=user.updated.outbox-test.v1",
+        "app.kafka.topics.user-deleted.name=user.deleted.outbox-test.v1",
+        "app.kafka.groups.user-service.id=user-service-outbox-test"
 })
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Kafka outbox integration test")
@@ -101,6 +107,9 @@ class KafkaOutboxIntegrationTest extends AbstractKafkaMsqlTestContainer {
                 "duplicate@example.com"
         );
 
+        ProcessedEventId processedEventId =
+                new ProcessedEventId(event.eventId(), USER_EVENT_CONSUMER);
+
         String payload = objectMapper.writeValueAsString(event);
 
         stringKafkaTemplate.send(
@@ -113,8 +122,11 @@ class KafkaOutboxIntegrationTest extends AbstractKafkaMsqlTestContainer {
                 .atMost(10, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .untilAsserted(() -> {
-                    assertThat(auditLogRepository.findAll()).hasSize(1);
-                    assertThat(processedEventRepository.findAll()).hasSize(1);
+                    assertThat(auditLogRepository.countByEventId(event.eventId()))
+                            .isEqualTo(1);
+
+                    assertThat(processedEventRepository.existsById(processedEventId))
+                            .isTrue();
                 });
 
         stringKafkaTemplate.send(
@@ -128,8 +140,11 @@ class KafkaOutboxIntegrationTest extends AbstractKafkaMsqlTestContainer {
                 .atMost(5, TimeUnit.SECONDS)
                 .pollInterval(500, TimeUnit.MILLISECONDS)
                 .untilAsserted(() -> {
-                    assertThat(auditLogRepository.findAll()).hasSize(1);
-                    assertThat(processedEventRepository.findAll()).hasSize(1);
+                    assertThat(auditLogRepository.countByEventId(event.eventId()))
+                            .isEqualTo(1);
+
+                    assertThat(processedEventRepository.existsById(processedEventId))
+                            .isTrue();
                 });
     }
 }
