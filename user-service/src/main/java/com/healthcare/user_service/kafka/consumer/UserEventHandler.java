@@ -11,6 +11,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.healthcare.user_service.kafka.consumer.ConsumerNames.USER_EVENT_CONSUMER;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -35,14 +37,16 @@ public class UserEventHandler {
     }
 
     private void handleInternal(UserEvent event, Runnable businessLogic) {
-        if (processedEventService.isProcessed(event.eventId())) {
-            log.warn("Duplicate event skipped: eventId={}", event.eventId());
+        if (processedEventService.isProcessed(event.eventId(), USER_EVENT_CONSUMER)) {
+            log.warn("Duplicate event skipped: eventId={}, consumer={}",
+                    event.eventId(),
+                    USER_EVENT_CONSUMER);
             return;
         }
 
         businessLogic.run();
 
-        processedEventService.markProcessed(event.eventId());
+        processedEventService.markProcessed(event.eventId(), USER_EVENT_CONSUMER);
     }
 
     private void handleUserRegistered(UserRegisteredEvent event) {

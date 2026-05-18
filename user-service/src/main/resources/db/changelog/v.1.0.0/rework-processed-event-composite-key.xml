@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-latest.xsd">
+
+    <changeSet id="rework_processed_event_composite_key" author="RsLan">
+
+        <dropTable tableName="processed_event"/>
+
+        <createTable tableName="processed_event">
+            <column name="event_id" type="CHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="consumer_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="processed_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addPrimaryKey
+                tableName="processed_event"
+                columnNames="event_id, consumer_name"
+                constraintName="pk_processed_event"/>
+
+    </changeSet>
+
+</databaseChangeLog>

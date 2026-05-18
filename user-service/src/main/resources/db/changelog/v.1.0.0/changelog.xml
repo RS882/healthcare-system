@@ -26,5 +26,7 @@
     <include file="create-processed-event-table.xml" relativeToChangelogFile="true"/>
     <include file="create-audit-log-table.xml" relativeToChangelogFile="true"/>
     <include file="fix-users-is-active-to-tinyint.xml" relativeToChangelogFile="true"/>
+    <include file="rework-processed-event-composite-key.xml" relativeToChangelogFile="true"/>
+
 
  </databaseChangeLog>
