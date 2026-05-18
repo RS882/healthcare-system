@@ -37,7 +37,6 @@ public class User {
     @Column(name ="password", nullable = false)
     private String password;
 
-    @JdbcTypeCode(SqlTypes.TINYINT)
     @Column(name = "is_active", nullable = false)
     private boolean isActive;
 

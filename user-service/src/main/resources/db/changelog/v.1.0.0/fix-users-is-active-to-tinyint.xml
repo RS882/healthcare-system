@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
+
+
+    <changeSet id="fix_users_is_active_to_tinyint" author="RsLan">
+
+        <preConditions onFail="MARK_RAN">
+            <tableExists tableName="users"/>
+            <columnExists tableName="users" columnName="is_active"/>
+        </preConditions>
+
+        <modifyDataType
+                tableName="users"
+                columnName="is_active"
+                newDataType="TINYINT(1)"/>
+
+    </changeSet>
+</databaseChangeLog>
