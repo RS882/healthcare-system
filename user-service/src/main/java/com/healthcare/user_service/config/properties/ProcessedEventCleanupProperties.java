@@ -1,4 +1,4 @@
-package com.healthcare.user_service.kafka.idempotency.cleanup;
+package com.healthcare.user_service.config.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

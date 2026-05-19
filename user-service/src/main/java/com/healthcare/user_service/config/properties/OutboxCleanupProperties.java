@@ -1,4 +1,4 @@
-package com.healthcare.user_service.outbox.cleanup;
+package com.healthcare.user_service.config.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

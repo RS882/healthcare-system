@@ -1,6 +1,7 @@
 package com.healthcare.user_service.outbox.cleanup;
 
 
+import com.healthcare.user_service.config.properties.OutboxCleanupProperties;
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
 import com.healthcare.user_service.outbox.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;

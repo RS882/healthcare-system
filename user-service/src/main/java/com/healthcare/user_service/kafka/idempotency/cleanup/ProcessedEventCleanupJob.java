@@ -1,5 +1,6 @@
 package com.healthcare.user_service.kafka.idempotency.cleanup;
 
+import com.healthcare.user_service.config.properties.ProcessedEventCleanupProperties;
 import com.healthcare.user_service.kafka.idempotency.repository.ProcessedEventRepository;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +19,7 @@ public class ProcessedEventCleanupJob {
     private final ProcessedEventRepository repository;
     private final ProcessedEventCleanupProperties properties;
 
-    @Scheduled(cron = "${app.processed-event.cleanup.cron:0 30 3 * * *}")
+    @Scheduled(cron = "${app.processed-event.cleanup.cron}")
     @Transactional
     public void cleanupProcessedEvents() {
         Instant threshold = Instant.now()
