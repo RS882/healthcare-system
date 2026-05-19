@@ -32,9 +32,6 @@ import static org.awaitility.Awaitility.await;
 @ActiveProfiles("it")
 @TestPropertySource(properties = {
         "user-context-filter.enabled=false",
-        "app.kafka.topics.user-registered.name=user.registered.outbox-test.v1",
-        "app.kafka.topics.user-updated.name=user.updated.outbox-test.v1",
-        "app.kafka.topics.user-deleted.name=user.deleted.outbox-test.v1",
         "app.kafka.groups.user-service.id=user-service-outbox-test"
 })
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
@@ -73,7 +70,7 @@ class KafkaOutboxIntegrationTest extends AbstractKafkaMsqlTestContainer {
     @Test
     void should_publish_user_registered_event_and_process() {
         RegistrationDto request = new RegistrationDto(
-                "test@example.com",
+                "test-" + System.nanoTime() + "@example.com",
                 "Test User",
                 "Password123!"
         );
@@ -95,11 +92,16 @@ class KafkaOutboxIntegrationTest extends AbstractKafkaMsqlTestContainer {
                     assertThat(outboxEvent.getAttemptCount()).isGreaterThanOrEqualTo(1);
                     assertThat(outboxEvent.getLastError()).isNull();
 
-                    assertThat(auditLogRepository.findAll()).hasSize(1);
-                    assertThat(processedEventRepository.findAll()).hasSize(1);
+                    ProcessedEventId processedEventId =
+                            new ProcessedEventId(outboxEvent.getEventId(), USER_EVENT_CONSUMER);
+
+                    assertThat(auditLogRepository.countByEventId(outboxEvent.getEventId()))
+                            .isEqualTo(1);
+
+                    assertThat(processedEventRepository.existsById(processedEventId))
+                            .isTrue();
                 });
     }
-
     @Test
     void should_not_create_second_audit_log_for_duplicate_event() throws Exception {
         UserRegisteredEvent event = UserRegisteredEvent.of(
