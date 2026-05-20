@@ -16,7 +16,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.*;
 
 import static com.healthcare.user_service.outbox.constant.OutboxConstant.MAX_ATTEMPTS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,6 +27,7 @@ import static org.mockito.Mockito.*;
 @ActiveProfiles("it")
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @TestPropertySource(properties = {
+        "spring.task.scheduling.enabled=false",
         "user-context-filter.enabled=false"
 })
 @DisplayName("Outbox publishing service test")
@@ -44,6 +45,7 @@ class OutboxPublishingServiceTest extends AbstractMySqlTestContainer {
     @BeforeEach
     void cleanDatabase() {
         outboxEventRepository.deleteAll();
+        reset(stringKafkaTemplate);
     }
 
     @Test
@@ -187,6 +189,63 @@ class OutboxPublishingServiceTest extends AbstractMySqlTestContainer {
 
         assertThat(claimedIds)
                 .containsExactly(newEvent.getId());
+    }
+
+    @Test
+    void should_publish_event_only_once_when_two_publishers_run_concurrently() throws Exception {
+        OutboxEvent event = outboxEventRepository.save(
+                newOutboxEvent(OutboxStatus.NEW, 0)
+        );
+
+        when(stringKafkaTemplate.send(
+                eq(event.getTopic()),
+                eq(event.getAggregateId()),
+                eq(event.getPayload())
+        )).thenReturn(CompletableFuture.completedFuture(mock(SendResult.class)));
+
+        ExecutorService executorService = Executors.newFixedThreadPool(2);
+        CountDownLatch startLatch = new CountDownLatch(1);
+
+        Callable<Void> publisherTask = () -> {
+            startLatch.await();
+
+            List<Long> claimedIds = publishingService.claimBatch();
+
+            for (Long claimedId : claimedIds) {
+                publishingService.publishSingle(claimedId);
+            }
+
+            return null;
+        };
+
+        Future<Void> first = executorService.submit(publisherTask);
+        Future<Void> second = executorService.submit(publisherTask);
+
+        startLatch.countDown();
+
+        first.get(10, TimeUnit.SECONDS);
+        second.get(10, TimeUnit.SECONDS);
+
+        executorService.shutdown();
+
+        OutboxEvent updatedEvent = outboxEventRepository
+                .findById(event.getId())
+                .orElseThrow();
+
+        assertThat(updatedEvent.getStatus())
+                .isEqualTo(OutboxStatus.PUBLISHED);
+
+        assertThat(updatedEvent.getAttemptCount())
+                .isEqualTo(1);
+
+        assertThat(updatedEvent.getPublishedAt())
+                .isNotNull();
+
+        verify(stringKafkaTemplate, times(1)).send(
+                eq(event.getTopic()),
+                eq(event.getAggregateId()),
+                eq(event.getPayload())
+        );
     }
 
     private OutboxEvent newOutboxEvent(OutboxStatus status, int attemptCount) {

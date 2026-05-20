@@ -4,6 +4,7 @@ import com.healthcare.user_service.config.AbstractMySqlTestContainer;
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
 import com.healthcare.user_service.outbox.model.OutboxEvent;
 import com.healthcare.user_service.outbox.publisher.OutboxPublisher;
+import com.healthcare.user_service.outbox.publisher.OutboxPublishingService;
 import com.healthcare.user_service.outbox.repository.OutboxEventRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
@@ -40,6 +42,9 @@ class OutboxPublisherTest extends AbstractMySqlTestContainer {
     @Autowired
     private OutboxEventRepository outboxEventRepository;
 
+    @Autowired
+    private OutboxPublishingService publishingService;
+
     @MockitoBean(name = "stringKafkaTemplate")
     private KafkaTemplate<String, String> stringKafkaTemplate;
 
@@ -58,7 +63,9 @@ class OutboxPublisherTest extends AbstractMySqlTestContainer {
                         new RuntimeException("Kafka is down")
                 ));
 
-        outboxPublisher.publish();
+        List<Long> claimed = publishingService.claimBatch();
+
+        publishingService.publishSingle(claimed.get(0));
 
         OutboxEvent updated = outboxEventRepository.findById(event.getId())
                 .orElseThrow();
@@ -76,7 +83,9 @@ class OutboxPublisherTest extends AbstractMySqlTestContainer {
     void should_mark_event_as_failed_when_max_attempts_exceeded() {
         OutboxEvent event = outboxEventRepository.save(newOutboxEvent(MAX_ATTEMPTS));
 
-        outboxPublisher.publish();
+        List<Long> claimed = publishingService.claimBatch();
+
+        publishingService.publishSingle(claimed.get(0));
 
         OutboxEvent updated = outboxEventRepository.findById(event.getId())
                 .orElseThrow();
