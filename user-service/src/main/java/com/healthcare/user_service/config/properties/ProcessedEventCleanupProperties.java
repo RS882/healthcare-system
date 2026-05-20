@@ -1,6 +1,7 @@
 package com.healthcare.user_service.config.properties;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.util.StringUtils;
 
 @ConfigurationProperties(prefix = "app.processed-event.cleanup")
 public record ProcessedEventCleanupProperties(
@@ -9,7 +10,7 @@ public record ProcessedEventCleanupProperties(
 ) {
 
     public ProcessedEventCleanupProperties {
-        if (cron == null || cron.isBlank()) {
+        if (!StringUtils.hasText(cron)) {
             cron = "0 30 3 * * *";
         }
 

@@ -1,21 +1,22 @@
 package com.healthcare.user_service.config.properties;
 
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.util.StringUtils;
 
-@ConfigurationProperties(prefix = "app.outbox.cleanup")
-public record OutboxCleanupProperties(
+@ConfigurationProperties(prefix = "app.outbox.recovery")
+public record OutboxRecoveryProperties(
         String cron,
-        long retentionDays
+        long timeoutMinutes
 ) {
 
-    public OutboxCleanupProperties {
+    public OutboxRecoveryProperties {
         if (!StringUtils.hasText(cron)) {
-            cron = "0 0 3 * * *";
+            cron = "0 */5 * * * *";
         }
 
-        if (retentionDays <= 0) {
-            retentionDays = 7;
+        if (timeoutMinutes <= 0) {
+            timeoutMinutes = 15;
         }
     }
 }
