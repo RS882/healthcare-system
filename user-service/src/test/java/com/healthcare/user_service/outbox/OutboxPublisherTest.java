@@ -1,6 +1,7 @@
 package com.healthcare.user_service.outbox;
 
 import com.healthcare.user_service.config.AbstractMySqlTestContainer;
+import com.healthcare.user_service.kafka.producer.interfaces.KafkaEventSender;
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
 import com.healthcare.user_service.outbox.model.OutboxEvent;
 import com.healthcare.user_service.outbox.publisher.OutboxPublisher;
@@ -45,23 +46,22 @@ class OutboxPublisherTest extends AbstractMySqlTestContainer {
     @Autowired
     private OutboxPublishingService publishingService;
 
-    @MockitoBean(name = "stringKafkaTemplate")
-    private KafkaTemplate<String, String> stringKafkaTemplate;
+    @MockitoBean
+    private KafkaEventSender kafkaEventSender;
 
     @BeforeEach
     void cleanDatabase() {
         outboxEventRepository.deleteAll();
-        reset(stringKafkaTemplate);
+        reset(kafkaEventSender);
     }
 
     @Test
     void should_increment_attempt_count_and_keep_status_new_when_kafka_publish_fails() {
         OutboxEvent event = outboxEventRepository.save(newOutboxEvent(0));
 
-        when(stringKafkaTemplate.send(anyString(), anyString(), anyString()))
-                .thenReturn(CompletableFuture.failedFuture(
-                        new RuntimeException("Kafka is down")
-                ));
+        doThrow(new RuntimeException("Kafka is down"))
+                .when(kafkaEventSender)
+                .send(any(OutboxEvent.class));
 
         List<Long> claimed = publishingService.claimBatch();
 
@@ -75,8 +75,8 @@ class OutboxPublisherTest extends AbstractMySqlTestContainer {
         assertThat(updated.getLastError()).contains("Kafka is down");
         assertThat(updated.getPublishedAt()).isNull();
 
-        verify(stringKafkaTemplate, times(1))
-                .send(event.getTopic(), event.getAggregateId(), event.getPayload());
+        verify(kafkaEventSender, times(1))
+                .send(any(OutboxEvent.class));
     }
 
     @Test
@@ -94,7 +94,7 @@ class OutboxPublisherTest extends AbstractMySqlTestContainer {
         assertThat(updated.getLastError()).isEqualTo("MAX_ATTEMPTS_EXCEEDED");
         assertThat(updated.getPublishedAt()).isNull();
 
-        verifyNoInteractions(stringKafkaTemplate);
+        verifyNoInteractions(kafkaEventSender);
     }
 
     private OutboxEvent newOutboxEvent(int attemptCount) {

@@ -114,11 +114,12 @@ class KafkaOutboxIntegrationTest extends AbstractKafkaMsqlTestContainer {
 
         String payload = objectMapper.writeValueAsString(event);
 
-        stringKafkaTemplate.send(
+        sendInTransaction(
                 kafkaProperties.topics().userRegistered().name(),
                 String.valueOf(event.userId()),
                 payload
-        ).get(5, TimeUnit.SECONDS);
+        );
+
 
         await()
                 .atMost(10, TimeUnit.SECONDS)
@@ -131,11 +132,11 @@ class KafkaOutboxIntegrationTest extends AbstractKafkaMsqlTestContainer {
                             .isTrue();
                 });
 
-        stringKafkaTemplate.send(
+        sendInTransaction(
                 kafkaProperties.topics().userRegistered().name(),
                 String.valueOf(event.userId()),
                 payload
-        ).get(5, TimeUnit.SECONDS);
+        );
 
         await()
                 .during(3, TimeUnit.SECONDS)
@@ -148,5 +149,22 @@ class KafkaOutboxIntegrationTest extends AbstractKafkaMsqlTestContainer {
                     assertThat(processedEventRepository.existsById(processedEventId))
                             .isTrue();
                 });
+    }
+
+    private void sendInTransaction(
+            String topic,
+            String key,
+            String payload
+    ) {
+        stringKafkaTemplate.executeInTransaction(operations -> {
+            try {
+                operations.send(topic, key, payload)
+                        .get(5, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            return true;
+        });
     }
 }

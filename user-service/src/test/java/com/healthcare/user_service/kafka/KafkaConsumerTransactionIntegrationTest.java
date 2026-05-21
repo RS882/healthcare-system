@@ -108,11 +108,11 @@ class KafkaConsumerTransactionIntegrationTest extends AbstractKafkaMsqlTestConta
 
         String payload = objectMapper.writeValueAsString(event);
 
-        stringKafkaTemplate.send(
+        sendInTransaction(
                 userRegisteredTopicName(),
                 String.valueOf(event.userId()),
                 payload
-        ).get(10, TimeUnit.SECONDS);
+        );
 
         await()
                 .atMost(Duration.ofSeconds(30))
@@ -140,5 +140,22 @@ class KafkaConsumerTransactionIntegrationTest extends AbstractKafkaMsqlTestConta
 
     private String dltTopicName() {
         return userRegisteredTopicName() + ".DLT";
+    }
+
+    private void sendInTransaction(
+            String topic,
+            String key,
+            String payload
+    ) {
+        stringKafkaTemplate.executeInTransaction(operations -> {
+            try {
+                operations.send(topic, key, payload)
+                        .get(10, TimeUnit.SECONDS);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            return true;
+        });
     }
 }

@@ -1,19 +1,18 @@
 package com.healthcare.user_service.outbox.publisher;
 
+import com.healthcare.user_service.exception_handler.exception.NotFoundException;
+import com.healthcare.user_service.kafka.producer.interfaces.KafkaEventSender;
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
 import com.healthcare.user_service.outbox.model.OutboxEvent;
 import com.healthcare.user_service.outbox.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import static com.healthcare.user_service.outbox.constant.OutboxConstant.MAX_ATTEMPTS;
 
@@ -23,10 +22,9 @@ import static com.healthcare.user_service.outbox.constant.OutboxConstant.MAX_ATT
 public class OutboxPublishingService {
 
     private static final int BATCH_SIZE = 100;
-    private static final long SEND_TIMEOUT_SECONDS = 5;
 
     private final OutboxEventRepository repository;
-    private final KafkaTemplate<String, String> stringKafkaTemplate;
+    private final KafkaEventSender kafkaEventSender;
 
     @Transactional
     public List<Long> claimBatch() {
@@ -48,7 +46,7 @@ public class OutboxPublishingService {
                         eventId,
                         OutboxStatus.PROCESSING
                 )
-                .orElseThrow(() -> new IllegalStateException(
+                .orElseThrow(() -> new NotFoundException(
                         "Outbox event not found in PROCESSING status: id=" + eventId
                 ));
 
@@ -59,11 +57,7 @@ public class OutboxPublishingService {
         event.setAttemptCount(event.getAttemptCount() + 1);
 
         try {
-            stringKafkaTemplate.send(
-                    event.getTopic(),
-                    event.getAggregateId(),
-                    event.getPayload()
-            ).get(SEND_TIMEOUT_SECONDS, TimeUnit.SECONDS);
+            kafkaEventSender.send(event);
 
             markPublished(event);
 
@@ -73,11 +67,6 @@ public class OutboxPublishingService {
                     event.getTopic(),
                     event.getAttemptCount()
             );
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            markForRetry(event, e);
-        } catch (ExecutionException e) {
-            markForRetry(event, e.getCause() != null ? e.getCause() : e);
         } catch (Exception e) {
             markForRetry(event, e);
         }

@@ -1,14 +1,14 @@
 package com.healthcare.user_service.outbox.publisher;
 
 import com.healthcare.user_service.config.AbstractMySqlTestContainer;
+
+import com.healthcare.user_service.kafka.producer.interfaces.KafkaEventSender;
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
 import com.healthcare.user_service.outbox.model.OutboxEvent;
 import com.healthcare.user_service.outbox.repository.OutboxEventRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -20,16 +20,16 @@ import java.util.concurrent.*;
 
 import static com.healthcare.user_service.outbox.constant.OutboxConstant.MAX_ATTEMPTS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
 @ActiveProfiles("it")
-@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @TestPropertySource(properties = {
         "spring.task.scheduling.enabled=false",
         "user-context-filter.enabled=false"
 })
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Outbox publishing service test")
 class OutboxPublishingServiceTest extends AbstractMySqlTestContainer {
 
@@ -40,26 +40,26 @@ class OutboxPublishingServiceTest extends AbstractMySqlTestContainer {
     private OutboxEventRepository outboxEventRepository;
 
     @MockitoBean
-    private KafkaTemplate<String, String> stringKafkaTemplate;
+    private KafkaEventSender kafkaEventSender;
+
+    @MockitoBean
+    private OutboxPublisher outboxPublisher;
 
     @BeforeEach
     void cleanDatabase() {
         outboxEventRepository.deleteAll();
-        reset(stringKafkaTemplate);
+        reset(kafkaEventSender);
     }
 
     @Test
     void should_claim_new_events_and_mark_them_as_processing() {
-
         OutboxEvent event = outboxEventRepository.save(
                 newOutboxEvent(OutboxStatus.NEW, 0)
         );
 
         List<Long> claimedIds = publishingService.claimBatch();
 
-        OutboxEvent updatedEvent = outboxEventRepository
-                .findById(event.getId())
-                .orElseThrow();
+        OutboxEvent updatedEvent = findEvent(event.getId());
 
         assertThat(claimedIds)
                 .containsExactly(event.getId());
@@ -69,29 +69,18 @@ class OutboxPublishingServiceTest extends AbstractMySqlTestContainer {
     }
 
     @Test
-    void should_publish_processing_event() throws Exception {
-
+    void should_publish_processing_event() {
         OutboxEvent event = outboxEventRepository.save(
                 newOutboxEvent(OutboxStatus.PROCESSING, 0)
         );
 
-        SendResult<String, String> sendResult =
-                mock(SendResult.class);
-
-        CompletableFuture<SendResult<String, String>> future =
-                CompletableFuture.completedFuture(sendResult);
-
-        when(stringKafkaTemplate.send(
-                eq(event.getTopic()),
-                eq(event.getAggregateId()),
-                eq(event.getPayload())
-        )).thenReturn(future);
+        doNothing()
+                .when(kafkaEventSender)
+                .send(any(OutboxEvent.class));
 
         publishingService.publishSingle(event.getId());
 
-        OutboxEvent updatedEvent = outboxEventRepository
-                .findById(event.getId())
-                .orElseThrow();
+        OutboxEvent updatedEvent = findEvent(event.getId());
 
         assertThat(updatedEvent.getStatus())
                 .isEqualTo(OutboxStatus.PUBLISHED);
@@ -105,11 +94,8 @@ class OutboxPublishingServiceTest extends AbstractMySqlTestContainer {
         assertThat(updatedEvent.getLastError())
                 .isNull();
 
-        verify(stringKafkaTemplate).send(
-                eq(event.getTopic()),
-                eq(event.getAggregateId()),
-                eq(event.getPayload())
-        );
+        verify(kafkaEventSender, times(1))
+                .send(any(OutboxEvent.class));
     }
 
     @Test
@@ -118,19 +104,13 @@ class OutboxPublishingServiceTest extends AbstractMySqlTestContainer {
                 newOutboxEvent(OutboxStatus.PROCESSING, 0)
         );
 
-        when(stringKafkaTemplate.send(
-                eq(event.getTopic()),
-                eq(event.getAggregateId()),
-                eq(event.getPayload())
-        )).thenReturn(CompletableFuture.failedFuture(
-                new RuntimeException("Kafka is down")
-        ));
+        doThrow(new RuntimeException("Kafka is down"))
+                .when(kafkaEventSender)
+                .send(any(OutboxEvent.class));
 
         publishingService.publishSingle(event.getId());
 
-        OutboxEvent updatedEvent = outboxEventRepository
-                .findById(event.getId())
-                .orElseThrow();
+        OutboxEvent updatedEvent = findEvent(event.getId());
 
         assertThat(updatedEvent.getStatus())
                 .isEqualTo(OutboxStatus.NEW);
@@ -143,23 +123,20 @@ class OutboxPublishingServiceTest extends AbstractMySqlTestContainer {
 
         assertThat(updatedEvent.getPublishedAt())
                 .isNull();
+
+        verify(kafkaEventSender, times(1))
+                .send(any(OutboxEvent.class));
     }
 
     @Test
     void should_mark_event_as_failed_when_max_attempts_exceeded() {
-
         OutboxEvent event = outboxEventRepository.save(
-                newOutboxEvent(
-                        OutboxStatus.PROCESSING,
-                        MAX_ATTEMPTS
-                )
+                newOutboxEvent(OutboxStatus.PROCESSING, MAX_ATTEMPTS)
         );
 
         publishingService.publishSingle(event.getId());
 
-        OutboxEvent updatedEvent = outboxEventRepository
-                .findById(event.getId())
-                .orElseThrow();
+        OutboxEvent updatedEvent = findEvent(event.getId());
 
         assertThat(updatedEvent.getStatus())
                 .isEqualTo(OutboxStatus.FAILED);
@@ -167,12 +144,14 @@ class OutboxPublishingServiceTest extends AbstractMySqlTestContainer {
         assertThat(updatedEvent.getLastError())
                 .isEqualTo("MAX_ATTEMPTS_EXCEEDED");
 
-        verifyNoInteractions(stringKafkaTemplate);
+        assertThat(updatedEvent.getPublishedAt())
+                .isNull();
+
+        verifyNoInteractions(kafkaEventSender);
     }
 
     @Test
     void should_claim_only_new_events() {
-
         OutboxEvent newEvent = outboxEventRepository.save(
                 newOutboxEvent(OutboxStatus.NEW, 0)
         );
@@ -183,6 +162,10 @@ class OutboxPublishingServiceTest extends AbstractMySqlTestContainer {
 
         outboxEventRepository.save(
                 newOutboxEvent(OutboxStatus.PUBLISHED, 1)
+        );
+
+        outboxEventRepository.save(
+                newOutboxEvent(OutboxStatus.FAILED, MAX_ATTEMPTS)
         );
 
         List<Long> claimedIds = publishingService.claimBatch();
@@ -197,11 +180,9 @@ class OutboxPublishingServiceTest extends AbstractMySqlTestContainer {
                 newOutboxEvent(OutboxStatus.NEW, 0)
         );
 
-        when(stringKafkaTemplate.send(
-                eq(event.getTopic()),
-                eq(event.getAggregateId()),
-                eq(event.getPayload())
-        )).thenReturn(CompletableFuture.completedFuture(mock(SendResult.class)));
+        doNothing()
+                .when(kafkaEventSender)
+                .send(any(OutboxEvent.class));
 
         ExecutorService executorService = Executors.newFixedThreadPool(2);
         CountDownLatch startLatch = new CountDownLatch(1);
@@ -228,9 +209,7 @@ class OutboxPublishingServiceTest extends AbstractMySqlTestContainer {
 
         executorService.shutdown();
 
-        OutboxEvent updatedEvent = outboxEventRepository
-                .findById(event.getId())
-                .orElseThrow();
+        OutboxEvent updatedEvent = findEvent(event.getId());
 
         assertThat(updatedEvent.getStatus())
                 .isEqualTo(OutboxStatus.PUBLISHED);
@@ -241,14 +220,19 @@ class OutboxPublishingServiceTest extends AbstractMySqlTestContainer {
         assertThat(updatedEvent.getPublishedAt())
                 .isNotNull();
 
-        verify(stringKafkaTemplate, times(1)).send(
-                eq(event.getTopic()),
-                eq(event.getAggregateId()),
-                eq(event.getPayload())
-        );
+        verify(kafkaEventSender, times(1))
+                .send(any(OutboxEvent.class));
     }
 
-    private OutboxEvent newOutboxEvent(OutboxStatus status, int attemptCount) {
+    private OutboxEvent findEvent(Long id) {
+        return outboxEventRepository.findById(id)
+                .orElseThrow();
+    }
+
+    private OutboxEvent newOutboxEvent(
+            OutboxStatus status,
+            int attemptCount
+    ) {
         return OutboxEvent.builder()
                 .eventId(UUID.randomUUID())
                 .aggregateType("USER")

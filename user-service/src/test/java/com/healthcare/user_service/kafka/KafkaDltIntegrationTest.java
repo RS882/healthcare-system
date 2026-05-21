@@ -8,18 +8,13 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.DisplayNameGenerator;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -83,11 +78,9 @@ class KafkaDltIntegrationTest extends AbstractKafkaMsqlTestContainer {
                 }
                 """;
 
-        stringKafkaTemplate.send(
-                userRegisteredTopicName(),
+        sendInTransaction(userRegisteredTopicName(),
                 UUID.randomUUID().toString(),
-                brokenPayload
-        ).get();
+                brokenPayload);
 
         await()
                 .atMost(Duration.ofSeconds(30))
@@ -112,5 +105,22 @@ class KafkaDltIntegrationTest extends AbstractKafkaMsqlTestContainer {
 
     private String dltTopicName() {
         return userRegisteredTopicName() + ".DLT";
+    }
+
+    private void sendInTransaction(
+            String topic,
+            String key,
+            String payload
+    ) {
+        stringKafkaTemplate.executeInTransaction(operations -> {
+            try {
+                operations.send(topic, key, payload)
+                        .get();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            return true;
+        });
     }
 }
