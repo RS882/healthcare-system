@@ -9,6 +9,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,7 @@ import java.io.IOException;
 import static com.healthcare.user_service.filter.security.constant.AttrNames.ATTR_REQUEST_ID;
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 @ConditionalOnProperty(
         name = "request-id-filter.enabled",
@@ -50,6 +52,8 @@ public class RequestIdFilter extends OncePerRequestFilter {
                 );
             }
             requestId = requestId.strip();
+
+            log.info("RequestIdFilter received requestId={}", requestId);
             if (!requestIdService.isRequestIdValid(requestId)) {
                 throw new RequestIdException(
                         HttpStatus.BAD_REQUEST,

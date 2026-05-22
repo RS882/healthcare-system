@@ -64,10 +64,15 @@ services:
       DB: ${DB}
       DB_USERNAME: ${DB_USERNAME}
       DB_PASSWORD: ${DB_PASSWORD}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
     depends_on:
       config-server:
         condition: service_healthy
+    volumes:
+      - ./secrets:/app/secrets
 
   api-gateway:
     build: ./api-gateway
@@ -79,6 +84,8 @@ services:
       EUREKA: ${EUREKA}
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
+    volumes:
+      - ./secrets:/app/secrets
     depends_on:
       config-server:
         condition: service_healthy
