@@ -3,6 +3,7 @@ package com.healthcare.user_service.outbox.cleanup;
 
 import com.healthcare.user_service.config.properties.OutboxCleanupProperties;
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
+import com.healthcare.user_service.outbox.metrics.OutboxMetricsService;
 import com.healthcare.user_service.outbox.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,6 +21,7 @@ public class OutboxCleanupJob {
 
     private final OutboxEventRepository repository;
     private final OutboxCleanupProperties properties;
+    private final OutboxMetricsService metricsService;
 
     @Scheduled(cron = "${app.outbox.cleanup.cron}")
     @Transactional
@@ -32,10 +34,14 @@ public class OutboxCleanupJob {
                 threshold
         );
 
-        log.info(
-                "Outbox cleanup completed: deleted {} published events older than {} days",
-                deletedCount,
-                properties.retentionDays()
-        );
+        if (deletedCount > 0) {
+            metricsService.incrementCleanupDeleted(deletedCount);
+
+            log.info(
+                    "Outbox cleanup completed: deleted {} published events older than {} days",
+                    deletedCount,
+                    properties.retentionDays()
+            );
+        }
     }
 }

@@ -3,6 +3,7 @@ package com.healthcare.user_service.outbox.publisher;
 import com.healthcare.user_service.exception_handler.exception.NotFoundException;
 import com.healthcare.user_service.kafka.producer.interfaces.KafkaEventSender;
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
+import com.healthcare.user_service.outbox.metrics.OutboxMetricsService;
 import com.healthcare.user_service.outbox.model.OutboxEvent;
 import com.healthcare.user_service.outbox.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +26,7 @@ public class OutboxPublishingService {
 
     private final OutboxEventRepository repository;
     private final KafkaEventSender kafkaEventSender;
+    private final OutboxMetricsService metricsService;
 
     @Transactional
     public List<Long> claimBatch() {
@@ -57,9 +59,11 @@ public class OutboxPublishingService {
         event.setAttemptCount(event.getAttemptCount() + 1);
 
         try {
-            kafkaEventSender.send(event);
+            metricsService.recordPublishDuration(() -> kafkaEventSender.send(event));
 
             markPublished(event);
+
+            metricsService.incrementPublishSuccess();
 
             log.info(
                     "Outbox event published: eventId={}, topic={}, attempts={}",
@@ -68,6 +72,7 @@ public class OutboxPublishingService {
                     event.getAttemptCount()
             );
         } catch (Exception e) {
+            metricsService.incrementPublishFailure();
             markForRetry(event, e);
         }
     }
@@ -79,6 +84,8 @@ public class OutboxPublishingService {
 
         event.setStatus(OutboxStatus.FAILED);
         event.setLastError("MAX_ATTEMPTS_EXCEEDED");
+
+        metricsService.incrementPublishFailure();
 
         log.warn(
                 "Outbox event failed permanently: eventId={}, attempts={}",
@@ -98,6 +105,8 @@ public class OutboxPublishingService {
     private void markForRetry(OutboxEvent event, Throwable error) {
         event.setStatus(OutboxStatus.NEW);
         event.setLastError(truncate(error.getMessage()));
+
+        metricsService.incrementPublishRetry();
 
         log.error(
                 "Failed to publish outbox event: eventId={}, topic={}, attempts={}",

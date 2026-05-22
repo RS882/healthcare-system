@@ -51,7 +51,9 @@ public class SecurityConfig {
                                 "/v3/api-docs",
                                 "/v3/api-docs/**",
                                 "/webjars/**",
-                                "/error"
+                                "/error",
+                                "/actuator/**",
+                                "/api/actuator/**"
                         ).permitAll()
                         .requestMatchers(HttpMethod.POST, REGISTRATION_URL).permitAll()
 

@@ -41,13 +41,13 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> 
 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
-        update OutboxEvent e
-        set e.status = :newStatus,
-            e.lastError = :lastError
-        where e.status = :currentStatus
-          and e.createdAt < :threshold
-        """)
-    int  resetStuckProcessingEvents(
+            update OutboxEvent e
+            set e.status = :newStatus,
+                e.lastError = :lastError
+            where e.status = :currentStatus
+              and e.createdAt < :threshold
+            """)
+    int resetStuckProcessingEvents(
             @Param("currentStatus") OutboxStatus currentStatus,
             @Param("newStatus") OutboxStatus newStatus,
             @Param("threshold") Instant threshold,
@@ -57,12 +57,14 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, Long> 
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Transactional
     @Query("""
-        update OutboxEvent e
-        set e.createdAt = :createdAt
-        where e.id = :id
-        """)
+            update OutboxEvent e
+            set e.createdAt = :createdAt
+            where e.id = :id
+            """)
     void updateCreatedAtById(
             @Param("id") Long id,
             @Param("createdAt") Instant createdAt
     );
+
+    long countByStatus(OutboxStatus status);
 }

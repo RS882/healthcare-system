@@ -2,6 +2,7 @@ package com.healthcare.user_service.outbox.cleanup;
 
 import com.healthcare.user_service.config.properties.OutboxRecoveryProperties;
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
+import com.healthcare.user_service.outbox.metrics.OutboxMetricsService;
 import com.healthcare.user_service.outbox.repository.OutboxEventRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,6 +20,7 @@ public class OutboxProcessingRecoveryJob {
 
     private final OutboxEventRepository repository;
     private final OutboxRecoveryProperties properties;
+    private final OutboxMetricsService metricsService;
 
     @Scheduled(cron = "${app.outbox.recovery.cron}")
     @Transactional
@@ -34,6 +36,7 @@ public class OutboxProcessingRecoveryJob {
         );
 
         if (recoveredCount > 0) {
+            metricsService.incrementRecoveredProcessing(recoveredCount);
             log.warn(
                     "Recovered {} stuck PROCESSING outbox events older than {} minutes",
                     recoveredCount,
