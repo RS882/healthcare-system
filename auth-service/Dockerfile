@@ -1,19 +1,14 @@
-FROM eclipse-temurin:17-jdk-alpine AS builder
-
-RUN apk add --no-cache curl unzip
-
-RUN curl -fsSL https://dlcdn.apache.org/maven/maven-3/3.9.10/binaries/apache-maven-3.9.10-bin.zip -o maven.zip \
-    && unzip maven.zip -d /opt \
-    && ln -s /opt/apache-maven-3.9.10 /opt/maven \
-    && ln -s /opt/maven/bin/mvn /usr/bin/mvn
+FROM maven:3.9.16-eclipse-temurin-17 AS builder
 
 WORKDIR /app
 
-COPY . .
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
 
+COPY src ./src
 RUN mvn clean package -DskipTests
 
-FROM eclipse-temurin:17-jdk-alpine
+FROM eclipse-temurin:17-jre
 
 WORKDIR /app
 

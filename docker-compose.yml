@@ -43,18 +43,18 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: host.docker.internal:9092
     depends_on:
       - config-server
-
-  ai-service:
-    build: ./aiservice
-    container_name: ai-service
-    ports:
-      - "8087:8087"
-    environment:
-      CONFIG: http://config-server:8888
-      EUREKA: http://service-registry:8761/eureka/
-      OPENAI_API_KEY: ${OPENAI_API_KEY}
-    depends_on:
-      - config-server
+#
+#  ai-service:
+#    build: ./aiservice
+#    container_name: ai-service
+#    ports:
+#      - "8087:8087"
+#    environment:
+#      CONFIG: http://config-server:8888
+#      EUREKA: http://service-registry:8761/eureka/
+#      OPENAI_API_KEY: ${OPENAI_API_KEY}
+#    depends_on:
+#      - config-server
 
   api-gateway:
     build: ./api-gateway
@@ -68,4 +68,4 @@ services:
     depends_on:
       - auth-service
       - user-service
-      - ai-service
+#      - ai-service
