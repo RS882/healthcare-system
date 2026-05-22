@@ -5,7 +5,7 @@ services:
     ports:
       - "8761:8761"
     environment:
-      EUREKA: http://service-registry:8761/eureka/
+      EUREKA_HOSTNAME: ${EUREKA_HOSTNAME}
 
   config-server:
     build: ./config-server
@@ -13,7 +13,8 @@ services:
     ports:
       - "8888:8888"
     environment:
-      EUREKA: http://service-registry:8761/eureka/
+      GIT: ${GIT}
+      EUREKA: ${EUREKA}
     depends_on:
       - service-registry
 
@@ -23,10 +24,20 @@ services:
     ports:
       - "8081:8081"
     environment:
-      CONFIG: http://config-server:8888
-      EUREKA: http://service-registry:8761/eureka/
-      MYSQL_HOST: host.docker.internal
-      REDIS_HOST: host.docker.internal
+      ACCESS_SECRET: ${ACCESS_SECRET}
+      ACCESS_TOKEN_EXPIRATION_MS: ${ACCESS_TOKEN_EXPIRATION_MS}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REFRESH_PREFIX: ${REFRESH_PREFIX}
+      REFRESH_SECRET: ${REFRESH_SECRET}
+      REFRESH_TOKEN_EXPIRATION_MS: ${REFRESH_TOKEN_EXPIRATION_MS}
+      COOKIE_PATH: ${COOKIE_PATH};
+      MAX_TOKEN: ${MAX_TOKEN}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      BLACKLIST_PREFIX: ${BLACKLIST_PREFIX}
+      BLOCKED_PREFIX: ${BLOCKED_PREFIX}
+      CONFIG: ${CONFIG}
+      EUREKA: ${EUREKA}
     depends_on:
       - config-server
 
@@ -36,11 +47,11 @@ services:
     ports:
       - "8082:8082"
     environment:
-      CONFIG: http://config-server:8888
-      EUREKA: http://service-registry:8761/eureka/
-      MYSQL_HOST: host.docker.internal
-      REDIS_HOST: host.docker.internal
-      KAFKA_BOOTSTRAP_SERVERS: host.docker.internal:9092
+      CONFIG: ${CONFIG}
+      EUREKA: ${EUREKA}
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
     depends_on:
       - config-server
 #
@@ -62,9 +73,10 @@ services:
     ports:
       - "8080:8080"
     environment:
-      CONFIG: http://config-server:8888
-      EUREKA: http://service-registry:8761/eureka/
-      REDIS_HOST: host.docker.internal
+      CONFIG: ${CONFIG}
+      EUREKA: ${EUREKA}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
     depends_on:
       - auth-service
       - user-service
