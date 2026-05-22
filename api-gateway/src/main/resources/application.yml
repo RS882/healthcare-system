@@ -3,4 +3,4 @@ spring:
     name: api-gateway
 
   config:
-    import: optional:configserver:${CONFIG}
+    import: configserver:${CONFIG}

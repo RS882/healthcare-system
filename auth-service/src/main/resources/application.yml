@@ -3,4 +3,4 @@ spring:
     name: auth-service
 
   config:
-    import: optional:configserver:${CONFIG}
+    import: configserver:${CONFIG}
