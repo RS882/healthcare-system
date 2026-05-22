@@ -6,6 +6,11 @@ services:
       - "8761:8761"
     environment:
       EUREKA_HOSTNAME: ${EUREKA_HOSTNAME}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   config-server:
     build: ./config-server
@@ -16,7 +21,13 @@ services:
       GIT: ${GIT}
       EUREKA: ${EUREKA}
     depends_on:
-      - service-registry
+      service-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
 
   auth-service:
     build: ./auth-service
@@ -31,7 +42,7 @@ services:
       REFRESH_PREFIX: ${REFRESH_PREFIX}
       REFRESH_SECRET: ${REFRESH_SECRET}
       REFRESH_TOKEN_EXPIRATION_MS: ${REFRESH_TOKEN_EXPIRATION_MS}
-      COOKIE_PATH: ${COOKIE_PATH};
+      COOKIE_PATH: ${COOKIE_PATH}
       MAX_TOKEN: ${MAX_TOKEN}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
       BLACKLIST_PREFIX: ${BLACKLIST_PREFIX}
@@ -39,7 +50,8 @@ services:
       CONFIG: ${CONFIG}
       EUREKA: ${EUREKA}
     depends_on:
-      - config-server
+      config-server:
+        condition: service_healthy
 
   user-service:
     build: ./user-service
@@ -54,19 +66,8 @@ services:
       DB_PASSWORD: ${DB_PASSWORD}
       KAFKA_BOOTSTRAP_SERVERS: ${KAFKA_BOOTSTRAP_SERVERS}
     depends_on:
-      - config-server
-#
-#  ai-service:
-#    build: ./aiservice
-#    container_name: ai-service
-#    ports:
-#      - "8087:8087"
-#    environment:
-#      CONFIG: http://config-server:8888
-#      EUREKA: http://service-registry:8761/eureka/
-#      OPENAI_API_KEY: ${OPENAI_API_KEY}
-#    depends_on:
-#      - config-server
+      config-server:
+        condition: service_healthy
 
   api-gateway:
     build: ./api-gateway
@@ -79,6 +80,9 @@ services:
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
     depends_on:
-      - auth-service
-      - user-service
-#      - ai-service
+      config-server:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      user-service:
+        condition: service_started
