@@ -1,0 +1,30 @@
+services:
+  auth-service:
+    image: auth-service:latest
+    ports:
+      - "8081:8081"
+    environment:
+      ACCESS_SECRET: ${ACCESS_SECRET}
+      ACCESS_TOKEN_EXPIRATION_MS: ${ACCESS_TOKEN_EXPIRATION_MS}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS}
+      BLACKLIST_PREFIX: ${BLACKLIST_PREFIX}
+      BLOCKED_PREFIX: ${BLOCKED_PREFIX}
+      CONFIG: ${CONFIG}
+      COOKIE_PATH: ${COOKIE_PATH};
+      EUREKA: ${EUREKA}
+      MAX_TOKEN: ${MAX_TOKEN}
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+      REFRESH_PREFIX: ${REFRESH_PREFIX}
+      REFRESH_SECRET: ${REFRESH_SECRET}
+#    depends_on:
+#      - redis
+#      - config-server
+#      - service-registry
+
+#  redis:
+#    image: redis:7-alpine
+#    container_name: redis
+#    ports:
+#      - "6379:6379"
+

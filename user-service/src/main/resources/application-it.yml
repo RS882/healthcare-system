@@ -1,0 +1,74 @@
+server:
+  port: 0
+
+spring:
+  application:
+    name: user-service-it
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  liquibase:
+    change-log: classpath:/db/changelog/db.changelog-master.xml
+    enabled: true
+
+  task:
+    scheduling:
+      enabled: true
+
+cors:
+  allowed-origins: http://localhost
+
+request-id:
+  prefix: "test-request-id:"
+  ttl: 1s
+  value: "test-user-service"
+
+header-request-id:
+  name: "X-Test-Request-Id"
+
+user-context:
+  userContextHeader: "X-Test-User-Context"
+
+app:
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    topics:
+      user-registered:
+        name: user.registered.v1
+        partitions: 3
+        replicas: 1
+      user-updated:
+        name: user.updated.v1
+        partitions: 3
+        replicas: 1
+      user-deleted:
+        name: user.deleted.v1
+        partitions: 3
+        replicas: 1
+
+    groups:
+      user-service:
+        id: user-service-group-it
+
+    producer:
+      transaction-id-prefix: user-service-tx-
+      properties:
+        enable.idempotence: true
+        acks: all
+
+  outbox:
+    cleanup:
+      cron: "0 0 3 * * *"
+      retention-days: 7
+    recovery:
+      cron: "0 */5 * * * *"
+      timeout-minutes: 15
+
+  processed-event:
+    cleanup:
+      cron: "0 30 3 * * *"
+      retention-days: 30

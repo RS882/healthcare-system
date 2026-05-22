@@ -1,0 +1,32 @@
+# 📦 Этап сборки (build stage)
+FROM eclipse-temurin:17-jdk-alpine AS builder
+
+# 🧰 Установка curl и unzip для скачивания и распаковки Maven
+RUN apk add --no-cache curl unzip
+
+# 📥 Загрузка Maven вручную (версия 3.9.6)
+RUN curl -fsSL https://dlcdn.apache.org/maven/maven-3/3.9.6/binaries/apache-maven-3.9.6-bin.zip -o maven.zip \
+    && unzip maven.zip -d /opt \
+    && ln -s /opt/apache-maven-3.9.6 /opt/maven \
+    && ln -s /opt/maven/bin/mvn /usr/bin/mvn
+
+# 📁 Рабочая директория для проекта
+WORKDIR /app
+
+# 📂 Копируем исходники и pom.xml
+COPY . .
+
+# 🛠️ Сборка JAR-файла без запуска тестов
+RUN mvn clean package -DskipTests
+
+# 🚀 Этап исполнения (runtime stage)
+FROM eclipse-temurin:17-jdk-alpine
+
+# 📁 Рабочая директория внутри финального контейнера
+WORKDIR /app
+
+# 📦 Копируем JAR-файл из предыдущего этапа
+COPY --from=builder /app/target/*.jar app.jar
+
+# 🏁 Команда запуска JAR
+ENTRYPOINT ["java", "-jar", "app.jar"]

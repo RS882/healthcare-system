@@ -1,0 +1,80 @@
+server:
+  port: 2082
+
+spring:
+  application:
+    name: test-user-service
+
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driverClassName: org.h2.Driver
+    username: sa
+    password:
+  jpa:
+    hibernate:
+      ddl-auto: update
+  scheduling:
+    enabled: false
+
+  liquibase:
+    enabled: false
+
+cors:
+  allowed-origins: http://localhost
+
+request-id:
+  prefix: "test-request-id:"
+  ttl: 1s   # sek
+  value: "test-user-service"
+
+header-request-id:
+  name: "X-Test-Request-Id"
+
+user-context:
+  userContextHeader: "X-Test-User-Context"
+
+security:
+  user-context:
+    issuer: api-gateway
+    key-id: gateway-key-1
+
+app:
+  kafka:
+    bootstrap-servers: localhost:9092
+
+    topics:
+      user-registered:
+        name: user.registered.v1
+        partitions: 3
+        replicas: 1
+      user-updated:
+        name: user.updated.v1
+        partitions: 3
+        replicas: 1
+      user-deleted:
+        name: user.deleted.v1
+        partitions: 3
+        replicas: 1
+
+    groups:
+      user-service:
+        id: user-service-group-test
+
+    producer:
+      transaction-id-prefix: user-service-tx-
+      properties:
+        enable.idempotence: true
+        acks: all
+
+  outbox:
+    cleanup:
+      cron: "0 0 3 * * *"
+      retention-days: 7
+    recovery:
+      cron: "0 */5 * * * *"
+      timeout-minutes: 15
+
+  processed-event:
+    cleanup:
+      cron: "0 30 3 * * *"
+      retention-days: 30

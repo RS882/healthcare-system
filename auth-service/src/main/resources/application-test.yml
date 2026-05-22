@@ -1,0 +1,37 @@
+server:
+  port: 2081
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: test-auth-service
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+jwt:
+  access-secret: testaccesssecrettestaccesssecrettestaccesssecrettestaccesssecrettestaccesssecrettestaccesssecrettest
+  refresh-secret: testrefreshsecrettestrefreshsecrettestrefreshsecrettestrefreshsecrettestrefreshsecrettestrefreshsecret
+  access-token-expiration: 15m
+  refresh-token-expiration: 30d
+  cookie-path: /
+  max-tokens: 3
+
+prefix:
+  refresh: "test:"
+  blocked: "test-block:"
+  blacklist: "test-blacklist:"
+
+cors:
+  allowed-origins: http://localhost
+
+request-id:
+  prefix: "test-request-id:"
+  ttl: 1s   # sek
+  value: "test-auth-service"
+
+header-request-id:
+  name: "X-Test-Request-Id"
+

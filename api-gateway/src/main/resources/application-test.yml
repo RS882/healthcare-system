@@ -1,0 +1,19 @@
+server:
+  port: 2080
+
+spring:
+  application:
+    name:  test-api-gateway
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+request-id:
+  prefix: "test-request-id:"
+  ttl: 1s   # sek
+  value: "test-gateway"
+
+header-request-id:
+  name: "X-Test-Request-Id"

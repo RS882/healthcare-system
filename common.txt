@@ -1,0 +1,8 @@
+docker-compose up --build -d
+
+•	Frontend: Angular, React, HTML, CSS
+•	Datenbanken: PostgreSQL, MySQL, MongoDB
+•	Testing & DevOps: JUnit, Mockito, Git, Docker, Maven
+•	Softwareentwicklung & Architektur: Microservices, Test-Driven Development, Clean Code
+•	Agile Entwicklung: Scrum, Kanban, Jira
+JavaScript, TypeScript
