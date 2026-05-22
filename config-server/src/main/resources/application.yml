@@ -18,7 +18,10 @@ eureka:
       defaultZone: ${EUREKA}
     register-with-eureka: true
     fetch-registry: true
+
   instance:
+    prefer-ip-address: false
+    hostname: ${HOSTNAME:${spring.application.name}}
     lease-renewal-interval-in-seconds: 10
     lease-expiration-duration-in-seconds: 30
 
