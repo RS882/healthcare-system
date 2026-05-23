@@ -8,7 +8,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
-@ConfigurationProperties(prefix = "app.kafka")
+@ConfigurationProperties(prefix = "spring.kafka")
 public record KafkaCustomProperties(
         @NotBlank
         String bootstrapServers,
