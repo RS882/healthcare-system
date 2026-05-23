@@ -3,19 +3,23 @@ package com.healthcare.user_service.kafka.consumer;
 import com.healthcare.user_service.kafka.event.UserDeletedEvent;
 import com.healthcare.user_service.kafka.event.UserRegisteredEvent;
 import com.healthcare.user_service.kafka.event.UserUpdatedEvent;
+import com.healthcare.user_service.kafka.properties.KafkaCustomProperties;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+@Getter
 @Component
 @RequiredArgsConstructor
 public class UserEventConsumer {
 
     private final UserEventHandler userEventHandler;
+    private final KafkaCustomProperties props;
 
     @KafkaListener(
-            topics = "#{@kafkaCustomProperties.topics().userRegistered().name()}",
-            groupId = "#{@kafkaCustomProperties.groups().userService().id()}",
+            topics = "#{__listener.props.topics().userRegistered().name()}",
+            groupId = "#{__listener.props.groups().userService().id()}",
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listen(UserRegisteredEvent event) {
@@ -23,8 +27,8 @@ public class UserEventConsumer {
     }
 
     @KafkaListener(
-            topics = "#{@kafkaCustomProperties.topics().userUpdated().name()}",
-            groupId = "#{@kafkaCustomProperties.groups().userService().id()}",
+            topics = "#{__listener.props.topics().userUpdated().name()}",
+            groupId = "#{__listener.props.groups().userService().id()}",
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listen(UserUpdatedEvent event) {
@@ -32,8 +36,8 @@ public class UserEventConsumer {
     }
 
     @KafkaListener(
-            topics = "#{@kafkaCustomProperties.topics().userDeleted().name()}",
-            groupId = "#{@kafkaCustomProperties.groups().userService().id()}",
+            topics = "#{__listener.props.topics().userDeleted().name()}",
+            groupId = "#{__listener.props.groups().userService().id()}",
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listen(UserDeletedEvent event) {
