@@ -14,8 +14,8 @@ public class UserEventConsumer {
     private final UserEventHandler userEventHandler;
 
     @KafkaListener(
-            topics = "${app.kafka.topics.user-registered.name}",
-            groupId = "${app.kafka.groups.user-service.id}",
+            topics = "#{@kafkaCustomProperties.topics().userRegistered().name()}",
+            groupId = "#{@kafkaCustomProperties.groups().userService().id()}",
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listen(UserRegisteredEvent event) {
@@ -23,8 +23,8 @@ public class UserEventConsumer {
     }
 
     @KafkaListener(
-            topics = "${app.kafka.topics.user-updated.name}",
-            groupId = "${app.kafka.groups.user-service.id}",
+            topics = "#{@kafkaCustomProperties.topics().userUpdated().name()}",
+            groupId = "#{@kafkaCustomProperties.groups().userService().id()}",
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listen(UserUpdatedEvent event) {
@@ -32,8 +32,8 @@ public class UserEventConsumer {
     }
 
     @KafkaListener(
-            topics = "${app.kafka.topics.user-deleted.name}",
-            groupId = "${app.kafka.groups.user-service.id}",
+            topics = "#{@kafkaCustomProperties.topics().userDeleted().name()}",
+            groupId = "#{@kafkaCustomProperties.groups().userService().id()}",
             containerFactory = "kafkaListenerContainerFactory"
     )
     public void listen(UserDeletedEvent event) {
