@@ -45,8 +45,6 @@ public class RequestIdGlobalFilter implements GlobalFilter, Ordered {
 
         ServerWebExchange mutatedExchange = mutateExchangeRequest(exchange, requestId);
 
-        log.info("X-Request-Id before routing: {}", requestId);
-
         return requestIdService.save(requestId)
                 .onErrorResume(e -> Mono.empty())
                 .then(chain.filter(mutatedExchange))

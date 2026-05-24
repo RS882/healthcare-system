@@ -53,7 +53,6 @@ public class RequestIdFilter extends OncePerRequestFilter {
             }
             requestId = requestId.strip();
 
-            log.info("RequestIdFilter received requestId={}", requestId);
             if (!requestIdService.isRequestIdValid(requestId)) {
                 throw new RequestIdException(
                         HttpStatus.BAD_REQUEST,
