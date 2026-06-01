@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: ai-service-test
+
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: llama3:latest
