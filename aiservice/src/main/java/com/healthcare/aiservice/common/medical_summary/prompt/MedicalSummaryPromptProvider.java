@@ -1,26 +1,37 @@
 package com.healthcare.aiservice.common.medical_summary.prompt;
 
+import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryRequest;
+import com.healthcare.aiservice.common.prompt.PromptProvider;
 import org.springframework.stereotype.Component;
 
 @Component
-public class MedicalSummaryPromptProvider {
+public class MedicalSummaryPromptProvider implements PromptProvider<MedicalSummaryRequest> {
 
+    @Override
     public String systemPrompt() {
         return """
                 You are a medical assistant.
-                Summarize medical notes clearly and safely.
-                Do not invent facts.
-                If information is missing, return an empty list.
-                Return structured data only.
+
+                Your task is to summarize medical notes and extract structured medical information.
+
+                Strict rules:
+                - Return only structured data compatible with the expected response object.
+                - Do NOT use markdown.
+                - Do NOT use code fences.
+                - Do NOT add explanations.
+                - Do NOT invent facts.
+                - If information is missing, return an empty array.
+                - Use only information explicitly present in the medical note.
                 """;
     }
 
-    public String userPrompt(String note) {
+    @Override
+    public String userPrompt(MedicalSummaryRequest request) {
         return """
-                Summarize this medical note.
+                Summarize the following medical note.
 
                 Medical note:
                 %s
-                """.formatted(note);
+                """.formatted(request.note());
     }
 }
