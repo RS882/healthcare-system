@@ -3,4 +3,4 @@ spring:
     name: ai-service
 
   config:
-    import: configserver:${CONFIG}
+    import: optional:configserver:${CONFIG}

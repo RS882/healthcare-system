@@ -2,9 +2,25 @@ spring:
   application:
     name: ai-service-test
 
+  config:
+    import: ""
+
+  cloud:
+    config:
+      enabled: false
+      fail-fast: false
+    discovery:
+      enabled: false
+
   ai:
     ollama:
       base-url: http://localhost:11434
       chat:
         options:
           model: llama3:latest
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
