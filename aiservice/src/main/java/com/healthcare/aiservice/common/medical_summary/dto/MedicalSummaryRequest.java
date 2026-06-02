@@ -1,5 +1,6 @@
 package com.healthcare.aiservice.common.medical_summary.dto;
 
+import com.healthcare.aiservice.common.dto.NoteBasedRequest;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -19,5 +20,5 @@ public record MedicalSummaryRequest(
         @Size(max = 12000, message = "Medical note is too long")
         String note
 
-) {
+) implements NoteBasedRequest {
 }

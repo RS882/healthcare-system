@@ -1,6 +1,8 @@
 package com.healthcare.aiservice.common.prompt;
 
-public interface PromptProvider<T> {
+import com.healthcare.aiservice.common.dto.NoteBasedRequest;
+
+public interface PromptProvider<T extends NoteBasedRequest> {
 
     String systemPrompt();
 

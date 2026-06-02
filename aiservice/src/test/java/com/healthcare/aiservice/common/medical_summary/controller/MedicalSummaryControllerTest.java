@@ -9,6 +9,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
+import org.springframework.ai.retry.NonTransientAiException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -20,6 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
+import static com.healthcare.aiservice.common.medical_summary.controller.API.AiApiPaths.MEDICAL_NOTE_SUMMARY_URL;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -64,7 +66,7 @@ class MedicalSummaryControllerTest {
                 .thenReturn(response);
 
         mockMvc.perform(
-                        post("/v1/ai/medical-note/summary")
+                        post(MEDICAL_NOTE_SUMMARY_URL)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )
@@ -82,7 +84,7 @@ class MedicalSummaryControllerTest {
                 new MedicalSummaryRequest("");
 
         mockMvc.perform(
-                        post("/v1/ai/medical-note/summary")
+                        post(MEDICAL_NOTE_SUMMARY_URL)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )
@@ -91,5 +93,28 @@ class MedicalSummaryControllerTest {
                         .value("VALIDATION_ERROR"))
                 .andExpect(jsonPath("$.message")
                         .value("Validation failed"));
+    }
+
+    @Test
+    void summarize_ShouldReturn502_WhenAiProviderFails() throws Exception {
+
+        MedicalSummaryRequest request =
+                new MedicalSummaryRequest("Patient complains about headache.");
+
+        when(medicalSummaryService.summarize(any()))
+                .thenThrow(new NonTransientAiException("AI provider failed"));
+
+        mockMvc.perform(
+                        post("/v1/ai/medical-note/summary")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(request))
+                )
+                .andExpect(status().isBadGateway())
+                .andExpect(jsonPath("$.error")
+                        .value("AI_PROVIDER_ERROR"))
+                .andExpect(jsonPath("$.message")
+                        .value("AI provider failed to process the request"))
+                .andExpect(jsonPath("$.path")
+                        .value("/v1/ai/medical-note/summary"));
     }
 }
