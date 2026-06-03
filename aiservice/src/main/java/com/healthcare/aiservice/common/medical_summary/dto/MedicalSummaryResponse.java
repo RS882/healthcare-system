@@ -22,13 +22,11 @@ public record MedicalSummaryResponse(
         )
         List<String> diagnoses,
 
+        @Schema(description = "Detected medications")
         @ArraySchema(
-                schema = @Schema(
-                        description = "Detected medications",
-                        example = "Ibuprofen"
-                )
+                schema = @Schema(implementation = MedicationInfo.class)
         )
-        List<String> medications,
+        List<MedicationInfo> medications,
 
         @ArraySchema(
                 schema = @Schema(
