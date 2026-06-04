@@ -1,6 +1,7 @@
 package com.healthcare.aiservice.common.provider;
 
 import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryResponse;
+import com.healthcare.aiservice.common.provider.logging.AiParsingErrorLogger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -16,6 +17,8 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
@@ -33,6 +36,9 @@ class SpringAiClientTest {
 
     @Mock
     private ChatClient.CallResponseSpec callResponseSpec;
+
+    @Mock
+    private AiParsingErrorLogger parsingErrorLogger;
 
     @InjectMocks
     private SpringAiClient springAiClient;
@@ -70,7 +76,7 @@ class SpringAiClientTest {
         verify(requestSpec).call();
         verify(callResponseSpec).entity(MedicalSummaryResponse.class);
 
-        verifyNoMoreInteractions(chatClient, requestSpec, callResponseSpec);
+        verifyNoMoreInteractions(chatClient, requestSpec, callResponseSpec, parsingErrorLogger);
     }
 
     @Test
@@ -98,7 +104,11 @@ class SpringAiClientTest {
         verify(requestSpec).user(userPrompt);
         verify(requestSpec).call();
         verify(callResponseSpec).entity(MedicalSummaryResponse.class);
+        verify(parsingErrorLogger).logIfParsingError(
+                any(RuntimeException.class),
+                eq(MedicalSummaryResponse.class)
+        );
 
-        verifyNoMoreInteractions(chatClient, requestSpec, callResponseSpec);
+        verifyNoMoreInteractions(chatClient, requestSpec, callResponseSpec, parsingErrorLogger);
     }
 }
