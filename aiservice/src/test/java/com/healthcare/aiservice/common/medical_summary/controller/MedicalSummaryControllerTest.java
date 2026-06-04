@@ -21,7 +21,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static com.healthcare.aiservice.common.medical_summary.controller.API.AiApiPaths.MEDICAL_NOTE_SUMMARY_URL;
+import static com.healthcare.aiservice.common.medical_summary.controller.API.MedicalSummaryApiPaths.MEDICAL_NOTE_SUMMARY_URL;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -105,7 +105,7 @@ class MedicalSummaryControllerTest {
                 .thenThrow(new NonTransientAiException("AI provider failed"));
 
         mockMvc.perform(
-                        post("/v1/ai/medical-note/summary")
+                        post(MEDICAL_NOTE_SUMMARY_URL)
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(objectMapper.writeValueAsString(request))
                 )
@@ -115,6 +115,6 @@ class MedicalSummaryControllerTest {
                 .andExpect(jsonPath("$.message")
                         .value("AI provider failed to process the request"))
                 .andExpect(jsonPath("$.path")
-                        .value("/v1/ai/medical-note/summary"));
+                        .value(MEDICAL_NOTE_SUMMARY_URL));
     }
 }

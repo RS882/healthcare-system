@@ -6,7 +6,6 @@ import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryRequest
 import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryResponse;
 import com.healthcare.aiservice.common.medical_summary.service.MedicalSummaryService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -20,7 +19,6 @@ public class MedicalSummaryController implements MedicalSummaryAPI {
     public ResponseEntity<MedicalSummaryResponse> summarize(
             MedicalSummaryRequest request
     ) {
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(medicalSummaryService.summarize(request));
+        return ResponseEntity.ok(medicalSummaryService.summarize(request));
     }
 }

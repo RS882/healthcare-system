@@ -2,9 +2,9 @@ package com.healthcare.aiservice.common.medical_summary.controller.API;
 
 import static com.healthcare.aiservice.common.APIPaths.ApiPaths.AI_BASIC_URL;
 
-public final class AiApiPaths {
+public final class MedicalSummaryApiPaths {
 
-    private AiApiPaths() {
+    private MedicalSummaryApiPaths() {
     }
 
     public static final String MEDICAL_NOTE = "/medical-note";
