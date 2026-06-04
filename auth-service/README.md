@@ -1,144 +1,483 @@
-# 🛡️ Auth Service — Healthcare System
+# 🛡️ Auth Service
 
-Authentication and authorization microservice using Spring Boot, JWT, Redis, and HttpOnly Cookies. It's part of the Healthcare Record Management System.
+Authentication and Authorization Service of the Healthcare System platform.
 
----
+This microservice is responsible for user authentication, JWT token management, secure session handling, token validation, logout processing, and identity verification for internal microservices.
 
-## 📚 Features
-
-- 🔐 User  login
-- 🔑 Access / Refresh token generation (JWT)
-- 🧁 Refresh token stored in HttpOnly cookie
-- 🔁 Token refresh via `/refresh`
-- 🚪 Logout with access token blacklist
-- 🧼 Refresh token removal
-- 🚫 Redis-based session limit blocking
-- ☁️ Communicates with `user-service` via Feign (no direct DB access)
+The service is designed as an independent authentication provider within a distributed microservice architecture and follows modern security practices including JWT-based authentication, HttpOnly cookie storage, Redis-backed session management, and centralized validation through API Gateway.
 
 ---
 
-## 📦 Technologies
+# 📖 Overview
 
-| Technology         | Purpose                             |
-|--------------------|-------------------------------------|
-| Spring Boot        | Core application framework          |
-| Spring Security    | Authentication/Authorization        |
-| JWT                | Access and Refresh tokens           |
-| Redis              | Token and blacklist storage         |
-| Feign Client       | Integration with `user-service`     |
-| Swagger/OpenAPI    | API documentation                   |
+Auth Service serves as the central authentication component of the Healthcare System.
+
+Its primary responsibilities include:
+
+* User authentication
+* JWT Access Token generation
+* JWT Refresh Token generation
+* Token validation
+* Session management
+* Logout processing
+* Security context validation
+* Integration with API Gateway
+* Communication with User Service
+
+The service follows a stateless authentication model while maintaining additional security controls through Redis.
 
 ---
 
-## 🔧 Setup
+# 🚀 Core Features
 
-### Required services:
+## 🔐 User Authentication
 
-- Redis
-- RedisInsight (optional UI)
-- `user-service` (manages users)
+Authenticates users using their credentials and issues secure JWT tokens.
 
-### Example configuration (via Spring Cloud Config):
+Features:
+
+* Credential validation
+* User status verification
+* Authentication exception handling
+* Secure token generation
+
+---
+
+## 🎟 JWT Access & Refresh Tokens
+
+The service generates two token types.
+
+### Access Token
+
+Short-lived JWT used for accessing protected resources.
+
+Contains:
+
+* User ID
+* User Roles
+* Token Expiration
+
+### Refresh Token
+
+Long-lived JWT used for obtaining new access tokens without requiring re-authentication.
+
+Benefits:
+
+* Improved security
+* Reduced login frequency
+* Better user experience
+
+---
+
+## 🍪 Secure Refresh Token Storage
+
+Refresh Tokens are stored in HttpOnly Cookies.
+
+Advantages:
+
+* Not accessible through JavaScript
+* Reduced XSS attack surface
+* Secure browser-managed storage
+* Improved session security
+
+---
+
+## 🔄 Token Refresh Workflow
+
+The service supports secure token renewal.
+
+Flow:
+
+1. Client sends Refresh Token cookie.
+2. Refresh Token is validated.
+3. Session state is verified.
+4. New Access Token is issued.
+5. New Refresh Token is generated.
+
+This allows users to maintain authenticated sessions while minimizing exposure of long-lived credentials.
+
+---
+
+## 🚪 Logout Processing
+
+Logout immediately invalidates the active session.
+
+Features:
+
+* Refresh Token removal
+* Access Token blacklisting
+* Redis cleanup
+* Session invalidation
+
+This prevents reuse of previously issued tokens.
+
+---
+
+## 🚫 Redis-Based Session Management
+
+Redis is used to maintain security-related state.
+
+Responsibilities:
+
+* Active session tracking
+* Access token blacklist
+* Logout support
+* Session limitation
+
+Benefits:
+
+* Immediate token invalidation
+* Fast lookups
+* Distributed deployment support
+* Improved security
+
+---
+
+## ☁ User Service Integration
+
+Auth Service does not manage user data directly.
+
+Instead, user information is retrieved through internal APIs exposed by User Service.
+
+Communication is implemented using OpenFeign clients.
+
+Benefits:
+
+* Clear service ownership
+* Reduced coupling
+* Independent scalability
+* Better maintainability
+
+---
+
+# 🏗 Architecture
+
+```text
+Client
+   │
+   ▼
+API Gateway
+   │
+   ▼
+Auth Service
+   │
+   ├── Authentication
+   ├── JWT Generation
+   ├── Token Validation
+   ├── Session Management
+   │
+   ▼
+Redis
+   │
+   ▼
+User Service
+```
+
+The service follows strict separation of responsibilities:
+
+* Authentication → Auth Service
+* User Management → User Service
+* Routing & Security Boundary → API Gateway
+
+---
+
+# 🔒 Security Design
+
+Implemented security mechanisms:
+
+## JWT Authentication
+
+Stateless authentication using signed JSON Web Tokens.
+
+---
+
+## Access & Refresh Token Strategy
+
+Separate token lifecycles improve overall security and user experience.
+
+---
+
+## HttpOnly Cookies
+
+Refresh Tokens are protected from client-side script access.
+
+---
+
+## Access Token Blacklisting
+
+Logged-out access tokens are blocked immediately.
+
+---
+
+## Redis-backed Session Control
+
+Provides centralized security state management.
+
+---
+
+## Gateway Validation Support
+
+Dedicated validation endpoint allows API Gateway to authenticate requests before they reach business services.
+
+---
+
+# 📡 Main API Endpoints
+
+| Method | Endpoint                  | Description           |
+| ------ | ------------------------- | --------------------- |
+| POST   | `/api/v1/auth/login`      | Authenticate user     |
+| POST   | `/api/v1/auth/refresh`    | Refresh tokens        |
+| POST   | `/api/v1/auth/logout`     | Logout user           |
+| POST   | `/api/v1/auth/validation` | Validate access token |
+
+---
+
+# ⚙ Technology Stack
+
+## Backend
+
+* Java
+* Spring Boot
+* Spring Security
+
+## Security
+
+* JWT
+* HttpOnly Cookies
+
+## Infrastructure
+
+* Redis
+* OpenFeign
+* Spring Cloud Config
+* Eureka Discovery Client
+
+## Documentation
+
+* OpenAPI
+* Swagger UI
+
+## Testing
+
+* JUnit 5
+* Mockito
+* Spring Boot Test
+* MockMvc
+
+---
+
+# 🧪 Testing Strategy
+
+The service contains unit and integration tests covering core authentication functionality.
+
+Covered components:
+
+* JWT generation and validation
+* Refresh Token management
+* Session management
+* Token blacklist functionality
+* Authentication business logic
+* REST API endpoints
+* Exception handling
+
+Testing tools:
+
+* JUnit 5
+* Mockito
+* MockMvc
+* Spring Boot Test
+
+---
+
+# ⚙ Configuration
+
+Configuration is externalized using Spring Cloud Config Server.
+
+Example:
 
 ```yaml
-spring:
-  application:
-    name: auth-service
-  cloud:
-    config:
-      uri: http://localhost:8888
-
 jwt:
-  access-secret: <base64-secret>
-  refresh-secret: <base64-secret>
   access-token-expiration: 600000
   refresh-token-expiration: 1209600000
 ```
 
-> 💡 Auth-service does not use its own database — all user management is delegated to `user-service`.
+This allows centralized configuration management across environments.
 
 ---
 
-## 🔐 Main Endpoints
+# 📜 API Documentation
 
-| Method | URL | Description        |
-|--------|-----|--------------------|
-|    |  |    |
-| POST   | `/api/v1/auth/login`        | Login user         |
-| POST   | `/api/v1/auth/refresh`      | Refresh tokens     |
-| POST   | `/api/v1/auth/logout`       | Logout user        |
+Swagger UI:
 
----
-
-## 🔬 Testing
-
-```bash
-./mvnw test
-```
-
-Includes unit and integration tests:
-
-- ✅ JwtService
-- ✅ RefreshTokenService
-- ✅ TokenBlacklistService
-- ✅ AuthServiceImpl (mocked `UserClient`)
-- ✅ Controller (via MockMvc or WebMvcTest)
-
----
-
-## 📜 Swagger UI
-
-Access API documentation:
-
-```
+```text
 http://localhost:8081/swagger-ui/index.html
 ```
 
 ---
 
-## 🐳 Redis (Docker Compose)
+# 🐳 Infrastructure Dependencies
 
-```yaml
-services:
-  redis:
-    image: redis
-    ports:
-      - "6379:6379"
+Required services:
 
-  redis-insight:
-    image: redis/redisinsight
-    ports:
-      - "8001:8001"
+* Redis
+* User Service
+* API Gateway
+* Config Server
+* Service Registry
+
+Optional:
+
+* RedisInsight
+
+---
+
+# 📁 Project Structure
+
+```text
+auth-service
+├── controller
+├── service
+├── security
+├── filter
+├── validator
+├── config
+├── domain
+├── exception
+├── mapper
+└── resources
 ```
 
 ---
 
-## 📁 Project Structure
+# 🤔 Why This Design?
 
-```
-auth-service/
-├── controller/
-├── config/
-├── domain/
-├── service/
-├── exception_handler/
-├── filter/
-├── validator/
-├── resources/
-```
+### Why separate authentication from user management?
 
----
+Authentication and user management represent different business responsibilities.
 
-## 🧑‍💻 Author
+Separating them into dedicated services provides:
 
-- Developer: @Ruslan Senkin
-- Last updated: April 2025
+* Better maintainability
+* Independent scalability
+* Clear domain ownership
+* Reduced coupling
+
+User data remains the responsibility of User Service while Auth Service focuses exclusively on authentication and authorization.
 
 ---
 
-## 🧩 Part of microservice system
+### Why JWT?
 
-- `auth-service` — authentication
-- `user-service` — user management (MySQL)
-- `patient-service`, `appointment-service`, `notification-service`
-- `api-gateway`, `config-server`, `service-registry`
+JWT enables stateless authentication.
+
+Benefits:
+
+* Horizontal scalability
+* Reduced database load
+* Standardized security model
+* Simplified distributed authentication
+
+---
+
+### Why Access and Refresh Tokens?
+
+A single long-lived token increases security risks.
+
+Separating responsibilities allows:
+
+* Short-lived access credentials
+* Secure session renewal
+* Better compromise containment
+* Improved user experience
+
+---
+
+### Why HttpOnly Cookies?
+
+Refresh Tokens are stored in HttpOnly Cookies to reduce exposure to browser-based attacks.
+
+Benefits:
+
+* Protection against JavaScript access
+* Reduced XSS attack surface
+* Secure browser handling
+
+---
+
+### Why Redis?
+
+JWT is stateless by design, but practical security requirements require shared state.
+
+Redis enables:
+
+* Logout support
+* Access token blacklisting
+* Session tracking
+* Active session limitation
+
+while preserving the scalability advantages of JWT authentication.
+
+---
+
+### Why Feign Instead of Direct Database Access?
+
+Auth Service intentionally has no direct access to user storage.
+
+Benefits:
+
+* Strong service boundaries
+* Independent deployments
+* Domain ownership
+* Better long-term maintainability
+
+---
+
+### Why API Gateway Validation?
+
+Authentication is validated at the system boundary.
+
+Benefits:
+
+* Consistent security enforcement
+* Reduced duplication
+* Simpler downstream services
+* Centralized access control
+
+---
+
+# 🏥 Healthcare System Platform
+
+This service is part of the Healthcare System, a cloud-native healthcare platform built using a microservice architecture.
+
+The platform follows modern software engineering principles including:
+
+* Domain-driven service separation
+* Centralized configuration management
+* Service discovery
+* API Gateway routing
+* Secure inter-service communication
+* Event-driven integration
+* Containerized deployment
+* Automated testing
+
+Each service is designed to be independently deployable, maintainable, and scalable while collaborating through clearly defined APIs and infrastructure components.
+
+---
+
+# 👨‍💻 Author
+
+**Ruslan Senkin**
+
+Java Backend Developer
+
+Specialization:
+
+* Java
+* Spring Boot
+* Spring Security
+* Microservices
+* Spring Cloud
+* Distributed Systems
+* Event-Driven Architecture
+* API Design
+* Cloud-Native Development
