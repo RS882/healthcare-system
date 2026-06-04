@@ -3,6 +3,7 @@ package com.healthcare.aiservice.common.medical_summary.controller.API;
 
 import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryRequest;
 import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryResponse;
+import com.healthcare.aiservice.exception.dto.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -13,7 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.ErrorResponse;
+
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -63,8 +64,8 @@ public interface MedicalSummaryAPI {
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
                                     @ExampleObject(
-                                            name = "Error400Validation",
-                                            ref = "#/components/examples/Error400Validation"
+                                            name = "Error400ValidationMedicalSummary",
+                                            ref = "#/components/examples/Error400ValidationMedicalSummary"
                                     )
                             }
                     )
@@ -78,8 +79,8 @@ public interface MedicalSummaryAPI {
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
                                     @ExampleObject(
-                                            name = "Error502AiResponseParsing",
-                                            ref = "#/components/examples/Error502AiResponseParsing"
+                                            name = "Error502AiResponseParsingMedicalSummary",
+                                            ref = "#/components/examples/Error502AiResponseParsingMedicalSummary"
                                     )
                             }
                     )
@@ -93,8 +94,8 @@ public interface MedicalSummaryAPI {
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
                                     @ExampleObject(
-                                            name = "Error503AiProviderUnavailable",
-                                            ref = "#/components/examples/Error503AiProviderUnavailable"
+                                            name = "Error503AiProviderUnavailableMedicalSummary",
+                                            ref = "#/components/examples/Error503AiProviderUnavailableMedicalSummary"
                                     )
                             }
                     )
@@ -108,8 +109,8 @@ public interface MedicalSummaryAPI {
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
                                     @ExampleObject(
-                                            name = "Error500InternalServerError",
-                                            ref = "#/components/examples/Error500InternalServerError"
+                                            name = "Error500InternalServerErrorMedicalSummary",
+                                            ref = "#/components/examples/Error500InternalServerErrorMedicalSummary"
                                     )
                             }
                     )
@@ -118,6 +119,14 @@ public interface MedicalSummaryAPI {
     @PostMapping(SUMMARY)
     ResponseEntity<MedicalSummaryResponse> summarize(
             @Valid
+            @io.swagger.v3.oas.annotations.parameters.RequestBody(
+                    required = true,
+                    description = "Request for medical note summarization",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = MedicalSummaryRequest.class)
+                    )
+            )
             @org.springframework.web.bind.annotation.RequestBody
             MedicalSummaryRequest request);
 }
