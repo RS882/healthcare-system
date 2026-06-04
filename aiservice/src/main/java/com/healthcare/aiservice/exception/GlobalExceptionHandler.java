@@ -10,6 +10,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.ResourceAccessException;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 
 import java.time.Instant;
 import java.util.Set;
@@ -76,6 +77,26 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
+    }
+
+    @ExceptionHandler(MismatchedInputException.class)
+    public ResponseEntity<ErrorResponse> handleAiResponseParsingException(
+            MismatchedInputException ex,
+            HttpServletRequest request
+    ) {
+
+        ErrorResponse response = new ErrorResponse(
+                Instant.now(),
+                HttpStatus.BAD_GATEWAY.value(),
+                "AI_RESPONSE_PARSING_ERROR",
+                "AI returned response in an unexpected format",
+                request.getRequestURI(),
+                Set.of()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_GATEWAY)
+                .body(response);
     }
 
     @ExceptionHandler(Exception.class)
