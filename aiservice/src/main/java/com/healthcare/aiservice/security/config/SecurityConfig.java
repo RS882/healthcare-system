@@ -7,8 +7,11 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
 
+import static com.healthcare.aiservice.common.medical_extraction.controller.API.MedicalInfoExtractionApiPaths.EXTRACT_MEDICAL_INFO_URL;
 import static com.healthcare.aiservice.common.medical_summary.controller.API.MedicalSummaryApiPaths.MEDICAL_NOTE_SUMMARY_URL;
 import static com.healthcare.aiservice.common.message_classification.controller.API.MessageClassificationApiPaths.CLASSIFY_MESSAGE_URL;
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -32,11 +35,19 @@ public class SecurityConfig {
                                 "/error").permitAll()
                         .requestMatchers(HttpMethod.POST, MEDICAL_NOTE_SUMMARY_URL).permitAll()
                         .requestMatchers(HttpMethod.POST, CLASSIFY_MESSAGE_URL).permitAll()
+                        .requestMatchers(HttpMethod.POST, EXTRACT_MEDICAL_INFO_URL).permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)
 
                 .build();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService() {
+        return username -> {
+            throw new UsernameNotFoundException("No local users configured");
+        };
     }
 }
 

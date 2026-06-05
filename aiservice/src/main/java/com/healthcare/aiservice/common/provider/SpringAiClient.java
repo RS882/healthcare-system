@@ -6,6 +6,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Component;
 
+import static com.healthcare.aiservice.common.prompt.PromptTextNormalizer.normalize;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -22,8 +24,8 @@ public class SpringAiClient implements AiClient {
     ) {
         try {
             return chatClient.prompt()
-                    .system(systemPrompt)
-                    .user(userPrompt)
+                    .system(normalize(systemPrompt))
+                    .user(normalize(userPrompt))
                     .call()
                     .entity(responseType);
 

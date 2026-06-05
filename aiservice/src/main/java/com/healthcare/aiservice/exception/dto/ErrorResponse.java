@@ -2,11 +2,13 @@ package com.healthcare.aiservice.exception.dto;
 
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 
 import java.time.Instant;
 import java.util.Set;
 
 @Schema(description = "Error response")
+@Builder
 public record ErrorResponse(
 
         @Schema(

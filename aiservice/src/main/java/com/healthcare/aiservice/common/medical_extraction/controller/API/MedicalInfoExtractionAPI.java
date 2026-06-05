@@ -1,8 +1,10 @@
-package com.healthcare.aiservice.common.message_classification.controller.API;
+package com.healthcare.aiservice.common.medical_extraction.controller.API;
 
-
-import com.healthcare.aiservice.common.message_classification.dto.MessageClassificationRequest;
-import com.healthcare.aiservice.common.message_classification.dto.MessageClassificationResponse;
+import com.healthcare.aiservice.common.medical_extraction.dto.MedicalInfoExtractionRequest;
+import com.healthcare.aiservice.common.medical_extraction.dto.MedicalInfoExtractionResponse;
+import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryRequest;
+import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryResponse;
+import com.healthcare.aiservice.exception.dto.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -13,41 +15,42 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import com.healthcare.aiservice.exception.dto.ErrorResponse;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import static com.healthcare.aiservice.common.APIPaths.ApiPaths.AI_BASIC_URL;
-import static com.healthcare.aiservice.common.message_classification.controller.API.MessageClassificationApiPaths.CLASSIFY_MESSAGE;
-
+import static com.healthcare.aiservice.common.medical_extraction.controller.API.MedicalInfoExtractionApiPaths.EXTRACT_MEDICAL_INFO;
 
 @RequestMapping(AI_BASIC_URL)
-@Tag(name = "Patient message classification controller", description = "Controller for patient message AI-classification")
-public interface MessageClassificationAPI {
+@Tag(name = "Medical info extraction controller", description = "Controller for extraction medical info from the medical note")
+public interface MedicalInfoExtractionAPI {
+
     @Operation(
-            summary = "Classify patient message",
+            summary = "Extract structured medical information",
             description = """
-                Classifies a patient message into one healthcare-related category.
-                
-                The endpoint uses the configured AI model to detect the intent of the message,
-                such as appointment requests, prescription questions, symptoms, insurance-related
-                questions, emergency cases, or other general messages.
-                
-                Only information explicitly contained in the provided message should be used.
-                
-                Note:
-                For JSON requests, line breaks inside the note field must
-                be escaped using \\n.
-                """
+                    Extracts symptoms, diagnoses, medications, allergies,
+                    procedures, and recommendations from a medical note.
+                    
+                    Note:
+                    For JSON requests, line breaks inside the note field must
+                    be escaped using \\n.
+                    """,
+    requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
+            required = true,
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = MedicalInfoExtractionRequest.class)
+            )
+    )
     )
     @ApiResponses(value = {
 
             @ApiResponse(
                     responseCode = "200",
-                    description = "Patient message classified successfully",
+                    description = "Medical info extracted successfully",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = MessageClassificationResponse.class)
+                            schema = @Schema(implementation = MedicalSummaryResponse.class)
                     )
             ),
 
@@ -59,8 +62,8 @@ public interface MessageClassificationAPI {
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
                                     @ExampleObject(
-                                            name = "Error400ValidationMessageClassification",
-                                            ref = "#/components/examples/Error400ValidationMessageClassification"
+                                            name = "Error400ValidationMedicalInfoExtraction",
+                                            ref = "#/components/examples/Error400ValidationMedicalInfoExtraction"
                                     )
                             }
                     )
@@ -74,8 +77,8 @@ public interface MessageClassificationAPI {
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
                                     @ExampleObject(
-                                            name = "Error502AiResponseParsingMessageClassification",
-                                            ref = "#/components/examples/Error502AiResponseParsingMessageClassification"
+                                            name = "Error502AiResponseMedicalInfoExtraction",
+                                            ref = "#/components/examples/Error502AiResponseMedicalInfoExtraction"
                                     )
                             }
                     )
@@ -89,8 +92,8 @@ public interface MessageClassificationAPI {
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
                                     @ExampleObject(
-                                            name = "Error503AiProviderUnavailableMessageClassification",
-                                            ref = "#/components/examples/Error503AiProviderUnavailableMessageClassification"
+                                            name = "Error503AiProviderUnavailableMedicalInfoExtraction",
+                                            ref = "#/components/examples/Error503AiProviderUnavailableMedicalInfoExtraction"
                                     )
                             }
                     )
@@ -104,25 +107,25 @@ public interface MessageClassificationAPI {
                             schema = @Schema(implementation = ErrorResponse.class),
                             examples = {
                                     @ExampleObject(
-                                            name = "Error500InternalServerErrorMessageClassification",
-                                            ref = "#/components/examples/Error500InternalServerErrorMessageClassification"
+                                            name = "Error500InternalServerErrorMedicalInfoExtraction",
+                                            ref = "#/components/examples/Error500InternalServerErrorMedicalInfoExtraction"
                                     )
                             }
                     )
             )
     })
-    @PostMapping(CLASSIFY_MESSAGE)
-    ResponseEntity<MessageClassificationResponse> classify(
+    @PostMapping(EXTRACT_MEDICAL_INFO)
+    ResponseEntity<MedicalInfoExtractionResponse> extract(
             @Valid
             @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
-                    description = "Patient message classification request",
+                    description = "Medical note text to analyze",
                     content = @Content(
                             mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = MessageClassificationRequest.class)
+                            schema = @Schema(implementation = MedicalInfoExtractionRequest.class)
                     )
             )
             @org.springframework.web.bind.annotation.RequestBody
-            MessageClassificationRequest request
+            MedicalInfoExtractionRequest request
     );
 }

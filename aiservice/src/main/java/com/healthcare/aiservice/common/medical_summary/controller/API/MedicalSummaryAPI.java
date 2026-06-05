@@ -14,7 +14,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -29,14 +28,18 @@ public interface MedicalSummaryAPI {
     @Operation(
             summary = "Summarize medical note",
             description = """
-                Generates an AI-powered summary of a medical note and extracts
-                structured medical information such as diagnoses, medications,
-                and recommendations.
-                
-                The response is generated using a configured AI model.
-                Only information explicitly contained in the provided medical note
-                should be included in the result.
-                """,
+                    Generates an AI-powered summary of a medical note and extracts
+                    structured medical information such as diagnoses, medications,
+                    and recommendations.
+                    
+                    The response is generated using a configured AI model.
+                    Only information explicitly contained in the provided medical note
+                    should be included in the result.
+                    
+                    Note:
+                    For JSON requests, line breaks inside the note field must
+                    be escaped using \\n.
+                    """,
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     required = true,
                     content = @Content(

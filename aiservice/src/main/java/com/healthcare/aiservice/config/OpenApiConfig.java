@@ -11,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.healthcare.aiservice.common.medical_extraction.controller.API.MedicalInfoExtractionApiPaths.EXTRACT_MEDICAL_INFO_URL;
 import static com.healthcare.aiservice.common.medical_summary.controller.API.MedicalSummaryApiPaths.MEDICAL_NOTE_SUMMARY_URL;
 import static com.healthcare.aiservice.common.message_classification.controller.API.MessageClassificationApiPaths.CLASSIFY_MESSAGE_URL;
 
@@ -29,15 +30,19 @@ public class OpenApiConfig {
                 // 400
                 .addExamples("Error400ValidationMedicalSummary", ex400Validation(MEDICAL_NOTE_SUMMARY_URL))
                 .addExamples("Error400ValidationMessageClassification", ex400Validation(CLASSIFY_MESSAGE_URL))
+                .addExamples("Error400ValidationMedicalInfoExtraction", ex400Validation(EXTRACT_MEDICAL_INFO_URL))
                 // 502
                 .addExamples("Error502AiResponseParsingMedicalSummary", ex502AiResponseParsing(MEDICAL_NOTE_SUMMARY_URL))
                 .addExamples("Error502AiResponseParsingMessageClassification", ex502AiResponseParsing(CLASSIFY_MESSAGE_URL))
+                .addExamples("Error502AiResponseMedicalInfoExtraction", ex502AiResponseParsing(EXTRACT_MEDICAL_INFO_URL))
                 // 503
                 .addExamples("Error503AiProviderUnavailableMedicalSummary", ex503(MEDICAL_NOTE_SUMMARY_URL))
                 .addExamples("Error503AiProviderUnavailableMessageClassification", ex503(CLASSIFY_MESSAGE_URL))
+                .addExamples("Error503AiProviderUnavailableMedicalInfoExtraction", ex503(EXTRACT_MEDICAL_INFO_URL))
                 // 500
                 .addExamples("Error500InternalServerErrorMedicalSummary", ex500(MEDICAL_NOTE_SUMMARY_URL))
                 .addExamples("Error500InternalServerErrorMessageClassification", ex500(CLASSIFY_MESSAGE_URL))
+                .addExamples("Error500InternalServerErrorMedicalInfoExtraction", ex500(EXTRACT_MEDICAL_INFO_URL))
                 ;
 
         return new OpenAPI()

@@ -5,11 +5,15 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import static com.healthcare.aiservice.common.dto.SwaggerDescriptions.NOTE_DESCRIPTION;
+
 @Schema(description = "Request for medical note summarization")
 public record MedicalSummaryRequest(
 
         @Schema(
-                description = "Raw medical note text",
+                description = """
+                        Raw medical note text 
+                        """ + NOTE_DESCRIPTION,
                 example = """
                         Patient complains about headache and nausea.
                         Takes Ibuprofen daily.
