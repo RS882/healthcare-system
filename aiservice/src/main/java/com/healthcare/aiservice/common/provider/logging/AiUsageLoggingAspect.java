@@ -1,5 +1,6 @@
 package com.healthcare.aiservice.common.provider.logging;
 
+import com.healthcare.aiservice.common.provider.logging.annotation.LogAiUsage;
 import com.healthcare.aiservice.config.propertie.AiProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,41 +16,78 @@ import org.springframework.stereotype.Component;
 public class AiUsageLoggingAspect {
 
     private final AiProperties aiProperties;
+    private final AiUsageLogger aiUsageLogger;
 
     @Around("@annotation(logAiUsage)")
     public Object logAiUsage(
             ProceedingJoinPoint joinPoint,
-            LogAiUsage logAiUsage) throws Throwable {
+            LogAiUsage logAiUsage
+    ) throws Throwable {
 
         long startTime = System.currentTimeMillis();
-        String feature =  logAiUsage.feature().getValue();
-        String provider =aiProperties.provider();
+
+        var feature = logAiUsage.feature();
+        String provider = aiProperties.provider();
         String model = aiProperties.model();
 
-        try {
+        Object request = extractRequest(joinPoint);
 
-            Object result = joinPoint.proceed();
+        try {
+            Object response = joinPoint.proceed();
+            long durationMs = System.currentTimeMillis() - startTime;
+
+            aiUsageLogger.logSuccess(
+                    feature,
+                    provider,
+                    model,
+                    request,
+                    response,
+                    durationMs
+            );
 
             log.info(
                     "AI request completed successfully. feature={}, provider={}, model={}, durationMs={}",
-                    feature,
+                    feature.getValue(),
                     provider,
                     model,
-                    System.currentTimeMillis() - startTime
+                    durationMs
             );
-            return result;
+
+            return response;
 
         } catch (Exception ex) {
-            log.error(
-                    "AI request failed. feature={}, provider={}, model={}, durationMs={}, error={}",
+            long durationMs = System.currentTimeMillis() - startTime;
+
+            aiUsageLogger.logFailure(
                     feature,
                     provider,
                     model,
-                    System.currentTimeMillis() - startTime,
+                    request,
+                    ex,
+                    durationMs
+            );
+
+            log.error(
+                    "AI request failed. feature={}, provider={}, model={}, durationMs={}, error={}",
+                    feature.getValue(),
+                    provider,
+                    model,
+                    durationMs,
                     ex.getClass().getSimpleName(),
                     ex
             );
+
             throw ex;
         }
+    }
+
+    private Object extractRequest(ProceedingJoinPoint joinPoint) {
+        Object[] args = joinPoint.getArgs();
+
+        if (args == null || args.length == 0) {
+            return null;
+        }
+
+        return args[0];
     }
 }

@@ -5,7 +5,7 @@ import com.healthcare.aiservice.common.message_classification.dto.MessageClassif
 import com.healthcare.aiservice.common.message_classification.prompt.MessageClassificationPromptProvider;
 import com.healthcare.aiservice.common.provider.AiClient;
 
-import com.healthcare.aiservice.common.provider.logging.LogAiUsage;
+import com.healthcare.aiservice.common.provider.logging.annotation.LogAiUsage;
 import com.healthcare.aiservice.config.constant.FeatureName;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

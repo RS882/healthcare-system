@@ -4,7 +4,7 @@ import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryRequest
 import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryResponse;
 import com.healthcare.aiservice.common.medical_summary.prompt.MedicalSummaryPromptProvider;
 import com.healthcare.aiservice.common.provider.AiClient;
-import com.healthcare.aiservice.common.provider.logging.LogAiUsage;
+import com.healthcare.aiservice.common.provider.logging.annotation.LogAiUsage;
 import com.healthcare.aiservice.config.constant.FeatureName;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
