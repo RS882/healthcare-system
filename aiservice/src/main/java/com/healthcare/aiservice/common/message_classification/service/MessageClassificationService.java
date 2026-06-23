@@ -6,10 +6,12 @@ import com.healthcare.aiservice.common.message_classification.prompt.MessageClas
 import com.healthcare.aiservice.common.provider.AiClient;
 import com.healthcare.aiservice.common.provider.logging.annotation.LogAiUsage;
 import com.healthcare.aiservice.config.constant.FeatureName;
-import com.healthcare.aiservice.exception.AiResponseInvalidException;
+import com.healthcare.aiservice.exception.ai_response_invalid_exception.AiResponseInvalidException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+
+import static com.healthcare.aiservice.exception.ai_response_invalid_exception.AiResponseInvalidExceptionMessages.CLASSIFICATION_EXCEPTION_MESSAGE;
 
 @Service
 @RequiredArgsConstructor
@@ -31,7 +33,7 @@ public class MessageClassificationService {
                 || response.category() == null
                 || !StringUtils.hasText(response.reason())) {
             throw new AiResponseInvalidException(
-                    "AI response does not match message classification schema"
+                    CLASSIFICATION_EXCEPTION_MESSAGE
             );
         }
         return normalizeMessageClassificationResponse(response);

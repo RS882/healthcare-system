@@ -7,14 +7,15 @@ import com.healthcare.aiservice.common.medical_summary.prompt.MedicalSummaryProm
 import com.healthcare.aiservice.common.provider.AiClient;
 import com.healthcare.aiservice.common.provider.logging.annotation.LogAiUsage;
 import com.healthcare.aiservice.config.constant.FeatureName;
-import com.healthcare.aiservice.exception.AiResponseInvalidException;
+import com.healthcare.aiservice.exception.ai_response_invalid_exception.AiResponseInvalidException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 import java.util.Objects;
+
+import static com.healthcare.aiservice.exception.ai_response_invalid_exception.AiResponseInvalidExceptionMessages.MEDICAL_SUMMARY_EXCEPTION_MESSAGE;
 
 @Service
 @RequiredArgsConstructor
@@ -33,7 +34,7 @@ public class MedicalSummaryService {
 
         if (response == null || !StringUtils.hasText(response.summary())) {
             throw new AiResponseInvalidException(
-                    "AI response does not match expected medical summary schema"
+                    MEDICAL_SUMMARY_EXCEPTION_MESSAGE
             );
         }
 
