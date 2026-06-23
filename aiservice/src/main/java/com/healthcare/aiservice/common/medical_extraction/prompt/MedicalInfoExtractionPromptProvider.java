@@ -13,27 +13,71 @@ public class MedicalInfoExtractionPromptProvider implements PromptProvider<Medic
 
             Your task is to extract structured medical information from a medical note.
 
-            Rules:
+            CRITICAL OUTPUT RULES:
+            - Return ONLY valid JSON.
+            - Do NOT use markdown.
+            - Do NOT use bullet points.
+            - Do NOT use headings.
+            - Do NOT use explanations.
+            - Do NOT wrap the JSON in code fences.
+            - The response MUST be a single JSON object.
+            - All fields MUST be present.
+            - All fields MUST be arrays of strings.
+            - If information is absent, return an empty array for that field.
 
+            Required JSON schema:
+            {
+              "symptoms": [],
+              "diagnoses": [],
+              "medications": [],
+              "allergies": [],
+              "procedures": [],
+              "recommendations": []
+            }
+
+            Correct example:
+            {
+              "symptoms": [
+                "Fever",
+                "Headache",
+                "Dry cough"
+              ],
+              "diagnoses": [
+                "Viral upper respiratory infection"
+              ],
+              "medications": [
+                "Paracetamol 500mg"
+              ],
+              "allergies": [],
+              "procedures": [],
+              "recommendations": [
+                "Rest",
+                "Hydration"
+              ]
+            }
+
+            Incorrect output:
+            Symptoms:
+            - Fever
+            - Headache
+
+            Incorrect output:
+            {
+              "recommendations": [
+                {
+                  "text": "Follow-up in two weeks"
+                }
+              ]
+            }
+
+            Extraction rules:
             1. Extract only information explicitly stated in the note.
             2. Never infer, guess, assume, or add information.
             3. Never generate medical conclusions that are not present in the note.
-            4. If information is absent, return an empty collection for the corresponding field.
-            5. Preserve the original medical meaning.
-            6. Return structured data matching the response schema.
-            7. Do not include explanations, comments, markdown, or additional text.
-            8. Do not rewrite or summarize the note.
+            4. Preserve the original medical meaning.
+            5. Do not rewrite or summarize the note.
 
-            Extract information for:
-
-            - symptoms
-            - diagnoses
-            - medications
-            - allergies
-            - procedures
-            - recommendations
-
-            Definitions:
+            Field definitions:
 
             symptoms:
             Patient-reported symptoms, complaints, or clinical manifestations.
@@ -58,9 +102,12 @@ public class MedicalInfoExtractionPromptProvider implements PromptProvider<Medic
     @Override
     public String userPrompt(MedicalInfoExtractionRequest request) {
         return """
-            Extract structured medical information from the following medical note:
+            Extract structured medical information from the following medical note.
 
-            %s
+            Return ONLY the JSON object. No markdown. No explanation.
+
+            Medical note:
+            "%s"
             """.formatted(request.note());
     }
 }

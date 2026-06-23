@@ -15,7 +15,6 @@ import org.springframework.web.client.ResourceAccessException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -118,6 +117,42 @@ public class GlobalExceptionHandler {
                 .build();
 
         return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    @ExceptionHandler(AiResponseParsingException.class)
+    public ResponseEntity<ErrorResponse> handleAiResponseParsingException(
+            AiResponseParsingException ex,
+            HttpServletRequest request
+    ) {
+        log.error(
+                "AI response parsing failed. path={}, rawResponse={}, extractedJson={}",
+                request.getRequestURI(),
+                ex.getRawResponse(),
+                ex.getExtractedJson(),
+                ex
+        );
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.BAD_GATEWAY.value())
+                .error(HttpStatus.BAD_GATEWAY.name())
+                .message("AI provider returned invalid response format")
+                .path(request.getRequestURI())
+                .validationErrors(Set.of())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(errorResponse);
+    }
+
+    @ExceptionHandler(RestException.class)
+    public ResponseEntity<ErrorResponse> handleException(RestException ex, HttpServletRequest request) {
+        ErrorResponse errorResponse = ex.getResponse();
+
+        ErrorResponse.builder().path(request.getRequestURI()).build();
+
+        log.error("REST Error: {}", errorResponse, ex);
+
+        return new ResponseEntity<>(errorResponse, ex.getStatus());
     }
 
     @ExceptionHandler(Exception.class)

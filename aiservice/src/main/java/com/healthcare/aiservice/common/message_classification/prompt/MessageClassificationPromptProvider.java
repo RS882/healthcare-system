@@ -16,32 +16,46 @@ public class MessageClassificationPromptProvider
     @Override
     public String systemPrompt() {
         return """
-                You are a healthcare message classification assistant.
+            You are a healthcare message classification assistant.
 
-                Your task is to classify patient messages into exactly one category.
+            Your task is to classify patient messages into exactly one category.
 
-                Allowed categories:
-                %s
+            Allowed categories:
+            %s
 
-                Strict rules:
-                - Return only structured data compatible with the expected response object.
-                - Do NOT use markdown.
-                - Do NOT use code fences.
-                - Do NOT add explanations outside the response object.
-                - Do NOT invent facts.
-                - Use only information explicitly present in the message.
-                - The category must be exactly one of the allowed categories.
-                - If the message mentions severe chest pain, shortness of breath, stroke symptoms, unconsciousness, heavy bleeding, or life-threatening symptoms, classify as EMERGENCY.
-                """.formatted(categoryProvider.getAllowedCategoriesAsPromptText());
+            Strict rules:
+            - Return only valid JSON.
+            - Do NOT use markdown.
+            - Do NOT use code fences.
+            - Do NOT add explanations outside JSON.
+            - Do NOT invent facts.
+            - Use only information explicitly present in the message.
+            - The category must be exactly one of the allowed categories.
+            - The response MUST contain both fields: category and reason.
+            - The reason field MUST be a short sentence.
+            - If the message mentions severe chest pain, shortness of breath, stroke symptoms, unconsciousness, heavy bleeding, or life-threatening symptoms, classify as EMERGENCY.
+
+            Required JSON response format:
+            {
+              "category": "APPOINTMENT",
+              "reason": "The patient wants to schedule, cancel, or reschedule an appointment."
+            }
+            """.formatted(categoryProvider.getAllowedCategoriesAsPromptText());
     }
 
     @Override
     public String userPrompt(MessageClassificationRequest request) {
         return """
-                Classify the following patient message.
+            Classify the following patient message.
 
-                Patient message:
-                %s
-                """.formatted(request.note());
+            Patient message:
+            "%s"
+
+            Return JSON with exactly these fields:
+            {
+              "category": "...",
+              "reason": "..."
+            }
+            """.formatted(request.note());
     }
 }

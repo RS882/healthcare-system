@@ -1,5 +1,6 @@
 package com.healthcare.aiservice.common.provider;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryResponse;
 import com.healthcare.aiservice.common.provider.logging.AiParsingErrorLogger;
 import org.junit.jupiter.api.DisplayName;
@@ -38,15 +39,27 @@ class SpringAiClientTest {
     private ChatClient.CallResponseSpec callResponseSpec;
 
     @Mock
+    private ObjectMapper objectMapper;
+
+    @Mock
     private AiParsingErrorLogger parsingErrorLogger;
 
     @InjectMocks
     private SpringAiClient springAiClient;
 
     @Test
-    void call_ShouldReturnResponse_WhenAiProviderReturnsValidEntity() {
+    void call_ShouldReturnResponse_WhenAiProviderReturnsValidJson() throws Exception {
         String systemPrompt = "system prompt";
         String userPrompt = "user prompt";
+
+        String rawResponse = """
+                {
+                  "summary": "Headache reported",
+                  "diagnoses": [],
+                  "medications": [],
+                  "recommendations": ["MRI examination"]
+                }
+                """;
 
         MedicalSummaryResponse expectedResponse = new MedicalSummaryResponse(
                 "Headache reported",
@@ -59,7 +72,8 @@ class SpringAiClientTest {
         when(requestSpec.system(systemPrompt)).thenReturn(requestSpec);
         when(requestSpec.user(userPrompt)).thenReturn(requestSpec);
         when(requestSpec.call()).thenReturn(callResponseSpec);
-        when(callResponseSpec.entity(MedicalSummaryResponse.class))
+        when(callResponseSpec.content()).thenReturn(rawResponse);
+        when(objectMapper.readValue(any(String.class), eq(MedicalSummaryResponse.class)))
                 .thenReturn(expectedResponse);
 
         MedicalSummaryResponse actualResponse = springAiClient.call(
@@ -74,9 +88,10 @@ class SpringAiClientTest {
         verify(requestSpec).system(systemPrompt);
         verify(requestSpec).user(userPrompt);
         verify(requestSpec).call();
-        verify(callResponseSpec).entity(MedicalSummaryResponse.class);
+        verify(callResponseSpec).content();
+        verify(objectMapper).readValue(any(String.class), eq(MedicalSummaryResponse.class));
 
-        verifyNoMoreInteractions(chatClient, requestSpec, callResponseSpec, parsingErrorLogger);
+        verifyNoMoreInteractions(chatClient, requestSpec, callResponseSpec, objectMapper, parsingErrorLogger);
     }
 
     @Test
@@ -84,12 +99,13 @@ class SpringAiClientTest {
         String systemPrompt = "system prompt";
         String userPrompt = "user prompt";
 
+        NonTransientAiException exception = new NonTransientAiException("AI provider failed");
+
         when(chatClient.prompt()).thenReturn(requestSpec);
         when(requestSpec.system(systemPrompt)).thenReturn(requestSpec);
         when(requestSpec.user(userPrompt)).thenReturn(requestSpec);
         when(requestSpec.call()).thenReturn(callResponseSpec);
-        when(callResponseSpec.entity(MedicalSummaryResponse.class))
-                .thenThrow(new NonTransientAiException("AI provider failed"));
+        when(callResponseSpec.content()).thenThrow(exception);
 
         assertThatThrownBy(() -> springAiClient.call(
                 systemPrompt,
@@ -103,12 +119,8 @@ class SpringAiClientTest {
         verify(requestSpec).system(systemPrompt);
         verify(requestSpec).user(userPrompt);
         verify(requestSpec).call();
-        verify(callResponseSpec).entity(MedicalSummaryResponse.class);
-        verify(parsingErrorLogger).logIfParsingError(
-                any(RuntimeException.class),
-                eq(MedicalSummaryResponse.class)
-        );
+        verify(callResponseSpec).content();
 
-        verifyNoMoreInteractions(chatClient, requestSpec, callResponseSpec, parsingErrorLogger);
+        verifyNoMoreInteractions(chatClient, requestSpec, callResponseSpec, objectMapper, parsingErrorLogger);
     }
 }

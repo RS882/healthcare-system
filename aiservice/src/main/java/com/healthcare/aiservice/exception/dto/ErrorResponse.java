@@ -47,4 +47,5 @@ public record ErrorResponse(
         Set<ValidationError> validationErrors
 
 ) {
+
 }
