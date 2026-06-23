@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static com.healthcare.aiservice.exception.ai_response_invalid_exception.AiResponseInvalidExceptionMessages.CLASSIFICATION_EXCEPTION_MESSAGE;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.*;
 
@@ -86,5 +87,31 @@ class MessageClassificationServiceTest {
         assertThatThrownBy(() -> service.classify(new MessageClassificationRequest("note")))
                 .isInstanceOf(AiResponseInvalidException.class)
                 .hasMessageContaining(CLASSIFICATION_EXCEPTION_MESSAGE);
+    }
+
+    @Test
+    void classify_ShouldNormalizeResponse_WhenReasonContainsWhitespaces() {
+        MessageClassificationRequest request =
+                new MessageClassificationRequest("I need to reschedule my appointment.");
+
+        MessageClassificationResponse aiResponse =
+                new MessageClassificationResponse(
+                        MessageCategory.APPOINTMENT,
+                        "  Patient wants to reschedule an appointment.  "
+                );
+
+        when(promptProvider.systemPrompt()).thenReturn("system");
+        when(promptProvider.userPrompt(request)).thenReturn("user");
+
+        when(aiClient.call(
+                eq("system"),
+                eq("user"),
+                eq(MessageClassificationResponse.class)
+        )).thenReturn(aiResponse);
+
+        MessageClassificationResponse result = service.classify(request);
+
+        assertThat(result.category()).isEqualTo(MessageCategory.APPOINTMENT);
+        assertThat(result.reason()).isEqualTo("Patient wants to reschedule an appointment.");
     }
 }

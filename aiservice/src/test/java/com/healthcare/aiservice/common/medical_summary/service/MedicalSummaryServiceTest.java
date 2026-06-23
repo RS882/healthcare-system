@@ -3,6 +3,7 @@ package com.healthcare.aiservice.common.medical_summary.service;
 
 import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryRequest;
 import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryResponse;
+import com.healthcare.aiservice.common.medical_summary.dto.MedicationInfo;
 import com.healthcare.aiservice.common.medical_summary.prompt.MedicalSummaryPromptProvider;
 import com.healthcare.aiservice.common.provider.AiClient;
 import com.healthcare.aiservice.exception.ai_response_invalid_exception.AiResponseInvalidException;
@@ -14,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static com.healthcare.aiservice.exception.ai_response_invalid_exception.AiResponseInvalidExceptionMessages.MEDICAL_SUMMARY_EXCEPTION_MESSAGE;
@@ -108,5 +110,43 @@ class MedicalSummaryServiceTest {
         assertThatThrownBy(() -> medicalSummaryService.summarize(new MedicalSummaryRequest("note")))
                 .isInstanceOf(AiResponseInvalidException.class)
                 .hasMessageContaining(MEDICAL_SUMMARY_EXCEPTION_MESSAGE);
+    }
+
+    @Test
+    void summarize_ShouldNormalizeResponse_WhenAiResponseContainsNullsAndBlankValues() {
+        MedicalSummaryRequest request = new MedicalSummaryRequest("note");
+
+        MedicalSummaryResponse aiResponse = new MedicalSummaryResponse(
+                "  Patient has headache.  ",
+                null,
+                Arrays.asList(
+                        null,
+                        new MedicationInfo(null, "500mg"),
+                        new MedicationInfo("   ", "500mg"),
+                        new MedicationInfo("  Ibuprofen  ", null),
+                        new MedicationInfo("  Paracetamol  ", "  500mg  ")
+                ),
+                null
+        );
+
+        when(promptProvider.systemPrompt()).thenReturn("system");
+        when(promptProvider.userPrompt(request)).thenReturn("user");
+
+        when(aiClient.call(
+                eq("system"),
+                eq("user"),
+                eq(MedicalSummaryResponse.class)
+        )).thenReturn(aiResponse);
+
+        MedicalSummaryResponse result = medicalSummaryService.summarize(request);
+
+        assertThat(result.summary()).isEqualTo("Patient has headache.");
+        assertThat(result.diagnoses()).isEmpty();
+        assertThat(result.recommendations()).isEmpty();
+
+        assertThat(result.medications()).containsExactly(
+                new MedicationInfo("Ibuprofen", ""),
+                new MedicationInfo("Paracetamol", "500mg")
+        );
     }
 }
