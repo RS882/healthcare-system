@@ -1,4 +1,4 @@
-package com.healthcare.aiservice.model;
+package com.healthcare.aiservice.common.provider.logging.model;
 
 
 import com.healthcare.aiservice.common.provider.logging.AiRequestStatus;

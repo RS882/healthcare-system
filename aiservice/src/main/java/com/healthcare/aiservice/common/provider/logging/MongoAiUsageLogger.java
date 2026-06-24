@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.aiservice.config.constant.FeatureName;
 
-import com.healthcare.aiservice.model.AiRequestLog;
+import com.healthcare.aiservice.common.provider.logging.model.AiRequestLog;
 import com.healthcare.aiservice.repository.AiRequestLogRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

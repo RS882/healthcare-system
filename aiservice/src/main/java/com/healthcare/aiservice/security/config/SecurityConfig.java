@@ -14,6 +14,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import static com.healthcare.aiservice.common.medical_extraction.controller.API.MedicalInfoExtractionApiPaths.EXTRACT_MEDICAL_INFO_URL;
 import static com.healthcare.aiservice.common.medical_summary.controller.API.MedicalSummaryApiPaths.MEDICAL_NOTE_SUMMARY_URL;
 import static com.healthcare.aiservice.common.message_classification.controller.API.MessageClassificationApiPaths.CLASSIFY_MESSAGE_URL;
+import static com.healthcare.aiservice.common.statistics.contriller.API.AiStatisticsApiPaths.STATISTICS_ADMIN_URL;
 import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
@@ -36,6 +37,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, MEDICAL_NOTE_SUMMARY_URL).permitAll()
                         .requestMatchers(HttpMethod.POST, CLASSIFY_MESSAGE_URL).permitAll()
                         .requestMatchers(HttpMethod.POST, EXTRACT_MEDICAL_INFO_URL).permitAll()
+                        .requestMatchers(HttpMethod.GET, STATISTICS_ADMIN_URL).permitAll()
                         .anyRequest().authenticated()
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)
