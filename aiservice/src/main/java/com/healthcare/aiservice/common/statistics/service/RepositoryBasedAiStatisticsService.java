@@ -1,9 +1,9 @@
 package com.healthcare.aiservice.common.statistics.service;
 
 import com.healthcare.aiservice.common.provider.logging.AiRequestStatus;
-import com.healthcare.aiservice.common.statistics.dto.AiStatisticsMapper;
 import com.healthcare.aiservice.common.statistics.dto.AiStatisticsResponse;
 import com.healthcare.aiservice.common.statistics.dto.FeatureStatistics;
+import com.healthcare.aiservice.common.statistics.mapper.FeatureStatisticsMapper;
 import com.healthcare.aiservice.common.statistics.service.interfaces.AiStatisticService;
 import com.healthcare.aiservice.config.constant.FeatureName;
 import com.healthcare.aiservice.repository.AiRequestLogRepository;
@@ -27,15 +27,11 @@ public class RepositoryBasedAiStatisticsService implements AiStatisticService {
     public AiStatisticsResponse getStatistic() {
         return AiStatisticsResponse.builder()
                 .totalRequests(repository.count())
-                .successfulRequests(countByStatus(AiRequestStatus.SUCCESS))
-                .failedRequests(countByStatus(AiRequestStatus.FAILED))
+                .successfulRequests(repository.countByStatus(AiRequestStatus.SUCCESS))
+                .failedRequests(repository.countByStatus(AiRequestStatus.FAILED))
                 .averageDurationMs(resolveAverageDuration())
                 .requestsByFeature(resolveRequestsByFeature())
                 .build();
-    }
-
-    private long countByStatus(AiRequestStatus status) {
-        return repository.countByStatus(status);
     }
 
     private long resolveAverageDuration() {
@@ -50,12 +46,18 @@ public class RepositoryBasedAiStatisticsService implements AiStatisticService {
 
     private List<FeatureStatistics> resolveRequestsByFeature() {
         Map<FeatureName, Long> statistics =
-                AiStatisticsMapper.initializeFeatureStatisticsMap();
+                FeatureStatisticsMapper.initializeFeatureStatisticsMap();
 
-        repository.countRequestsGroupedByFeature()
-                .forEach(projection -> applyFeatureCount(statistics, projection));
+        List<FeatureCountProjection> projections =
+                repository.countRequestsGroupedByFeature();
 
-        return AiStatisticsMapper.convertFeatureStatisticsMapToFeatureStatisticsList(statistics);
+        if (projections == null || projections.isEmpty()) {
+            return FeatureStatisticsMapper.empty();
+        }
+
+        projections.forEach(projection -> applyFeatureCount(statistics, projection));
+
+        return FeatureStatisticsMapper.toFeatureStatisticsList(statistics);
     }
 
     private void applyFeatureCount(

@@ -1,5 +1,6 @@
-package com.healthcare.aiservice.common.statistics.dto;
+package com.healthcare.aiservice.common.statistics.mapper;
 
+import com.healthcare.aiservice.common.statistics.dto.FeatureStatistics;
 import com.healthcare.aiservice.config.constant.FeatureName;
 
 import java.util.Arrays;
@@ -7,11 +8,10 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-public final class AiStatisticsMapper {
+public final class FeatureStatisticsMapper {
 
-    private  AiStatisticsMapper() {
+    private FeatureStatisticsMapper() {
     }
-
 
     public static Map<FeatureName, Long> initializeFeatureStatisticsMap() {
         Map<FeatureName, Long> result = new EnumMap<>(FeatureName.class);
@@ -20,7 +20,7 @@ public final class AiStatisticsMapper {
         return result;
     }
 
-    public static List<FeatureStatistics> convertFeatureStatisticsMapToFeatureStatisticsList(Map<FeatureName, Long> map) {
+    public static List<FeatureStatistics> toFeatureStatisticsList(Map<FeatureName, Long> map) {
         return map.entrySet().stream()
                 .map(entry -> FeatureStatistics.builder()
                         .feature(entry.getKey())
@@ -28,10 +28,7 @@ public final class AiStatisticsMapper {
                         .build())
                 .toList();
     }
-
-
-    public static List<FeatureStatistics> emptyFeatureStatistics() {
-
+    public static List<FeatureStatistics> empty() {
         return Arrays.stream(FeatureName.values())
                 .map(FeatureStatistics::empty)
                 .toList();

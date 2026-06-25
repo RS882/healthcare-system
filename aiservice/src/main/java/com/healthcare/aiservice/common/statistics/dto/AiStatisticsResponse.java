@@ -1,13 +1,12 @@
 package com.healthcare.aiservice.common.statistics.dto;
 
 
+import com.healthcare.aiservice.common.statistics.mapper.FeatureStatisticsMapper;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 
 import java.util.List;
-
-import static com.healthcare.aiservice.common.statistics.dto.AiStatisticsMapper.emptyFeatureStatistics;
 
 @Schema(
         name = "AiStatisticsResponse",
@@ -40,7 +39,7 @@ public record AiStatisticsResponse(
                 .successfulRequests(0L)
                 .failedRequests(0L)
                 .averageDurationMs(0L)
-                .requestsByFeature(emptyFeatureStatistics())
+                .requestsByFeature(FeatureStatisticsMapper.empty())
                 .build();
     }
 }

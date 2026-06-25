@@ -13,7 +13,6 @@ public record FeatureStatistics(
         @Schema(description = "Count of requests", example = "29")
         long requests
 ) {
-
     public static FeatureStatistics empty(FeatureName feature) {
         return FeatureStatistics.builder()
                 .feature(feature)
