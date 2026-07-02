@@ -51,6 +51,9 @@ Example output:
 
 This enables healthcare professionals to process large volumes of medical information more efficiently.
 
+### Example
+
+![Medical Summary](docs/images/medical-summary.png)
 ---
 
 ## 🔬 Medical Information Extraction
@@ -71,6 +74,10 @@ Benefits:
 * Improved data consistency
 * Reduced manual processing
 
+### Example
+
+![Medical Extraction](docs/images/medical-extraction.png)
+
 ---
 
 ## 📬 Message Classification
@@ -86,6 +93,9 @@ Potential use cases:
 
 This functionality supports intelligent workflow automation.
 
+### Example
+
+![Message Classification](docs/images/message-classification.png)
 ---
 
 ## 🧠 Structured AI Responses
@@ -251,6 +261,9 @@ Example response:
   ]
 }
 ```
+### Statistics Endpoint
+
+![AI Statistics](docs/images/statistics-endpoint.png)
 
 Statistics include:
 
@@ -285,6 +298,11 @@ MongoDB TTL indexes automatically remove expired audit records after 30 days.
 
 This audit trail simplifies troubleshooting, monitoring, and production support.
 
+### MongoDB Audit Log
+
+![MongoDB Audit](docs/images/mongodb-audit_1.png)
+
+![MongoDB Audit](docs/images/mongodb-audit_2.png)
 ---
 
 # 📝 AI Parsing Error Handling
@@ -463,6 +481,10 @@ Swagger UI:
 ```text
 http://localhost:8087/swagger-ui.html
 ```
+
+## Swagger Overview
+
+![Swagger Overview](docs/images/swagger-overview.png)
 
 ---
 

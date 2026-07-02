@@ -10,12 +10,9 @@ import org.springframework.context.annotation.Configuration;
         info = @Info(
                 title = "Healthcare System: AI Service",
                 description = """
-                        AI-powered healthcare microservice for:
-                        
-                        - medical note summarization
-                        - patient message classification
-                        - medical information extraction
-                        - healthcare communication assistance
+                        AI-powered healthcare microservice providing structured medical summarization,
+                        medical information extraction, patient message classification,
+                        AI audit logging, monitoring and usage statistics.
                         """,
                 version = "1.0.0"
         )
