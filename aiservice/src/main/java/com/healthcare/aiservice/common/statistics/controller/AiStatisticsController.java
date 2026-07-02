@@ -1,4 +1,4 @@
-package com.healthcare.aiservice.common.statistics.contriller;
+package com.healthcare.aiservice.common.statistics.controller;
 
 import com.healthcare.aiservice.common.statistics.controller.API.AiStatisticsAPI;
 import com.healthcare.aiservice.common.statistics.dto.AiStatisticsResponse;

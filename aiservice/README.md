@@ -217,6 +217,76 @@ Benefits:
 
 ---
 
+# 📈 AI Statistics
+
+The service provides a dedicated administrative endpoint exposing aggregated AI usage statistics.
+
+Endpoint:
+
+```text
+GET /api/v1/ai/admin/statistics
+```
+
+Example response:
+
+```json
+{
+  "totalRequests": 125,
+  "successfulRequests": 120,
+  "failedRequests": 5,
+  "averageDurationMs": 843,
+  "requestsByFeature": [
+    {
+      "feature": "MEDICAL_SUMMARY",
+      "requests": 50
+    },
+    {
+      "feature": "MESSAGE_CLASSIFICATION",
+      "requests": 40
+    },
+    {
+      "feature": "MEDICAL_EXTRACTION",
+      "requests": 35
+    }
+  ]
+}
+```
+
+Statistics include:
+
+* Total AI requests
+* Successful requests
+* Failed requests
+* Average processing time
+* Request distribution by AI feature
+
+The statistics module is intended for operational monitoring, performance analysis, and capacity planning.
+
+---
+
+# 📋 AI Audit
+
+Every interaction with the AI provider is persisted for auditing and diagnostics.
+
+Each log entry contains:
+
+* AI feature
+* AI provider
+* AI model
+* Request payload
+* AI response
+* Processing duration
+* Request status
+* Error type
+* Error message
+* Timestamp
+
+MongoDB TTL indexes automatically remove expired audit records after 30 days.
+
+This audit trail simplifies troubleshooting, monitoring, and production support.
+
+---
+
 # 📝 AI Parsing Error Handling
 
 AI output is inherently probabilistic.
@@ -263,6 +333,17 @@ This minimizes risks associated with AI-driven processing.
 * ChatClient API
 * Structured Output Mapping
 
+## Database
+
+* MongoDB
+* Spring Data MongoDB
+
+## Monitoring
+
+* AI Audit Logging
+* AI Statistics
+* MongoDB Aggregation Pipeline
+
 ## Architecture
 
 * DTO-based contracts
@@ -302,6 +383,14 @@ The service includes tests for:
 * AI client abstraction
 * Structured response mapping
 
+### Monitoring & Statistics
+
+* AI statistics service
+* Repository implementation
+* MongoTemplate implementation
+* REST controller
+* Integration tests (MongoDB Testcontainers)
+
 ### Error Handling
 
 * Parsing failures
@@ -312,6 +401,7 @@ Testing tools:
 * JUnit 5
 * Mockito
 * Spring Boot Test
+* Testcontainers
 
 ---
 
@@ -395,18 +485,41 @@ Optional:
 
 ```text
 ai-service
-├── common
-│   ├── medical_summary
-│   ├── medical_extraction
-│   ├── message_classification
-│   ├── prompt
-│   └── provider
+common│
+├── statistics
+│   ├── controller
+│   ├── dto
+│   ├── mapper
+│   └── service
+│
+├── provider
+│   └── logging
+│
+├── medical_summary
+├── medical_extraction
+├── message_classification
 │
 ├── config
 ├── exception
 ├── validation
 └── resources
 ```
+---
+
+# 📊 Monitoring & Observability
+
+The AI Service includes built-in monitoring capabilities designed for production environments.
+
+Implemented functionality:
+
+* AI request audit logging
+* Usage statistics
+* Execution time tracking
+* Success/failure monitoring
+* MongoDB aggregation-based analytics
+* Automatic log retention using TTL indexes
+
+These capabilities provide operational visibility without requiring external monitoring tools.
 
 ---
 

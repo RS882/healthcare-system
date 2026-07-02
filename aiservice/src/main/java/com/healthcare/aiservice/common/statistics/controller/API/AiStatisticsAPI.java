@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import static com.healthcare.aiservice.common.APIPaths.ApiPaths.AI_BASIC_ADMIN_URL;
-import static com.healthcare.aiservice.common.statistics.contriller.API.AiStatisticsApiPaths.STATISTICS;
+import static com.healthcare.aiservice.common.statistics.controller.API.AiStatisticsApiPaths.STATISTICS;
 
 
 @RequestMapping(AI_BASIC_ADMIN_URL)

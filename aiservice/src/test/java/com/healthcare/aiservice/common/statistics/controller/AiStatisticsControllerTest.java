@@ -1,4 +1,4 @@
-package com.healthcare.aiservice.common.statistics.contriller;
+package com.healthcare.aiservice.common.statistics.controller;
 
 
 import com.healthcare.aiservice.common.statistics.dto.AiStatisticsResponse;
@@ -12,13 +12,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
-import static com.healthcare.aiservice.common.statistics.contriller.API.AiStatisticsApiPaths.STATISTICS_ADMIN_URL;
+import static com.healthcare.aiservice.common.statistics.controller.API.AiStatisticsApiPaths.STATISTICS_ADMIN_URL;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;

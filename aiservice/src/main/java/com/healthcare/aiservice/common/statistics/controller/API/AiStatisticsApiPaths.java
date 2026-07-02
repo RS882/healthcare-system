@@ -1,4 +1,4 @@
-package com.healthcare.aiservice.common.statistics.contriller.API;
+package com.healthcare.aiservice.common.statistics.controller.API;
 
 import static com.healthcare.aiservice.common.APIPaths.ApiPaths.AI_BASIC_ADMIN_URL;
 
