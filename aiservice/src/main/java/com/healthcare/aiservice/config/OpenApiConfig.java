@@ -14,6 +14,7 @@ import java.util.Map;
 import static com.healthcare.aiservice.common.medical_extraction.controller.API.MedicalInfoExtractionApiPaths.EXTRACT_MEDICAL_INFO_URL;
 import static com.healthcare.aiservice.common.medical_summary.controller.API.MedicalSummaryApiPaths.MEDICAL_NOTE_SUMMARY_URL;
 import static com.healthcare.aiservice.common.message_classification.controller.API.MessageClassificationApiPaths.CLASSIFY_MESSAGE_URL;
+import static com.healthcare.aiservice.common.statistics.contriller.API.AiStatisticsApiPaths.STATISTICS_ADMIN_URL;
 
 
 @Configuration
@@ -43,6 +44,7 @@ public class OpenApiConfig {
                 .addExamples("Error500InternalServerErrorMedicalSummary", ex500(MEDICAL_NOTE_SUMMARY_URL))
                 .addExamples("Error500InternalServerErrorMessageClassification", ex500(CLASSIFY_MESSAGE_URL))
                 .addExamples("Error500InternalServerErrorMedicalInfoExtraction", ex500(EXTRACT_MEDICAL_INFO_URL))
+                .addExamples("Error500InternalServerErrorStatistics", ex500(STATISTICS_ADMIN_URL))
                 ;
 
         return new OpenAPI()

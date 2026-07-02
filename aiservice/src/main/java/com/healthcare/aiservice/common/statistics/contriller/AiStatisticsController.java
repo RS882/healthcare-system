@@ -1,6 +1,6 @@
 package com.healthcare.aiservice.common.statistics.contriller;
 
-import com.healthcare.aiservice.common.statistics.contriller.API.AiStatisticsAPI;
+import com.healthcare.aiservice.common.statistics.controller.API.AiStatisticsAPI;
 import com.healthcare.aiservice.common.statistics.dto.AiStatisticsResponse;
 import com.healthcare.aiservice.common.statistics.service.interfaces.AiStatisticService;
 import lombok.RequiredArgsConstructor;
