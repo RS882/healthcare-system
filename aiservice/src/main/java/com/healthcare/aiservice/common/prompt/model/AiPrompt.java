@@ -54,4 +54,36 @@ public record AiPrompt(
 
         String versionComment
 ) {
+    public AiPrompt activate(String userId, String username) {
+        return withActive(true, userId, username);
+    }
+
+    public AiPrompt deactivate(String userId, String username) {
+        return withActive(false, userId, username);
+    }
+
+    private AiPrompt withActive(
+            boolean active,
+            String userId,
+            String username
+    ) {
+        Instant now = Instant.now();
+        return AiPrompt.builder()
+                .id(id)
+                .feature(feature)
+                .type(type)
+                .targetModel(targetModel)
+                .version(version)
+                .content(content)
+                .active(active)
+                .createdByUserId(createdByUserId)
+                .createdByUsername(createdByUsername)
+                .createdAt(createdAt)
+                .updatedByUserId(userId)
+                .updatedByUsername(username)
+                .updatedAt(now)
+                .promptDescription(promptDescription)
+                .versionComment(versionComment)
+                .build();
+    }
 }

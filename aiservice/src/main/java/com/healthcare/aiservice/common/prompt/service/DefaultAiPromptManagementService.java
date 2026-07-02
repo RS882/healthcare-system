@@ -9,6 +9,7 @@ import com.healthcare.aiservice.common.prompt.model.AiProviderModel;
 import com.healthcare.aiservice.common.prompt.model.PromptType;
 import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptManagementService;
 import com.healthcare.aiservice.config.constant.FeatureName;
+import com.healthcare.aiservice.exception.AiPromptNotFoundException;
 import com.healthcare.aiservice.repository.AiPromptRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -51,13 +53,26 @@ public class DefaultAiPromptManagementService implements AiPromptManagementServi
 
         AiPrompt savedPrompt = repository.save(prompt);
 
-
         return AiPromptMapper.toDetailsResponse(savedPrompt);
     }
 
     @Override
     public AiPromptDetailsResponse activatePrompt(String promptId) {
-        return null;
+
+        AiPrompt promptToActivate = repository.findById(promptId)
+                .orElseThrow(()->new AiPromptNotFoundException(promptId));
+
+        deactivateOtherActivePrompts(promptToActivate);
+
+        if (promptToActivate.active()) {
+            return AiPromptMapper.toDetailsResponse(promptToActivate);
+        }
+
+        AiPrompt activatedPrompt = repository.save(
+                promptToActivate.activate(SYSTEM_USER_ID, SYSTEM_USERNAME)
+        );
+
+        return AiPromptMapper.toDetailsResponse(activatedPrompt);
     }
 
     @Override
@@ -73,6 +88,18 @@ public class DefaultAiPromptManagementService implements AiPromptManagementServi
     @Override
     public List<AiPromptResponse> getPromptVersions(FeatureName feature, PromptType type, AiProviderModel targetModel) {
         return List.of();
+    }
+
+    private void deactivateOtherActivePrompts(AiPrompt prompt) {
+        repository.findAllByFeatureAndTypeAndTargetModelAndActiveTrue(
+                        prompt.feature(),
+                        prompt.type(),
+                        prompt.targetModel()
+                )
+                .stream()
+                .filter(activePrompt -> !Objects.equals(activePrompt.id(), prompt.id()))
+                .map(activePrompt -> activePrompt.deactivate(SYSTEM_USER_ID, SYSTEM_USERNAME))
+                .forEach(repository::save);
     }
 
     private long resolveNextVersion(

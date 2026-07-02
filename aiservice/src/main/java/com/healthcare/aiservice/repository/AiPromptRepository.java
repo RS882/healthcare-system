@@ -29,4 +29,10 @@ public interface AiPromptRepository extends MongoRepository<AiPrompt, String> {
             PromptType type,
             AiProviderModel targetModel
     );
+
+    List<AiPrompt> findAllByFeatureAndTypeAndTargetModelAndActiveTrue(
+            FeatureName feature,
+            PromptType type,
+            AiProviderModel targetModel
+    );
 }
