@@ -2,7 +2,9 @@ package com.healthcare.aiservice.common.prompt.mapper;
 
 import com.healthcare.aiservice.common.prompt.dto.AiPromptDetailsResponse;
 import com.healthcare.aiservice.common.prompt.dto.AiPromptResponse;
+import com.healthcare.aiservice.common.prompt.dto.CreateAiPromptRequest;
 import com.healthcare.aiservice.common.prompt.model.AiPrompt;
+import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
 
 import java.util.List;
 
@@ -69,5 +71,22 @@ public final class AiPromptMapper {
         return prompts.stream()
                 .map(AiPromptMapper::toDetailsResponse)
                 .toList();
+    }
+
+
+    public static AiPromptKey toKey(CreateAiPromptRequest request) {
+        return AiPromptKey.builder()
+                .feature(request.feature())
+                .type(request.type())
+                .targetModel(request.targetModel())
+                .build();
+    }
+
+    public static AiPromptKey toKey(AiPrompt prompt) {
+        return AiPromptKey.builder()
+                .feature(prompt.feature())
+                .type(prompt.type())
+                .targetModel(prompt.targetModel())
+                .build();
     }
 }

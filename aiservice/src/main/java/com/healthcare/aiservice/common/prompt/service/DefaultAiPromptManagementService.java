@@ -5,19 +5,22 @@ import com.healthcare.aiservice.common.prompt.dto.AiPromptResponse;
 import com.healthcare.aiservice.common.prompt.dto.CreateAiPromptRequest;
 import com.healthcare.aiservice.common.prompt.mapper.AiPromptMapper;
 import com.healthcare.aiservice.common.prompt.model.AiPrompt;
-import com.healthcare.aiservice.common.prompt.model.AiProviderModel;
-import com.healthcare.aiservice.common.prompt.model.PromptType;
+import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
 import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptManagementService;
-import com.healthcare.aiservice.config.constant.FeatureName;
+import com.healthcare.aiservice.exception.AiActivePromptNotFoundException;
 import com.healthcare.aiservice.exception.AiPromptNotFoundException;
+import com.healthcare.aiservice.exception.AiPromptStateInvalidException;
+import com.healthcare.aiservice.exception.AiPromptVersionConflictException;
 import com.healthcare.aiservice.repository.AiPromptRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -30,95 +33,149 @@ public class DefaultAiPromptManagementService implements AiPromptManagementServi
 
     @Override
     public AiPromptDetailsResponse createPrompt(CreateAiPromptRequest request) {
-        long nextVersion = resolveNextVersion(request.feature(), request.type(), request.targetModel());
 
-        Instant now = Instant.now();
+        AiPromptKey aiPromptKey = AiPromptMapper.toKey(request);
 
-        AiPrompt prompt = AiPrompt.builder()
-                .feature(request.feature())
-                .type(request.type())
-                .targetModel(request.targetModel())
-                .version(nextVersion)
-                .content(request.content().strip())
-                .active(false)
-                .createdByUserId(SYSTEM_USER_ID)
-                .createdByUsername(SYSTEM_USERNAME)
-                .createdAt(now)
-                .updatedByUserId(SYSTEM_USER_ID)
-                .updatedByUsername(SYSTEM_USERNAME)
-                .updatedAt(now)
-                .promptDescription(normalizeText(request.promptDescription()))
-                .versionComment(normalizeText(request.versionComment()))
-                .build();
+        long nextVersion = resolveNextVersion(aiPromptKey);
 
-        AiPrompt savedPrompt = repository.save(prompt);
+        AiPrompt prompt = buildPrompt(request, nextVersion);
 
-        return AiPromptMapper.toDetailsResponse(savedPrompt);
+        try {
+            AiPrompt savedPrompt = repository.save(prompt);
+            return AiPromptMapper.toDetailsResponse(savedPrompt);
+
+        } catch (DuplicateKeyException ex) {
+            throw new AiPromptVersionConflictException(
+                    aiPromptKey,
+                    nextVersion);
+        }
     }
 
     @Override
     public AiPromptDetailsResponse activatePrompt(String promptId) {
+        AiPrompt prompt = getPromptById(promptId);
 
-        AiPrompt promptToActivate = repository.findById(promptId)
-                .orElseThrow(()->new AiPromptNotFoundException(promptId));
+        AiPrompt activePrompt = prompt.active()
+                ? prompt
+                : repository.save(prompt.activate(SYSTEM_USER_ID, SYSTEM_USERNAME));
 
-        deactivateOtherActivePrompts(promptToActivate);
+        deactivateOtherActivePrompts(activePrompt);
 
-        if (promptToActivate.active()) {
-            return AiPromptMapper.toDetailsResponse(promptToActivate);
-        }
-
-        AiPrompt activatedPrompt = repository.save(
-                promptToActivate.activate(SYSTEM_USER_ID, SYSTEM_USERNAME)
-        );
-
-        return AiPromptMapper.toDetailsResponse(activatedPrompt);
+        return AiPromptMapper.toDetailsResponse(activePrompt);
     }
 
     @Override
     public AiPromptDetailsResponse getPrompt(String promptId) {
-        return null;
+
+        AiPrompt currentPrompt = getPromptById(promptId);
+
+        return AiPromptMapper.toDetailsResponse(currentPrompt);
     }
 
     @Override
-    public AiPromptDetailsResponse getActivePrompt(FeatureName feature, PromptType type, AiProviderModel targetModel) {
-        return null;
+    public AiPromptDetailsResponse getActivePrompt(AiPromptKey aiPromptKey) {
+        List<AiPrompt> activePrompts = findActivePrompts(aiPromptKey);
+
+        if (activePrompts.isEmpty()) {
+            throw new AiActivePromptNotFoundException(aiPromptKey);
+        }
+
+        if (activePrompts.size() > 1) {
+            throw new AiPromptStateInvalidException(aiPromptKey);
+        }
+
+        return AiPromptMapper.toDetailsResponse(activePrompts.get(0));
     }
 
     @Override
-    public List<AiPromptResponse> getPromptVersions(FeatureName feature, PromptType type, AiProviderModel targetModel) {
-        return List.of();
+    public List<AiPromptResponse> getPromptVersions(AiPromptKey aiPromptKey) {
+
+        return findPromptVersions(aiPromptKey).stream()
+                .map(AiPromptMapper::toResponse)
+                .toList();
+    }
+
+    private Optional<AiPrompt> findLatestPrompt(AiPromptKey key) {
+        return repository.findTopByFeatureAndTypeAndTargetModelOrderByVersionDesc(
+                key.feature(),
+                key.type(),
+                key.targetModel()
+        );
+    }
+
+    private List<AiPrompt> findPromptVersions(AiPromptKey key) {
+        return repository.findByFeatureAndTypeAndTargetModelOrderByVersionDesc(
+                key.feature(),
+                key.type(),
+                key.targetModel()
+        );
+    }
+
+    private List<AiPrompt> findActivePrompts(AiPromptKey key) {
+        return repository.findAllByFeatureAndTypeAndTargetModelAndActiveTrue(
+                key.feature(),
+                key.type(),
+                key.targetModel()
+        );
+    }
+
+    private AiPrompt buildPrompt(
+            CreateAiPromptRequest request,
+            long version
+    ) {
+        Instant now = Instant.now();
+
+        return buildPrompt(request, version, now, SYSTEM_USER_ID, SYSTEM_USERNAME);
+    }
+
+    private AiPrompt buildPrompt(
+            CreateAiPromptRequest request,
+            long version,
+            Instant now,
+            String userId,
+            String username
+    ) {
+        return AiPrompt.builder()
+                .feature(request.feature())
+                .type(request.type())
+                .targetModel(request.targetModel())
+                .version(version)
+                .content(normalizeText(request.content()))
+                .active(false)
+                .createdByUserId(userId)
+                .createdByUsername(username)
+                .createdAt(now)
+                .promptDescription(normalizeText(request.promptDescription()))
+                .versionComment(normalizeText(request.versionComment()))
+                .build();
+    }
+
+    private AiPrompt getPromptById(String promptId) {
+        return repository.findById(promptId)
+                .orElseThrow(() -> new AiPromptNotFoundException(promptId));
     }
 
     private void deactivateOtherActivePrompts(AiPrompt prompt) {
-        repository.findAllByFeatureAndTypeAndTargetModelAndActiveTrue(
-                        prompt.feature(),
-                        prompt.type(),
-                        prompt.targetModel()
-                )
+        deactivateOtherActivePrompts(prompt, SYSTEM_USER_ID, SYSTEM_USERNAME);
+    }
+
+    private void deactivateOtherActivePrompts(AiPrompt prompt, String userId, String username) {
+        findActivePrompts(AiPromptMapper.toKey(prompt))
                 .stream()
                 .filter(activePrompt -> !Objects.equals(activePrompt.id(), prompt.id()))
-                .map(activePrompt -> activePrompt.deactivate(SYSTEM_USER_ID, SYSTEM_USERNAME))
+                .map(activePrompt -> activePrompt.deactivate(userId, username))
                 .forEach(repository::save);
     }
 
-    private long resolveNextVersion(
-            FeatureName feature,
-            PromptType type,
-            AiProviderModel targetModel
-    ) {
-        return repository.findTopByFeatureAndTypeAndTargetModelOrderByVersionDesc(
-                        feature,
-                        type,
-                        targetModel
-                )
+    private long resolveNextVersion(AiPromptKey aiPromptKey) {
+        return findLatestPrompt(aiPromptKey)
                 .map(AiPrompt::version)
                 .filter(version -> version > 0)
                 .map(version -> version + 1)
                 .orElse(1L);
     }
 
-    private String normalizeText(String text) {
+    private static String normalizeText(String text) {
         return StringUtils.hasText(text) ? text.strip() : "";
     }
 }

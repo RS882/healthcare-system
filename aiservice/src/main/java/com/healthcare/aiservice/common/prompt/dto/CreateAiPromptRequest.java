@@ -1,5 +1,6 @@
 package com.healthcare.aiservice.common.prompt.dto;
 
+import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
 import com.healthcare.aiservice.common.prompt.model.AiProviderModel;
 import com.healthcare.aiservice.common.prompt.model.PromptType;
 import com.healthcare.aiservice.config.constant.FeatureName;
