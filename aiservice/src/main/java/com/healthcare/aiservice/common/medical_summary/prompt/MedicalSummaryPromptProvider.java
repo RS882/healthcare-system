@@ -1,11 +1,22 @@
 package com.healthcare.aiservice.common.medical_summary.prompt;
 
 import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryRequest;
-import com.healthcare.aiservice.common.prompt.PromptProvider;
+import com.healthcare.aiservice.common.prompt.service.interfaces.PromptProvider;
+import com.healthcare.aiservice.config.constant.FeatureName;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MedicalSummaryPromptProvider implements PromptProvider<MedicalSummaryRequest> {
+
+    @Override
+    public FeatureName feature() {
+        return FeatureName.MEDICAL_SUMMARY;
+    }
+
+    @Override
+    public Class<MedicalSummaryRequest> requestType() {
+        return MedicalSummaryRequest.class;
+    }
 
     @Override
     public String systemPrompt() {

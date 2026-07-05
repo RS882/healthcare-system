@@ -3,6 +3,11 @@ package com.healthcare.aiservice.common.medical_extraction.service;
 import com.healthcare.aiservice.common.medical_extraction.dto.MedicalInfoExtractionRequest;
 import com.healthcare.aiservice.common.medical_extraction.dto.MedicalInfoExtractionResponse;
 import com.healthcare.aiservice.common.medical_extraction.prompt.MedicalInfoExtractionPromptProvider;
+import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
+import com.healthcare.aiservice.common.prompt.model.AiProviderModel;
+import com.healthcare.aiservice.common.prompt.model.PromptType;
+import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptFactory;
+import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptResolver;
 import com.healthcare.aiservice.common.provider.AiClient;
 import com.healthcare.aiservice.common.provider.logging.annotation.LogAiUsage;
 import com.healthcare.aiservice.config.constant.FeatureName;
@@ -20,14 +25,14 @@ import static com.healthcare.aiservice.exception.ai_response_invalid_exception.A
 public class MedicalInfoExtractionService {
 
     private final AiClient aiClient;
-    private final MedicalInfoExtractionPromptProvider promptProvider;
+    private final AiPromptFactory promptFactory;
 
     @LogAiUsage(feature = FeatureName.MEDICAL_EXTRACTION)
     public MedicalInfoExtractionResponse extract(MedicalInfoExtractionRequest request) {
 
         MedicalInfoExtractionResponse response = aiClient.call(
-                promptProvider.systemPrompt(),
-                promptProvider.userPrompt(request),
+                promptFactory.getSystemPrompt(FeatureName.MEDICAL_EXTRACTION),
+                promptFactory.getUserPrompt(FeatureName.MEDICAL_EXTRACTION, request),
                 MedicalInfoExtractionResponse.class
         );
 

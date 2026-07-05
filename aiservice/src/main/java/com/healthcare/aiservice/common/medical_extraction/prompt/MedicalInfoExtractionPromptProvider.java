@@ -1,11 +1,22 @@
 package com.healthcare.aiservice.common.medical_extraction.prompt;
 
 import com.healthcare.aiservice.common.medical_extraction.dto.MedicalInfoExtractionRequest;
-import com.healthcare.aiservice.common.prompt.PromptProvider;
+import com.healthcare.aiservice.common.prompt.service.interfaces.PromptProvider;
+import com.healthcare.aiservice.config.constant.FeatureName;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MedicalInfoExtractionPromptProvider implements PromptProvider<MedicalInfoExtractionRequest> {
+    @Override
+    public FeatureName feature() {
+        return FeatureName.MEDICAL_EXTRACTION;
+    }
+
+    @Override
+    public Class<MedicalInfoExtractionRequest> requestType() {
+        return MedicalInfoExtractionRequest.class;
+    }
+
     @Override
     public String systemPrompt() {
         return """

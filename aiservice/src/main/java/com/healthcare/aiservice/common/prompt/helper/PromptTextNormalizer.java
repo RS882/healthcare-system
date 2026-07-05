@@ -1,4 +1,4 @@
-package com.healthcare.aiservice.common.prompt;
+package com.healthcare.aiservice.common.prompt.helper;
 
 public final class PromptTextNormalizer {
 

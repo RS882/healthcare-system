@@ -2,7 +2,8 @@ package com.healthcare.aiservice.common.message_classification.prompt;
 
 import com.healthcare.aiservice.common.message_classification.category.ClassificationCategoryProvider;
 import com.healthcare.aiservice.common.message_classification.dto.MessageClassificationRequest;
-import com.healthcare.aiservice.common.prompt.PromptProvider;
+import com.healthcare.aiservice.common.prompt.service.interfaces.PromptProvider;
+import com.healthcare.aiservice.config.constant.FeatureName;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -12,6 +13,16 @@ public class MessageClassificationPromptProvider
         implements PromptProvider<MessageClassificationRequest> {
 
     private final ClassificationCategoryProvider categoryProvider;
+
+    @Override
+    public FeatureName feature() {
+        return FeatureName.MESSAGE_CLASSIFICATION;
+    }
+
+    @Override
+    public Class<MessageClassificationRequest> requestType() {
+        return MessageClassificationRequest.class;
+    }
 
     @Override
     public String systemPrompt() {

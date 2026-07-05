@@ -4,6 +4,11 @@ import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryRequest
 import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryResponse;
 import com.healthcare.aiservice.common.medical_summary.dto.MedicationInfo;
 import com.healthcare.aiservice.common.medical_summary.prompt.MedicalSummaryPromptProvider;
+import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
+import com.healthcare.aiservice.common.prompt.model.AiProviderModel;
+import com.healthcare.aiservice.common.prompt.model.PromptType;
+import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptFactory;
+import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptResolver;
 import com.healthcare.aiservice.common.provider.AiClient;
 import com.healthcare.aiservice.common.provider.logging.annotation.LogAiUsage;
 import com.healthcare.aiservice.config.constant.FeatureName;
@@ -22,14 +27,14 @@ import static com.healthcare.aiservice.exception.ai_response_invalid_exception.A
 public class MedicalSummaryService {
 
     private final AiClient aiClient;
-    private final MedicalSummaryPromptProvider promptProvider;
+    private final AiPromptFactory promptFactory;
 
     @LogAiUsage(feature = FeatureName.MEDICAL_SUMMARY)
     public MedicalSummaryResponse summarize(MedicalSummaryRequest request) {
 
         MedicalSummaryResponse response = aiClient.call(
-                promptProvider.systemPrompt(),
-                promptProvider.userPrompt(request),
+                promptFactory.getSystemPrompt(FeatureName.MEDICAL_SUMMARY),
+                promptFactory.getUserPrompt(FeatureName.MEDICAL_SUMMARY, request),
                 MedicalSummaryResponse.class);
 
         if (response == null || !StringUtils.hasText(response.summary())) {
