@@ -33,7 +33,7 @@ public record CreateAiPromptRequest(
         @NotNull(message = "Target model must not be null")
         @Schema(
                 description = "Target AI model",
-                example = "LLAMA3"
+                example = "LLAMA_3"
         )
         AiProviderModel targetModel,
 
@@ -74,4 +74,5 @@ public record CreateAiPromptRequest(
         )
         String versionComment
 ) {
+
 }

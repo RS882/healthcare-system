@@ -1,5 +1,8 @@
 package com.healthcare.aiservice.exception;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.healthcare.aiservice.exception.dto.ErrorResponse;
 import com.healthcare.aiservice.exception.dto.ValidationError;
 import jakarta.servlet.http.HttpServletRequest;
@@ -12,9 +15,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.ResourceAccessException;
-import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -107,16 +110,63 @@ public class GlobalExceptionHandler {
             HttpMessageNotReadableException ex,
             HttpServletRequest request
     ) {
+        log.warn(
+                "Invalid request body. URI: {}, reason: {}",
+                request.getRequestURI(),
+                buildRequestBodyErrorMessage(ex)
+        );
+
         ErrorResponse errorResponse = ErrorResponse.builder()
                 .timestamp(Instant.now())
                 .status(HttpStatus.BAD_REQUEST.value())
                 .error(HttpStatus.BAD_REQUEST.name())
-                .message("Malformed JSON request. Use \\n for line breaks inside JSON strings.")
+                .message(buildRequestBodyErrorMessage(ex))
                 .path(request.getRequestURI())
                 .validationErrors(Set.of())
                 .build();
 
         return ResponseEntity.badRequest().body(errorResponse);
+    }
+
+    private String buildRequestBodyErrorMessage(HttpMessageNotReadableException ex) {
+        Throwable cause = ex.getCause();
+
+        String message;
+
+        if (cause instanceof InvalidFormatException ife) {
+
+            Class<?> targetType = ife.getTargetType();
+            String field = ife.getPath().isEmpty()
+                    ? "unknown"
+                    : ife.getPath().get(0).getFieldName();
+
+            if (targetType.isEnum()) {
+
+                String allowedValues = Arrays.stream(targetType.getEnumConstants())
+                        .map(Object::toString)
+                        .collect(Collectors.joining(", "));
+
+                message = String.format(
+                        "Invalid value '%s' for field '%s'. Allowed values: [%s].",
+                        ife.getValue(),
+                        field,
+                        allowedValues
+                );
+            } else {
+
+                message = String.format(
+                        "Invalid value '%s' for field '%s'. Expected type: %s.",
+                        ife.getValue(),
+                        field,
+                        targetType.getSimpleName()
+                );
+            }
+        } else if (cause instanceof JsonParseException) {
+            message = "Malformed JSON request.";
+        } else {
+            message = "Request body is invalid or cannot be parsed.";
+        }
+        return message;
     }
 
     @ExceptionHandler(AiResponseParsingException.class)
