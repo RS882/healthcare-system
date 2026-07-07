@@ -11,5 +11,5 @@ public interface PromptProvider<T extends NoteBasedRequest> {
 
     String systemPrompt();
 
-    String userPrompt(T input);
+    String userPromptTemplate();
 }

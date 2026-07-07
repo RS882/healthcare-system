@@ -84,7 +84,7 @@ public class MedicalSummaryPromptProvider implements PromptProvider<MedicalSumma
     }
 
     @Override
-    public String userPrompt(MedicalSummaryRequest request) {
+    public String userPromptTemplate() {
         return """
         Summarize the following medical note and extract structured medical information.
 
@@ -93,6 +93,6 @@ public class MedicalSummaryPromptProvider implements PromptProvider<MedicalSumma
         %s
 
         Return exactly one valid root JSON object and nothing else.
-        """.formatted(request.note());
+        """;
     }
 }

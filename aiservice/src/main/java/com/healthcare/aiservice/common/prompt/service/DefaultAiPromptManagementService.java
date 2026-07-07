@@ -6,6 +6,7 @@ import com.healthcare.aiservice.common.prompt.dto.CreateAiPromptRequest;
 import com.healthcare.aiservice.common.prompt.mapper.AiPromptMapper;
 import com.healthcare.aiservice.common.prompt.model.AiPrompt;
 import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
+import com.healthcare.aiservice.common.prompt.normalizer.PromptTextNormalizer;
 import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptManagementService;
 import com.healthcare.aiservice.exception.AiActivePromptNotFoundException;
 import com.healthcare.aiservice.exception.AiPromptNotFoundException;
@@ -30,6 +31,7 @@ public class DefaultAiPromptManagementService implements AiPromptManagementServi
     private static final String SYSTEM_USERNAME = "system";
 
     private final AiPromptRepository repository;
+    private final PromptTextNormalizer normalizer;
 
     @Override
     public AiPromptDetailsResponse createPrompt(CreateAiPromptRequest request) {
@@ -140,13 +142,13 @@ public class DefaultAiPromptManagementService implements AiPromptManagementServi
                 .type(request.type())
                 .targetModel(request.targetModel())
                 .version(version)
-                .content(normalizeText(request.content()))
+                .content(normalizer.normalizeContent(request.content()))
                 .active(false)
                 .createdByUserId(userId)
                 .createdByUsername(username)
                 .createdAt(now)
-                .promptDescription(normalizeText(request.promptDescription()))
-                .versionComment(normalizeText(request.versionComment()))
+                .promptDescription(normalizer.normalizeShortText(request.promptDescription()))
+                .versionComment(normalizer.normalizeShortText(request.versionComment()))
                 .build();
     }
 
@@ -173,9 +175,5 @@ public class DefaultAiPromptManagementService implements AiPromptManagementServi
                 .filter(version -> version > 0)
                 .map(version -> version + 1)
                 .orElse(1L);
-    }
-
-    private static String normalizeText(String text) {
-        return StringUtils.hasText(text) ? text.strip() : "";
     }
 }

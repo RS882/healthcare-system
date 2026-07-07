@@ -2,6 +2,8 @@ package com.healthcare.aiservice.common.prompt.service;
 
 import com.healthcare.aiservice.common.prompt.model.AiPrompt;
 import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
+import com.healthcare.aiservice.common.prompt.model.PromptSource;
+import com.healthcare.aiservice.common.prompt.model.ResolvedPrompt;
 import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptResolver;
 import com.healthcare.aiservice.exception.AiPromptStateInvalidException;
 import com.healthcare.aiservice.repository.AiPromptRepository;
@@ -19,7 +21,7 @@ public class DefaultAiPromptResolver implements AiPromptResolver {
     private final AiPromptRepository repository;
 
     @Override
-    public String resolvePrompt(
+    public ResolvedPrompt resolvePrompt(
             AiPromptKey key,
             Supplier<String> fallbackPromptSupplier
     ) {
@@ -36,9 +38,21 @@ public class DefaultAiPromptResolver implements AiPromptResolver {
 
         if (activePrompts.size() == 1
                 && StringUtils.hasText(activePrompts.get(0).content())) {
-            return activePrompts.get(0).content();
+            AiPrompt activePrompt = activePrompts.get(0);
+
+            return new ResolvedPrompt(
+                    key,
+                    PromptSource.DATABASE,
+                    activePrompt.version(),
+                    activePrompt.content()
+            );
         }
 
-        return fallbackPromptSupplier.get();
+        return new ResolvedPrompt(
+                key,
+                PromptSource.FALLBACK,
+                null,
+                fallbackPromptSupplier.get()
+        );
     }
 }

@@ -111,7 +111,7 @@ public class MedicalInfoExtractionPromptProvider implements PromptProvider<Medic
     }
 
     @Override
-    public String userPrompt(MedicalInfoExtractionRequest request) {
+    public String userPromptTemplate() {
         return """
             Extract structured medical information from the following medical note.
 
@@ -119,6 +119,6 @@ public class MedicalInfoExtractionPromptProvider implements PromptProvider<Medic
 
             Medical note:
             "%s"
-            """.formatted(request.note());
+            """;
     }
 }

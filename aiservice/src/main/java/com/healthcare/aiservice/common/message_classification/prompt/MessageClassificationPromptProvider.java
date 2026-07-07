@@ -55,7 +55,7 @@ public class MessageClassificationPromptProvider
     }
 
     @Override
-    public String userPrompt(MessageClassificationRequest request) {
+    public String userPromptTemplate() {
         return """
             Classify the following patient message.
 
@@ -67,6 +67,6 @@ public class MessageClassificationPromptProvider
               "category": "...",
               "reason": "..."
             }
-            """.formatted(request.note());
+            """;
     }
 }

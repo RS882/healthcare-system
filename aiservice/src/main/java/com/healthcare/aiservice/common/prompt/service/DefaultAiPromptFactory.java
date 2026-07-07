@@ -9,7 +9,6 @@ import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptResolve
 import com.healthcare.aiservice.common.prompt.service.interfaces.PromptProvider;
 import com.healthcare.aiservice.config.constant.FeatureName;
 import com.healthcare.aiservice.exception.AiPromptProviderNotFoundException;
-import com.healthcare.aiservice.exception.InvalidRequestTypeForFeatureException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -42,7 +41,7 @@ public class DefaultAiPromptFactory implements AiPromptFactory {
         return promptResolver.resolvePrompt(
                 buildKey(feature, PromptType.SYSTEM),
                 provider::systemPrompt
-        );
+        ).content();
     }
 
     @Override
@@ -50,22 +49,11 @@ public class DefaultAiPromptFactory implements AiPromptFactory {
         PromptProvider<? extends NoteBasedRequest> provider = getProvider(feature);
 
         return promptResolver.resolvePrompt(
-                buildKey(feature, PromptType.USER),
-                () -> buildUserPrompt(provider, request)
-        );
-    }
-
-    private <T extends NoteBasedRequest> String buildUserPrompt(
-            PromptProvider<T> provider,
-            NoteBasedRequest request
-    ) {
-        if (!provider.requestType().isInstance(request)) {
-            throw new InvalidRequestTypeForFeatureException(provider, request.getClass());
-        }
-
-        T typedRequest = provider.requestType().cast(request);
-
-        return provider.userPrompt(typedRequest);
+                        buildKey(feature, PromptType.USER),
+                        provider::userPromptTemplate
+                )
+                .content()
+                .formatted(request.note());
     }
 
     private PromptProvider<? extends NoteBasedRequest> getProvider(FeatureName feature) {
