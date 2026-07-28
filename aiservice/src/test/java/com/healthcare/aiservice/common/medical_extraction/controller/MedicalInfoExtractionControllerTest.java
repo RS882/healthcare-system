@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.aiservice.common.medical_extraction.dto.MedicalInfoExtractionRequest;
 import com.healthcare.aiservice.common.medical_extraction.dto.MedicalInfoExtractionResponse;
 import com.healthcare.aiservice.common.medical_extraction.service.MedicalInfoExtractionService;
+import com.healthcare.aiservice.common.web.converter.NormalizedStringToEnumConverterFactory;
 import com.healthcare.aiservice.security.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DisplayNameGeneration;
@@ -46,6 +47,9 @@ class MedicalInfoExtractionControllerTest {
 
     @MockitoBean
     private ChatClient.Builder chatClientBuilder;
+
+    @MockitoBean
+    private NormalizedStringToEnumConverterFactory converterFactory;
 
     @Test
     @DisplayName("Should extract medical info and return 200")

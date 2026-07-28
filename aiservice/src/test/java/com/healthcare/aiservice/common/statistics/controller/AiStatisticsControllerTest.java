@@ -4,6 +4,7 @@ package com.healthcare.aiservice.common.statistics.controller;
 import com.healthcare.aiservice.common.statistics.dto.AiStatisticsResponse;
 import com.healthcare.aiservice.common.statistics.dto.FeatureStatistics;
 import com.healthcare.aiservice.common.statistics.service.interfaces.AiStatisticService;
+import com.healthcare.aiservice.common.web.converter.NormalizedStringToEnumConverterFactory;
 import com.healthcare.aiservice.config.constant.FeatureName;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DisplayNameGeneration;
@@ -12,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -25,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(AiStatisticsController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@Import(NormalizedStringToEnumConverterFactory.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("AI statistics controller tests: ")
 class AiStatisticsControllerTest {

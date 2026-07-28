@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryRequest;
 import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryResponse;
 import com.healthcare.aiservice.common.medical_summary.service.MedicalSummaryService;
+import com.healthcare.aiservice.common.web.converter.NormalizedStringToEnumConverterFactory;
 import com.healthcare.aiservice.exception.GlobalExceptionHandler;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DisplayNameGeneration;
@@ -46,6 +47,9 @@ class MedicalSummaryControllerTest {
 
     @MockitoBean
     private MedicalSummaryService medicalSummaryService;
+
+    @MockitoBean
+    private NormalizedStringToEnumConverterFactory converterFactory;
 
     @Test
     void summarize_ShouldReturn200() throws Exception {

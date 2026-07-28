@@ -6,6 +6,7 @@ import com.healthcare.aiservice.common.message_classification.category.MessageCa
 import com.healthcare.aiservice.common.message_classification.dto.MessageClassificationRequest;
 import com.healthcare.aiservice.common.message_classification.dto.MessageClassificationResponse;
 import com.healthcare.aiservice.common.message_classification.service.MessageClassificationService;
+import com.healthcare.aiservice.common.web.converter.NormalizedStringToEnumConverterFactory;
 import com.healthcare.aiservice.security.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -41,6 +42,9 @@ class MessageClassificationControllerTest {
 
     @MockitoBean
     private ChatClient.Builder chatClientBuilder;
+
+    @MockitoBean
+    private NormalizedStringToEnumConverterFactory converterFactory;
 
     @Test
     @DisplayName("Should classify message and return 200")
