@@ -12,12 +12,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -49,6 +53,62 @@ public class GlobalExceptionHandler {
         );
 
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler({
+            MethodArgumentTypeMismatchException.class,
+            MissingServletRequestParameterException.class
+    })
+    public ResponseEntity<ErrorResponse> handleRequestParameterException(
+            Exception ex,
+            HttpServletRequest request
+    ) {
+        String message;
+
+        if (ex instanceof MethodArgumentTypeMismatchException mismatch) {
+            message = buildTypeMismatchMessage(mismatch);
+
+        } else if (ex instanceof MissingServletRequestParameterException missing) {
+            message = buildMissingParameterMessage(missing);
+
+        } else {
+            message = "Invalid request parameter";
+        }
+
+        ErrorResponse response = new ErrorResponse(
+                Instant.now(),
+                HttpStatus.BAD_REQUEST.value(),
+                HttpStatus.BAD_REQUEST.name(),
+                message,
+                request.getRequestURI(),
+                Set.of()
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    private String buildTypeMismatchMessage(
+            MethodArgumentTypeMismatchException ex
+    ) {
+        return "Invalid value '%s' for parameter '%s'"
+                .formatted(
+                        ex.getValue(),
+                        ex.getName()
+                );
+    }
+
+    private String buildMissingParameterMessage(
+            MissingServletRequestParameterException ex
+    ) {
+        if (ex.isMissingAfterConversion()) {
+            return "Request parameter '%s' must not be blank"
+                    .formatted(ex.getParameterName());
+        }
+
+        return "Required request parameter '%s' is missing"
+                .formatted(ex.getParameterName());
     }
 
     @ExceptionHandler(NonTransientAiException.class)
