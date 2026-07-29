@@ -6,8 +6,10 @@ import com.healthcare.aiservice.common.medical_extraction.dto.MedicalInfoExtract
 import com.healthcare.aiservice.common.medical_extraction.service.MedicalInfoExtractionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RestController;
 
+@Validated
 @RestController
 @RequiredArgsConstructor
 public class MedicalInfoExtractionController implements MedicalInfoExtractionAPI {

@@ -5,8 +5,10 @@ import com.healthcare.aiservice.common.statistics.dto.AiStatisticsResponse;
 import com.healthcare.aiservice.common.statistics.service.interfaces.AiStatisticService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RestController;
 
+@Validated
 @RestController
 @RequiredArgsConstructor
 public class AiStatisticsController implements AiStatisticsAPI {

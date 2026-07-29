@@ -6,8 +6,10 @@ import com.healthcare.aiservice.common.message_classification.dto.MessageClassif
 import com.healthcare.aiservice.common.message_classification.service.MessageClassificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RestController;
 
+@Validated
 @RestController
 @RequiredArgsConstructor
 

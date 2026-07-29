@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.healthcare.aiservice.exception.dto.ErrorResponse;
 import com.healthcare.aiservice.exception.dto.ValidationError;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.retry.NonTransientAiException;
 import org.springframework.http.HttpStatus;
@@ -20,8 +22,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import java.time.Instant;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -29,11 +29,36 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolationException(
+            ConstraintViolationException ex,
+            HttpServletRequest request
+    ) {
+        Set<ValidationError> validationErrors = ex.getConstraintViolations()
+                .stream()
+                .map(this::toValidationError)
+                .collect(Collectors.toSet());
+
+        log.warn(
+                "Constraint validation failed. path={}, validationErrors={}",
+                request.getRequestURI(),
+                validationErrors
+        );
+
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                ErrorCode.VALIDATION_ERROR,
+                request,
+                validationErrors
+        );
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorResponse> handleValidationException(
             MethodArgumentNotValidException ex,
             HttpServletRequest request
     ) {
+
         Set<ValidationError> validationErrors = ex.getBindingResult()
                 .getFieldErrors()
                 .stream()
@@ -43,16 +68,18 @@ public class GlobalExceptionHandler {
                 ))
                 .collect(Collectors.toSet());
 
-        ErrorResponse response = new ErrorResponse(
-                Instant.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                "VALIDATION_ERROR",
-                "Validation failed",
+        log.warn(
+                "Validation failed. path={}, validationErrors={}",
                 request.getRequestURI(),
                 validationErrors
         );
 
-        return ResponseEntity.badRequest().body(response);
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                ErrorCode.VALIDATION_ERROR,
+                request,
+                validationErrors
+        );
     }
 
     @ExceptionHandler({
@@ -63,6 +90,9 @@ public class GlobalExceptionHandler {
             Exception ex,
             HttpServletRequest request
     ) {
+        final HttpStatus status = HttpStatus.BAD_REQUEST;
+        final ErrorCode errorCode = ErrorCode.INVALID_REQUEST_PARAMETER;
+
         String message;
 
         if (ex instanceof MethodArgumentTypeMismatchException mismatch) {
@@ -72,21 +102,179 @@ public class GlobalExceptionHandler {
             message = buildMissingParameterMessage(missing);
 
         } else {
-            message = "Invalid request parameter";
+            message = errorCode.getDefaultMessage();
         }
 
-        ErrorResponse response = new ErrorResponse(
-                Instant.now(),
-                HttpStatus.BAD_REQUEST.value(),
-                HttpStatus.BAD_REQUEST.name(),
-                message,
+        log.warn(
+                "Invalid request parameter. path={}, message={}",
                 request.getRequestURI(),
-                Set.of()
+                message
         );
 
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(response);
+        return buildErrorResponse(
+                status,
+                errorCode.name(),
+                message,
+                request
+        );
+    }
+
+    @ExceptionHandler(NonTransientAiException.class)
+    public ResponseEntity<ErrorResponse> handleAiProviderException(
+            NonTransientAiException ex,
+            HttpServletRequest request
+    ) {
+
+        log.error(
+                "AI provider failed. path={}",
+                request.getRequestURI(),
+                ex
+        );
+
+        return buildErrorResponse(
+                HttpStatus.BAD_GATEWAY,
+                ErrorCode.AI_PROVIDER_ERROR,
+                request);
+    }
+
+    @ExceptionHandler(ResourceAccessException.class)
+    public ResponseEntity<ErrorResponse> handleAiConnectionException(
+            ResourceAccessException ex,
+            HttpServletRequest request
+    ) {
+        log.error(
+                "AI provider unavailable. path={}, message={}",
+                request.getRequestURI(),
+                ex.getMessage(),
+                ex
+        );
+
+        return buildErrorResponse(
+                HttpStatus.SERVICE_UNAVAILABLE,
+                ErrorCode.AI_PROVIDER_UNAVAILABLE,
+                request
+        );
+    }
+
+    @ExceptionHandler(MismatchedInputException.class)
+    public ResponseEntity<ErrorResponse> handleAiResponseParsingException(
+            MismatchedInputException ex,
+            HttpServletRequest request
+    ) {
+
+        return buildErrorResponse(
+                HttpStatus.BAD_GATEWAY,
+                ErrorCode.AI_RESPONSE_UNEXPECTED,
+                request
+        );
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
+            HttpMessageNotReadableException ex,
+            HttpServletRequest request
+    ) {
+        HttpStatus status = HttpStatus.BAD_REQUEST;
+
+        log.warn(
+                "Invalid request body. path={}, message={}",
+                request.getRequestURI(),
+                buildRequestBodyErrorMessage(ex)
+        );
+
+        return buildErrorResponse(
+                status,
+                ErrorCode.INVALID_REQUEST_BODY.name(),
+                buildRequestBodyErrorMessage(ex),
+                request
+        );
+    }
+
+    @ExceptionHandler(AiResponseParsingException.class)
+    public ResponseEntity<ErrorResponse> handleAiResponseParsingException(
+            AiResponseParsingException ex,
+            HttpServletRequest request
+    ) {
+
+        HttpStatus status = HttpStatus.BAD_GATEWAY;
+
+        log.error(
+                "AI response parsing failed. path={}, rawResponse={}, extractedJson={}",
+                request.getRequestURI(),
+                ex.getRawResponse(),
+                ex.getExtractedJson(),
+                ex
+        );
+
+        return buildErrorResponse(
+                status,
+                ErrorCode.AI_RESPONSE_PARSING_ERROR,
+                request
+        );
+    }
+
+    @ExceptionHandler(RestException.class)
+    public ResponseEntity<ErrorResponse> handleException(RestException ex, HttpServletRequest request) {
+
+        ErrorResponse response = ex.getResponse();
+
+        log.error(
+                "REST exception. path={}, response={}",
+                request.getRequestURI(),
+                response,
+                ex
+        );
+
+        return buildErrorResponse(
+                ex.getStatus(),
+                response.error(),
+                response.message(),
+                request,
+                response.validationErrors()
+        );
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleGenericException(
+            Exception ex,
+            HttpServletRequest request
+    ) {
+        log.error(
+                "Unexpected error. path={}",
+                request.getRequestURI(),
+                ex
+        );
+
+        return buildErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                ErrorCode.INTERNAL_SERVER_ERROR,
+                request
+        );
+    }
+
+    private ValidationError toValidationError(
+            ConstraintViolation<?> violation
+    ) {
+        return new ValidationError(
+                extractPropertyName(violation),
+                violation.getMessage()
+        );
+    }
+
+    private String extractPropertyName(
+            ConstraintViolation<?> violation
+    ) {
+        String propertyPath = violation
+                .getPropertyPath()
+                .toString();
+
+        int lastDotIndex = propertyPath.lastIndexOf('.');
+
+        if (lastDotIndex < 0) {
+            return propertyPath;
+        }
+
+        return propertyPath.substring(lastDotIndex + 1);
     }
 
     private String buildTypeMismatchMessage(
@@ -109,83 +297,6 @@ public class GlobalExceptionHandler {
 
         return "Required request parameter '%s' is missing"
                 .formatted(ex.getParameterName());
-    }
-
-    @ExceptionHandler(NonTransientAiException.class)
-    public ResponseEntity<ErrorResponse> handleAiProviderException(
-            NonTransientAiException ex,
-            HttpServletRequest request
-    ) {
-        ErrorResponse response = new ErrorResponse(
-                Instant.now(),
-                HttpStatus.BAD_GATEWAY.value(),
-                "AI_PROVIDER_ERROR",
-                "AI provider failed to process the request",
-                request.getRequestURI(),
-                Set.of()
-        );
-
-        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(response);
-    }
-
-    @ExceptionHandler(ResourceAccessException.class)
-    public ResponseEntity<ErrorResponse> handleAiConnectionException(
-            ResourceAccessException ex,
-            HttpServletRequest request
-    ) {
-        ErrorResponse response = new ErrorResponse(
-                Instant.now(),
-                HttpStatus.SERVICE_UNAVAILABLE.value(),
-                "AI_PROVIDER_UNAVAILABLE",
-                "AI provider is unavailable",
-                request.getRequestURI(),
-                Set.of()
-        );
-
-        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).body(response);
-    }
-
-    @ExceptionHandler(MismatchedInputException.class)
-    public ResponseEntity<ErrorResponse> handleAiResponseParsingException(
-            MismatchedInputException ex,
-            HttpServletRequest request
-    ) {
-
-        ErrorResponse response = new ErrorResponse(
-                Instant.now(),
-                HttpStatus.BAD_GATEWAY.value(),
-                "AI_RESPONSE_PARSING_ERROR",
-                "AI returned response in an unexpected format",
-                request.getRequestURI(),
-                Set.of()
-        );
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_GATEWAY)
-                .body(response);
-    }
-
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(
-            HttpMessageNotReadableException ex,
-            HttpServletRequest request
-    ) {
-        log.warn(
-                "Invalid request body. URI: {}, reason: {}",
-                request.getRequestURI(),
-                buildRequestBodyErrorMessage(ex)
-        );
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(Instant.now())
-                .status(HttpStatus.BAD_REQUEST.value())
-                .error(HttpStatus.BAD_REQUEST.name())
-                .message(buildRequestBodyErrorMessage(ex))
-                .path(request.getRequestURI())
-                .validationErrors(Set.of())
-                .build();
-
-        return ResponseEntity.badRequest().body(errorResponse);
     }
 
     private String buildRequestBodyErrorMessage(HttpMessageNotReadableException ex) {
@@ -229,58 +340,48 @@ public class GlobalExceptionHandler {
         return message;
     }
 
-    @ExceptionHandler(AiResponseParsingException.class)
-    public ResponseEntity<ErrorResponse> handleAiResponseParsingException(
-            AiResponseParsingException ex,
+    private ResponseEntity<ErrorResponse> buildErrorResponse(
+            HttpStatus status,
+            String error,
+            String message,
             HttpServletRequest request
     ) {
-        log.error(
-                "AI response parsing failed. path={}, rawResponse={}, extractedJson={}",
-                request.getRequestURI(),
-                ex.getRawResponse(),
-                ex.getExtractedJson(),
-                ex
-        );
-
-        ErrorResponse errorResponse = ErrorResponse.builder()
-                .timestamp(Instant.now())
-                .status(HttpStatus.BAD_GATEWAY.value())
-                .error(HttpStatus.BAD_GATEWAY.name())
-                .message("AI provider returned invalid response format")
-                .path(request.getRequestURI())
-                .validationErrors(Set.of())
-                .build();
-
-        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(errorResponse);
+        return buildErrorResponse(status, error, message, request, Set.of());
     }
 
-    @ExceptionHandler(RestException.class)
-    public ResponseEntity<ErrorResponse> handleException(RestException ex, HttpServletRequest request) {
-        ErrorResponse errorResponse = ex.getResponse();
-
-        ErrorResponse.builder().path(request.getRequestURI()).build();
-
-        log.error("REST Error: {}", errorResponse, ex);
-
-        return new ResponseEntity<>(errorResponse, ex.getStatus());
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleGenericException(
-            Exception ex,
+    private ResponseEntity<ErrorResponse> buildErrorResponse(
+            HttpStatus status,
+            ErrorCode errorCode,
             HttpServletRequest request
     ) {
-        log.error("Unexpected error on path={}", request.getRequestURI(), ex);
+        return buildErrorResponse(status, errorCode, request, Set.of());
+    }
 
-        ErrorResponse response = new ErrorResponse(
-                Instant.now(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                "INTERNAL_SERVER_ERROR",
-                "Unexpected internal server error",
-                request.getRequestURI(),
-                Set.of()
-        );
+    private ResponseEntity<ErrorResponse> buildErrorResponse(
+            HttpStatus status,
+            ErrorCode errorCode,
+            HttpServletRequest request,
+            Set<ValidationError> validationErrors
+    ) {
+        return buildErrorResponse(status, errorCode.name(), errorCode.getDefaultMessage(), request, validationErrors);
+    }
 
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    private ResponseEntity<ErrorResponse> buildErrorResponse(
+            HttpStatus status,
+            String error,
+            String message,
+            HttpServletRequest request,
+            Set<ValidationError> validationErrors
+    ) {
+        return ResponseEntity
+                .status(status)
+                .body(ErrorResponse.builder()
+                        .timestamp(Instant.now())
+                        .status(status.value())
+                        .error(error)
+                        .message(message)
+                        .path(request.getRequestURI())
+                        .validationErrors(validationErrors)
+                        .build());
     }
 }

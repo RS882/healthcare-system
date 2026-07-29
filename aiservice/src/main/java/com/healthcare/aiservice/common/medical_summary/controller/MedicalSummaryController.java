@@ -7,8 +7,10 @@ import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryRespons
 import com.healthcare.aiservice.common.medical_summary.service.MedicalSummaryService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.RestController;
 
+@Validated
 @RestController
 @RequiredArgsConstructor
 public class MedicalSummaryController implements MedicalSummaryAPI {
