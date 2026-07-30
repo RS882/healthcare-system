@@ -1,15 +1,8 @@
 package com.healthcare.aiservice.common.prompt.service;
 
 
-import com.healthcare.aiservice.common.prompt.model.AiPrompt;
-import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
-import com.healthcare.aiservice.common.prompt.model.AiProviderModel;
-import com.healthcare.aiservice.common.prompt.model.PromptSource;
-import com.healthcare.aiservice.common.prompt.model.PromptType;
-import com.healthcare.aiservice.common.prompt.model.ResolvedPrompt;
+import com.healthcare.aiservice.common.prompt.model.*;
 import com.healthcare.aiservice.config.constant.FeatureName;
-import com.healthcare.aiservice.exception.AiPromptStateInvalidException;
-import com.healthcare.aiservice.repository.AiPromptRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -19,14 +12,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.List;
 import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
@@ -40,7 +29,7 @@ class DefaultAiPromptResolverTest {
     );
 
     @Mock
-    private AiPromptRepository repository;
+    private CachedActivePromptService activePromptService;
 
     @Mock
     private Supplier<String> fallbackPromptSupplier;
@@ -50,21 +39,10 @@ class DefaultAiPromptResolverTest {
 
     @Test
     void resolvePrompt_ShouldReturnDatabasePrompt_WhenSingleActivePromptExists() {
-        AiPrompt activePrompt = AiPrompt.builder()
-                .id("prompt-id")
-                .feature(PROMPT_KEY.feature())
-                .type(PROMPT_KEY.type())
-                .targetModel(PROMPT_KEY.targetModel())
-                .version(3L)
-                .content("Database prompt")
-                .active(true)
-                .build();
+        AiPrompt activePrompt = createPrompt("prompt-id", 3L, "Database prompt");
 
-        when(repository.findAllByFeatureAndTypeAndTargetModelAndActiveTrue(
-                PROMPT_KEY.feature(),
-                PROMPT_KEY.type(),
-                PROMPT_KEY.targetModel()
-        )).thenReturn(List.of(activePrompt));
+        when(activePromptService.findActivePrompt(PROMPT_KEY))
+                .thenReturn(activePrompt);
 
         ResolvedPrompt result = resolver.resolvePrompt(
                 PROMPT_KEY,
@@ -81,13 +59,12 @@ class DefaultAiPromptResolverTest {
 
     @Test
     void resolvePrompt_ShouldReturnFallbackPrompt_WhenNoActivePromptExists() {
-        when(repository.findAllByFeatureAndTypeAndTargetModelAndActiveTrue(
-                PROMPT_KEY.feature(),
-                PROMPT_KEY.type(),
-                PROMPT_KEY.targetModel()
-        )).thenReturn(List.of());
 
-        when(fallbackPromptSupplier.get()).thenReturn("Fallback prompt");
+        when(activePromptService.findActivePrompt(PROMPT_KEY))
+                .thenReturn(null);
+
+        when(fallbackPromptSupplier.get())
+                .thenReturn("Fallback prompt");
 
         ResolvedPrompt result = resolver.resolvePrompt(
                 PROMPT_KEY,
@@ -104,23 +81,14 @@ class DefaultAiPromptResolverTest {
 
     @Test
     void resolvePrompt_ShouldReturnFallbackPrompt_WhenActivePromptContentIsBlank() {
-        AiPrompt activePrompt = AiPrompt.builder()
-                .id("prompt-id")
-                .feature(PROMPT_KEY.feature())
-                .type(PROMPT_KEY.type())
-                .targetModel(PROMPT_KEY.targetModel())
-                .version(3L)
-                .content("   ")
-                .active(true)
-                .build();
 
-        when(repository.findAllByFeatureAndTypeAndTargetModelAndActiveTrue(
-                PROMPT_KEY.feature(),
-                PROMPT_KEY.type(),
-                PROMPT_KEY.targetModel()
-        )).thenReturn(List.of(activePrompt));
+        AiPrompt activePrompt = createPrompt("prompt-id", 3L, "     ");
 
-        when(fallbackPromptSupplier.get()).thenReturn("Fallback prompt");
+        when(activePromptService.findActivePrompt(PROMPT_KEY))
+                .thenReturn(activePrompt);
+
+        when(fallbackPromptSupplier.get())
+                .thenReturn("Fallback prompt");
 
         ResolvedPrompt result = resolver.resolvePrompt(
                 PROMPT_KEY,
@@ -134,40 +102,20 @@ class DefaultAiPromptResolverTest {
         verify(fallbackPromptSupplier).get();
     }
 
-    @Test
-    void resolvePrompt_ShouldThrowException_WhenMultipleActivePromptsExist() {
-        AiPrompt firstPrompt = AiPrompt.builder()
-                .id("prompt-1")
+
+    private AiPrompt createPrompt(
+            String id,
+            Long version,
+            String content
+    ) {
+        return AiPrompt.builder()
+                .id(id)
                 .feature(PROMPT_KEY.feature())
                 .type(PROMPT_KEY.type())
                 .targetModel(PROMPT_KEY.targetModel())
-                .version(1L)
-                .content("Prompt 1")
+                .version(version)
+                .content(content)
                 .active(true)
                 .build();
-
-        AiPrompt secondPrompt = AiPrompt.builder()
-                .id("prompt-2")
-                .feature(PROMPT_KEY.feature())
-                .type(PROMPT_KEY.type())
-                .targetModel(PROMPT_KEY.targetModel())
-                .version(2L)
-                .content("Prompt 2")
-                .active(true)
-                .build();
-
-        when(repository.findAllByFeatureAndTypeAndTargetModelAndActiveTrue(
-                PROMPT_KEY.feature(),
-                PROMPT_KEY.type(),
-                PROMPT_KEY.targetModel()
-        )).thenReturn(List.of(firstPrompt, secondPrompt));
-
-        assertThatThrownBy(() -> resolver.resolvePrompt(
-                PROMPT_KEY,
-                fallbackPromptSupplier
-        ))
-                .isInstanceOf(AiPromptStateInvalidException.class);
-
-        verify(fallbackPromptSupplier, never()).get();
     }
 }
