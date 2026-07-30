@@ -2,7 +2,7 @@ package com.healthcare.aiservice.common.statistics.controller;
 
 import com.healthcare.aiservice.common.provider.logging.AiRequestStatus;
 import com.healthcare.aiservice.common.provider.logging.model.AiRequestLog;
-import com.healthcare.aiservice.config.AbstractMongoDbTestContainer;
+import com.healthcare.aiservice.config.AbstractMongoDbIntegrationTest;
 import com.healthcare.aiservice.config.constant.FeatureName;
 import com.healthcare.aiservice.repository.AiRequestLogRepository;
 import org.junit.jupiter.api.*;
@@ -13,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Instant;
 
@@ -24,10 +25,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 
 @SpringBootTest
+@Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureMockMvc
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("AI statistics controller integration tests: ")
-class AiStatisticsControllerIT extends AbstractMongoDbTestContainer {
+class AiStatisticsControllerIT extends AbstractMongoDbIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;

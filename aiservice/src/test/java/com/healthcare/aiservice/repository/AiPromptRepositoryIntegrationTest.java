@@ -3,7 +3,7 @@ package com.healthcare.aiservice.repository;
 import com.healthcare.aiservice.common.prompt.model.AiPrompt;
 import com.healthcare.aiservice.common.prompt.model.AiProviderModel;
 import com.healthcare.aiservice.common.prompt.model.PromptType;
-import com.healthcare.aiservice.config.AbstractMongoDbTestContainer;
+import com.healthcare.aiservice.config.AbstractMongoDbIntegrationTest;
 import com.healthcare.aiservice.config.constant.FeatureName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.dao.DuplicateKeyException;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.Instant;
 import java.util.List;
@@ -21,13 +22,14 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+@Testcontainers(disabledWithoutDocker = true)
 @DataMongoTest(properties = {
         "spring.data.mongodb.auto-index-creation=true"
 })
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("AI prompt repository integration tests: ")
 class AiPromptRepositoryIntegrationTest
-        extends AbstractMongoDbTestContainer {
+        extends AbstractMongoDbIntegrationTest {
 
     private static final FeatureName FEATURE =
             FeatureName.MEDICAL_SUMMARY;

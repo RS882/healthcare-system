@@ -3,15 +3,14 @@ package com.healthcare.aiservice.config;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
 
-public abstract class AbstractMongoDbTestContainer {
 
+public abstract class AbstractMongoDbIntegrationTest extends AbstractIntegrationTest {
+
+    @Container
     protected static final MongoDBContainer mongo =
             new MongoDBContainer("mongo:7.0");
-
-    static {
-        mongo.start();
-    }
 
     @DynamicPropertySource
     static void mongoProperties(DynamicPropertyRegistry registry) {

@@ -22,8 +22,7 @@ public class CachedActivePromptService {
     @Cacheable(
             cacheNames = CacheNames.ACTIVE_PROMPTS,
             key = "T(com.healthcare.aiservice.common.prompt.cache.PromptCacheKey).of(#key)",
-            unless = "#result == null",
-            sync = true
+            unless = "#result == null"
     )
     public AiPrompt findActivePrompt(AiPromptKey key) {
         List<AiPrompt> activePrompts =
