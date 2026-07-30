@@ -16,6 +16,7 @@ import com.healthcare.aiservice.repository.AiPromptRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -31,6 +32,7 @@ public class DefaultAiPromptManagementService implements AiPromptManagementServi
 
     private final AiPromptRepository repository;
     private final PromptTextNormalizer normalizer;
+    private final ActivePromptChangedEventPublisher publisher;
 
     @Override
     public AiPromptDetailsResponse createPrompt(CreateAiPromptRequest request) {
@@ -43,6 +45,7 @@ public class DefaultAiPromptManagementService implements AiPromptManagementServi
 
         try {
             AiPrompt savedPrompt = repository.save(prompt);
+
             return AiPromptMapper.toDetailsResponse(savedPrompt);
 
         } catch (DuplicateKeyException ex) {
@@ -53,16 +56,26 @@ public class DefaultAiPromptManagementService implements AiPromptManagementServi
     }
 
     @Override
+    @Transactional
     public AiPromptDetailsResponse activatePrompt(String promptId) {
         AiPrompt prompt = getPromptById(promptId);
 
-        AiPrompt activePrompt = prompt.active()
+        AiPromptKey key = AiPromptMapper.toKey(prompt);
+
+        deactivateOtherActivePrompts(prompt);
+
+        AiPrompt activatedPrompt = prompt.active()
                 ? prompt
-                : repository.save(prompt.activate(SYSTEM_USER_ID, SYSTEM_USERNAME));
+                : repository.save(
+                prompt.activate(
+                        SYSTEM_USER_ID,
+                        SYSTEM_USERNAME
+                )
+        );
 
-        deactivateOtherActivePrompts(activePrompt);
+        publisher.publish(key);
 
-        return AiPromptMapper.toDetailsResponse(activePrompt);
+        return AiPromptMapper.toDetailsResponse(activatedPrompt);
     }
 
     @Override
