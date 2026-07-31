@@ -2,12 +2,7 @@ package com.healthcare.aiservice.common.message_classification.service;
 
 import com.healthcare.aiservice.common.message_classification.dto.MessageClassificationRequest;
 import com.healthcare.aiservice.common.message_classification.dto.MessageClassificationResponse;
-import com.healthcare.aiservice.common.message_classification.prompt.MessageClassificationPromptProvider;
-import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
-import com.healthcare.aiservice.common.prompt.model.AiProviderModel;
-import com.healthcare.aiservice.common.prompt.model.PromptType;
 import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptFactory;
-import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptResolver;
 import com.healthcare.aiservice.common.provider.AiClient;
 import com.healthcare.aiservice.common.provider.logging.annotation.LogAiUsage;
 import com.healthcare.aiservice.config.constant.FeatureName;

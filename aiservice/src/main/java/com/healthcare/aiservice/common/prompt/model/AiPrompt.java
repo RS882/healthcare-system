@@ -1,5 +1,7 @@
 package com.healthcare.aiservice.common.prompt.model;
 
+import com.healthcare.aiservice.config.constant.AiProviderModel;
+import com.healthcare.aiservice.config.constant.PromptType;
 import com.healthcare.aiservice.config.constant.FeatureName;
 import jakarta.validation.constraints.Positive;
 import lombok.Builder;

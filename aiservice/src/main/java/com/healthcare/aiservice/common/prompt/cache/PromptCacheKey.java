@@ -1,7 +1,7 @@
 package com.healthcare.aiservice.common.prompt.cache;
 
 import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
-import com.healthcare.aiservice.common.prompt.model.AiProviderModel;
+import com.healthcare.aiservice.config.constant.AiProviderModel;
 
 import java.util.Locale;
 import java.util.Objects;

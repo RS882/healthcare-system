@@ -2,7 +2,7 @@ package com.healthcare.aiservice.common.prompt.service;
 
 import com.healthcare.aiservice.common.prompt.model.AiPrompt;
 import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
-import com.healthcare.aiservice.common.prompt.model.PromptSource;
+import com.healthcare.aiservice.config.constant.PromptSource;
 import com.healthcare.aiservice.common.prompt.model.ResolvedPrompt;
 import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptResolver;
 import lombok.RequiredArgsConstructor;

@@ -1,4 +1,4 @@
-package com.healthcare.aiservice.common.prompt.model;
+package com.healthcare.aiservice.config.constant;
 
 public enum AiProviderModel {
     GPT_5,

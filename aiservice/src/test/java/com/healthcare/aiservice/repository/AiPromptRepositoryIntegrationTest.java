@@ -1,8 +1,8 @@
 package com.healthcare.aiservice.repository;
 
 import com.healthcare.aiservice.common.prompt.model.AiPrompt;
-import com.healthcare.aiservice.common.prompt.model.AiProviderModel;
-import com.healthcare.aiservice.common.prompt.model.PromptType;
+import com.healthcare.aiservice.config.constant.AiProviderModel;
+import com.healthcare.aiservice.config.constant.PromptType;
 import com.healthcare.aiservice.config.AbstractMongoDbIntegrationTest;
 import com.healthcare.aiservice.config.constant.FeatureName;
 import org.junit.jupiter.api.BeforeEach;

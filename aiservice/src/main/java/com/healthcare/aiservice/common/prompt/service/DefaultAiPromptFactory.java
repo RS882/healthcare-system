@@ -2,8 +2,8 @@ package com.healthcare.aiservice.common.prompt.service;
 
 import com.healthcare.aiservice.common.dto.NoteBasedRequest;
 import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
-import com.healthcare.aiservice.common.prompt.model.AiProviderModel;
-import com.healthcare.aiservice.common.prompt.model.PromptType;
+import com.healthcare.aiservice.config.constant.AiProviderModel;
+import com.healthcare.aiservice.config.constant.PromptType;
 import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptFactory;
 import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptResolver;
 import com.healthcare.aiservice.common.prompt.service.interfaces.PromptProvider;

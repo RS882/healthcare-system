@@ -1,6 +1,9 @@
 package com.healthcare.aiservice.common.prompt.service;
 
 
+import com.healthcare.aiservice.config.constant.AiProviderModel;
+import com.healthcare.aiservice.config.constant.PromptSource;
+import com.healthcare.aiservice.config.constant.PromptType;
 import com.healthcare.aiservice.common.prompt.model.*;
 import com.healthcare.aiservice.config.constant.FeatureName;
 import org.junit.jupiter.api.DisplayName;
