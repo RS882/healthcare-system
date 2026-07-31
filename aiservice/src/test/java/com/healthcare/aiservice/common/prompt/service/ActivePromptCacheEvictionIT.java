@@ -203,6 +203,65 @@ class ActivePromptCacheEvictionIT
                 .isFalse();
     }
 
+    @Test
+    void activatePrompt_ShouldRefreshCacheWithNewActivePrompt_AfterEviction() {
+        Cache cache = getActivePromptCache();
+        String cacheKey = PromptCacheKey.of(PROMPT_KEY);
+
+        AiPrompt oldCachedPrompt =
+                cachedActivePromptService.findActivePrompt(PROMPT_KEY);
+
+        assertThat(oldCachedPrompt)
+                .isNotNull();
+
+        assertThat(oldCachedPrompt.id())
+                .isEqualTo(ACTIVE_PROMPT_ID);
+
+        Cache.ValueWrapper oldCachedValue =
+                cache.get(cacheKey);
+
+        assertThat(oldCachedValue)
+                .as("Old active prompt must be stored in cache")
+                .isNotNull();
+
+        promptManagementService.activatePrompt(INACTIVE_PROMPT_ID);
+
+        assertThat(cache.get(cacheKey))
+                .as("Cache entry must be evicted after prompt activation")
+                .isNull();
+
+        AiPrompt refreshedPrompt =
+                cachedActivePromptService.findActivePrompt(PROMPT_KEY);
+
+        assertThat(refreshedPrompt)
+                .isNotNull();
+
+        assertThat(refreshedPrompt.id())
+                .isEqualTo(INACTIVE_PROMPT_ID);
+
+        assertThat(refreshedPrompt.active())
+                .isTrue();
+
+        Cache.ValueWrapper refreshedCachedValue =
+                cache.get(cacheKey);
+
+        assertThat(refreshedCachedValue)
+                .as("New active prompt must be stored in cache")
+                .isNotNull();
+
+        AiPrompt secondRead =
+                cachedActivePromptService.findActivePrompt(PROMPT_KEY);
+
+        assertThat(secondRead)
+                .isNotNull();
+
+        assertThat(secondRead.id())
+                .isEqualTo(INACTIVE_PROMPT_ID);
+
+        assertThat(secondRead.content())
+                .isEqualTo("new prompt");
+    }
+
     private Cache getActivePromptCache() {
         Cache cache =
                 cacheManager.getCache(CacheNames.ACTIVE_PROMPTS);
