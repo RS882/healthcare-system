@@ -1,6 +1,8 @@
 package com.healthcare.aiservice.config;
 
 import com.healthcare.aiservice.common.prompt.cache.CacheNames;
+import com.healthcare.aiservice.config.propertie.cache_propertie.CacheProperties;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -17,23 +19,20 @@ import java.util.Map;
 
 @Configuration
 @EnableCaching
+@RequiredArgsConstructor
 public class CacheConfiguration {
 
-    private static final Duration DEFAULT_CACHE_TTL =
-            Duration.ofMinutes(30);
-
-    private static final Duration ACTIVE_PROMPTS_CACHE_TTL =
-            Duration.ofHours(1);
+    private  final CacheProperties props;
 
     @Bean
     public CacheManager cacheManager(
             RedisConnectionFactory connectionFactory
     ) {
         RedisCacheConfiguration defaultConfiguration =
-                createCacheConfiguration(DEFAULT_CACHE_TTL);
+                createCacheConfiguration(props.defaultTtl());
 
         RedisCacheConfiguration activePromptsConfiguration =
-                createCacheConfiguration(ACTIVE_PROMPTS_CACHE_TTL);
+                createCacheConfiguration(props.activePrompt().ttl());
 
         return RedisCacheManager.builder(connectionFactory)
                 .cacheDefaults(defaultConfiguration)

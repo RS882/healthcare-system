@@ -8,9 +8,6 @@ import java.time.Duration;
 public record ActivePromptProperties(
 
         @NotNull
-        String cacheName,
-
-        @NotNull
         @DurationMin(seconds = 1)
         Duration ttl
 ) {
