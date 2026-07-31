@@ -32,10 +32,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
@@ -78,6 +75,9 @@ class DefaultAiPromptManagementServiceTest {
 
     @Mock
     private AiPromptRepository repository;
+
+    @Mock
+    private ActivePromptChangedEventPublisher publisher;
 
     @Mock
     private PromptTextNormalizer normalizer;
@@ -288,19 +288,16 @@ class DefaultAiPromptManagementServiceTest {
         when(repository.findById(PROMPT_ID))
                 .thenReturn(Optional.of(inactivePrompt));
 
-        when(repository.save(any(AiPrompt.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
         when(repository
                 .findAllByFeatureAndTypeAndTargetModelAndActiveTrue(
                         FEATURE,
                         TYPE,
                         TARGET_MODEL
                 ))
-                .thenReturn(List.of(
-                        inactivePrompt.activate("system", "system"),
-                        otherActivePrompt
-                ));
+                .thenReturn(List.of(otherActivePrompt));
+
+        when(repository.save(any(AiPrompt.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
         AiPromptDetailsResponse result =
                 service.activatePrompt(PROMPT_ID);
@@ -308,17 +305,38 @@ class DefaultAiPromptManagementServiceTest {
         ArgumentCaptor<AiPrompt> promptCaptor =
                 ArgumentCaptor.forClass(AiPrompt.class);
 
-        verify(repository, org.mockito.Mockito.times(2))
+        verify(repository, times(2))
                 .save(promptCaptor.capture());
 
         List<AiPrompt> savedPrompts =
                 promptCaptor.getAllValues();
 
-        AiPrompt activatedPrompt = savedPrompts.get(0);
-        AiPrompt deactivatedPrompt = savedPrompts.get(1);
 
-        assertThat(activatedPrompt.id()).isEqualTo(PROMPT_ID);
-        assertThat(activatedPrompt.active()).isTrue();
+        AiPrompt deactivatedPrompt = savedPrompts.get(0);
+
+
+        AiPrompt activatedPrompt = savedPrompts.get(1);
+
+        assertThat(deactivatedPrompt.id())
+                .isEqualTo(SECOND_PROMPT_ID);
+
+        assertThat(deactivatedPrompt.active())
+                .isFalse();
+
+        assertThat(deactivatedPrompt.updatedByUserId())
+                .isEqualTo("system");
+
+        assertThat(deactivatedPrompt.updatedByUsername())
+                .isEqualTo("system");
+
+        assertThat(deactivatedPrompt.updatedAt())
+                .isNotNull();
+
+        assertThat(activatedPrompt.id())
+                .isEqualTo(PROMPT_ID);
+
+        assertThat(activatedPrompt.active())
+                .isTrue();
 
         assertThat(activatedPrompt.updatedByUserId())
                 .isEqualTo("system");
@@ -326,17 +344,23 @@ class DefaultAiPromptManagementServiceTest {
         assertThat(activatedPrompt.updatedByUsername())
                 .isEqualTo("system");
 
-        assertThat(activatedPrompt.updatedAt()).isNotNull();
+        assertThat(activatedPrompt.updatedAt())
+                .isNotNull();
 
-        assertThat(deactivatedPrompt.id())
-                .isEqualTo(SECOND_PROMPT_ID);
+        assertThat(result.id())
+                .isEqualTo(PROMPT_ID);
 
-        assertThat(deactivatedPrompt.active()).isFalse();
+        assertThat(result.active())
+                .isTrue();
 
-        assertThat(result.id()).isEqualTo(PROMPT_ID);
-        assertThat(result.active()).isTrue();
+        verify(publisher).publish(
+                new AiPromptKey(
+                        FEATURE,
+                        TYPE,
+                        TARGET_MODEL
+                )
+        );
     }
-
     @Test
     void activatePrompt_ShouldNotSavePromptAgain_WhenPromptIsAlreadyActive() {
         AiPrompt alreadyActivePrompt = createPrompt(

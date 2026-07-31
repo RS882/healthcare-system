@@ -19,6 +19,15 @@ spring:
         options:
           model: llama3:latest
 
+cache:
+  default-ttl: 5m
+  active-prompt:
+    ttl: 10m
+
+ai:
+  provider: ollama
+  model: llama3:latest
+
 eureka:
   client:
     enabled: false

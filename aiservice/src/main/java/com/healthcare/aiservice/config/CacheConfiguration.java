@@ -22,7 +22,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CacheConfiguration {
 
-    private  final CacheProperties props;
+    private final CacheProperties props;
 
     @Bean
     public CacheManager cacheManager(
