@@ -14,6 +14,14 @@ public abstract class AbstractMongoDbIntegrationTest extends AbstractIntegration
 
     @DynamicPropertySource
     static void mongoProperties(DynamicPropertyRegistry registry) {
-        registry.add("spring.data.mongodb.uri", mongo::getReplicaSetUrl);
+
+        registry.add(
+                "spring.data.mongodb.uri",
+                mongo::getReplicaSetUrl);
+
+        registry.add(
+                "spring.data.mongodb.auto-index-creation",
+                () -> true
+        );
     }
 }

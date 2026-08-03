@@ -38,5 +38,10 @@ public abstract class AbstractMongoRedisIntegrationTest extends AbstractIntegrat
         registry.add(
                 "spring.data.mongodb.uri",
                 mongo::getReplicaSetUrl);
+
+        registry.add(
+                "spring.data.mongodb.auto-index-creation",
+                () -> true
+        );
     }
 }

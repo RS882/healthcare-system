@@ -8,16 +8,17 @@ import org.springframework.http.HttpStatus;
 public class InvalidRequestTypeForFeatureException extends RestException {
 
 
-    private static final HttpStatus status = HttpStatus.BAD_REQUEST;
+    private static final HttpStatus STATUS = HttpStatus.BAD_REQUEST;
 
     public InvalidRequestTypeForFeatureException(
             PromptProvider<? extends NoteBasedRequest> provider,
             Class<?> currentRequestType) {
 
-        super(status,
+        super(STATUS,
                 String.format("Invalid request type for feature '%s'. Expected '%s', got '%s'.",
                         provider.feature().name(),
                         provider.requestType().getSimpleName(),
-                        currentRequestType.getSimpleName()));
+                        currentRequestType.getSimpleName()),
+                ErrorCode.INVALID_REQUEST_PARAMETER);
     }
 }

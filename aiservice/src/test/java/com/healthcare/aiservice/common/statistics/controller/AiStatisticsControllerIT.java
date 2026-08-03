@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -24,7 +23,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ActiveProfiles("test")
 @SpringBootTest
 @Testcontainers(disabledWithoutDocker = true)
 @AutoConfigureMockMvc
@@ -98,10 +96,10 @@ class AiStatisticsControllerIT extends AbstractMongoDbIntegrationTest {
                 .andExpect(jsonPath("$.averageDurationMs").value(200))
                 .andExpect(jsonPath(featureStatisticsJsonPath(FeatureName.MEDICAL_SUMMARY)).value(hasItem(2)))
                 .andExpect(jsonPath(featureStatisticsJsonPath(FeatureName.MESSAGE_CLASSIFICATION)).value(hasItem(1)))
-               .andExpect(jsonPath(featureStatisticsJsonPath(FeatureName.MEDICAL_EXTRACTION)).value(hasItem(0)));
+                .andExpect(jsonPath(featureStatisticsJsonPath(FeatureName.MEDICAL_EXTRACTION)).value(hasItem(0)));
     }
 
-    private String featureStatisticsJsonPath(FeatureName  feature) {
+    private String featureStatisticsJsonPath(FeatureName feature) {
         return "requestsByFeature[?(@.feature=='" + feature + "')].requests";
     }
 }

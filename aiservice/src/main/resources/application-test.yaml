@@ -12,6 +12,9 @@ spring:
     discovery:
       enabled: false
 
+  cache:
+    type: redis
+
   ai:
     ollama:
       base-url: http://localhost:11434

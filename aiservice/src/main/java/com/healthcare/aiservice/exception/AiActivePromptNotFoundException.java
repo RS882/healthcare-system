@@ -5,18 +5,21 @@ import org.springframework.http.HttpStatus;
 
 public class AiActivePromptNotFoundException extends RestException {
 
-    private static final HttpStatus status = HttpStatus.NOT_FOUND;
+    private static final HttpStatus STATUS = HttpStatus.NOT_FOUND;
 
     public AiActivePromptNotFoundException(String promptId) {
 
-        super(status, String.format("Active AI prompt with id: '%s' no found", promptId));
+        super(STATUS,
+                String.format("Active AI prompt with id: '%s' no found", promptId),
+                ErrorCode.AI_PROMPT_NOT_FOUND);
     }
 
     public AiActivePromptNotFoundException(AiPromptKey aiPromptKey) {
-        super(status,
+        super(STATUS,
                 String.format("Active AI prompt with feature : '%s', type: '%s' for provider model :'%s' no found",
                         aiPromptKey.feature(),
                         aiPromptKey.type(),
-                        aiPromptKey.targetModel()));
+                        aiPromptKey.targetModel()),
+                ErrorCode.AI_PROMPT_NOT_FOUND);
     }
 }

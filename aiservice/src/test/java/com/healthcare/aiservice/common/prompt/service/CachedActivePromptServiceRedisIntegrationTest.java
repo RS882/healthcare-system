@@ -4,10 +4,10 @@ import com.healthcare.aiservice.common.prompt.cache.CacheNames;
 import com.healthcare.aiservice.common.prompt.cache.PromptCacheKey;
 import com.healthcare.aiservice.common.prompt.model.AiPrompt;
 import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
-import com.healthcare.aiservice.config.constant.AiProviderModel;
-import com.healthcare.aiservice.config.constant.PromptType;
 import com.healthcare.aiservice.config.AbstractRedisIntegrationTest;
+import com.healthcare.aiservice.config.constant.AiProviderModel;
 import com.healthcare.aiservice.config.constant.FeatureName;
+import com.healthcare.aiservice.config.constant.PromptType;
 import com.healthcare.aiservice.repository.AiPromptRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +16,6 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -26,7 +25,6 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-@ActiveProfiles("test")
 @Testcontainers(disabledWithoutDocker = true)
 @SpringBootTest
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)

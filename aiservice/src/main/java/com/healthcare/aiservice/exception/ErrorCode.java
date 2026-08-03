@@ -17,6 +17,7 @@ public enum ErrorCode {
     AI_PROVIDER_UNAVAILABLE("AI provider is unavailable"),
     AI_PROVIDER_ERROR("AI provider failed to process the request"),
     AI_PROVIDER_TIMEOUT("AI provider timeout"),
+    AI_PROVIDER_NOT_FOUND("AI provider not found"),
 
     // AI Response
     AI_RESPONSE_PARSING_ERROR("AI provider returned invalid response format"),

@@ -4,9 +4,9 @@ import org.springframework.http.HttpStatus;
 
 public class JsonExtractorException extends RestException {
 
-    private static final HttpStatus status = HttpStatus.NOT_FOUND;
+    private static final HttpStatus STATUS = HttpStatus.NOT_FOUND;
 
     public JsonExtractorException(String message) {
-        super(status, message);    }
+        super(STATUS, message);    }
 
 }

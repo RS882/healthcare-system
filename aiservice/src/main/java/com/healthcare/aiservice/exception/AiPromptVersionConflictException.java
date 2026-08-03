@@ -5,16 +5,22 @@ import org.springframework.http.HttpStatus;
 
 public class AiPromptVersionConflictException extends RestException {
 
-    private static final HttpStatus status = HttpStatus.CONFLICT;
+    private static final HttpStatus STATUS = HttpStatus.CONFLICT;
 
-    public AiPromptVersionConflictException(AiPromptKey aiPromptKey, long version) {
-        super(status,
+    public AiPromptVersionConflictException(
+            AiPromptKey key,
+            long version
+    ) {
+        super(
+                STATUS,
                 String.format(
-                        "AI prompt version '%d' already exists for feature '%s', type '%s' and target model '%s'.",
+                        "AI prompt version '%d' already exists for feature '%s', type '%s', and target model '%s'.",
                         version,
-                        aiPromptKey.feature(),
-                        aiPromptKey.type(),
-                        aiPromptKey.targetModel()
-                ));
+                        key.feature(),
+                        key.type(),
+                        key.targetModel()
+                ),
+                ErrorCode.AI_PROMPT_VERSION_CONFLICT
+        );
     }
 }
