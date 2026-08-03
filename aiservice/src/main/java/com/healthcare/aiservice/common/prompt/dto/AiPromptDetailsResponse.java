@@ -4,6 +4,7 @@ import com.healthcare.aiservice.config.constant.AiProviderModel;
 import com.healthcare.aiservice.config.constant.PromptType;
 import com.healthcare.aiservice.config.constant.FeatureName;
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Builder;
 
 import java.time.Instant;
 
@@ -11,6 +12,7 @@ import java.time.Instant;
         name = "AiPromptDetailsResponse",
         description = "Detailed information about an AI prompt version"
 )
+@Builder
 public record AiPromptDetailsResponse(
 
         @Schema(

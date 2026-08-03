@@ -1268,45 +1268,66 @@ class AiPromptManagementApiIT
 
         try {
             Future<Integer> secondPromptActivation =
-                    executor.submit(() -> activatePromptConcurrently(
-                            secondPrompt.id(),
-                            readyLatch,
-                            startLatch
-                    ));
+                    executor.submit(() ->
+                            activatePromptConcurrently(
+                                    secondPrompt.id(),
+                                    readyLatch,
+                                    startLatch
+                            )
+                    );
 
             Future<Integer> thirdPromptActivation =
-                    executor.submit(() -> activatePromptConcurrently(
-                            thirdPrompt.id(),
-                            readyLatch,
-                            startLatch
-                    ));
+                    executor.submit(() ->
+                            activatePromptConcurrently(
+                                    thirdPrompt.id(),
+                                    readyLatch,
+                                    startLatch
+                            )
+                    );
 
-            boolean requestsReady =
-                    readyLatch.await(10, TimeUnit.SECONDS);
+            boolean bothRequestsReady =
+                    readyLatch.await(
+                            10,
+                            TimeUnit.SECONDS
+                    );
 
-            assertThat(requestsReady)
-                    .as("Both activation requests must be ready")
+            assertThat(bothRequestsReady)
+                    .as("Both activation requests must be ready before execution")
                     .isTrue();
 
             startLatch.countDown();
 
-            int firstStatus =
+            int secondPromptStatus =
                     secondPromptActivation.get(
                             30,
                             TimeUnit.SECONDS
                     );
 
-            int secondStatus =
+            int thirdPromptStatus =
                     thirdPromptActivation.get(
                             30,
                             TimeUnit.SECONDS
                     );
 
-            assertThat(List.of(firstStatus, secondStatus))
+            List<Integer> statuses = List.of(
+                    secondPromptStatus,
+                    thirdPromptStatus
+            );
+
+            assertThat(statuses)
                     .allMatch(status ->
                             status == HttpStatus.OK.value()
                                     || status == HttpStatus.CONFLICT.value()
                     );
+
+            assertThat(statuses)
+                    .doesNotContain(
+                            HttpStatus.INTERNAL_SERVER_ERROR.value()
+                    );
+
+
+            assertThat(statuses)
+                    .contains(HttpStatus.OK.value());
 
             List<AiPrompt> activePrompts =
                     repository
@@ -1324,30 +1345,91 @@ class AiPromptManagementApiIT
                     activePrompts.get(0);
 
             assertThat(finalActivePrompt.id())
+                    .as("One of the concurrently selected prompts must become active")
                     .isIn(
                             secondPrompt.id(),
                             thirdPrompt.id()
                     );
 
-            assertThat(
+            assertThat(finalActivePrompt.active())
+                    .isTrue();
+
+            AiPrompt initialPromptAfterActivation =
                     repository.findById(initialActivePrompt.id())
-                            .orElseThrow()
-                            .active()
-            ).isFalse();
+                            .orElseThrow();
+
+            assertThat(initialPromptAfterActivation.active())
+                    .isFalse();
+
+            AiPrompt secondPromptAfterActivation =
+                    repository.findById(secondPrompt.id())
+                            .orElseThrow();
+
+            AiPrompt thirdPromptAfterActivation =
+                    repository.findById(thirdPrompt.id())
+                            .orElseThrow();
+
+            long activeConcurrentPromptsCount =
+                    List.of(
+                                    secondPromptAfterActivation,
+                                    thirdPromptAfterActivation
+                            )
+                            .stream()
+                            .filter(AiPrompt::active)
+                            .count();
+
+            assertThat(activeConcurrentPromptsCount)
+                    .as("Only one concurrently selected prompt may remain active")
+                    .isEqualTo(1L);
 
             assertThat(cache.get(cacheKey))
-                    .as("Cached prompt must be evicted after successful activation")
+                    .as("Active prompt cache must be evicted after successful activation")
                     .isNull();
+
 
             mockMvc.perform(get(CURRENT_PROMPT_URL)
                             .param("feature", FEATURE.name())
                             .param("type", TYPE.name())
                             .param("targetModel", TARGET_MODEL.name()))
                     .andExpect(status().isOk())
+                    .andExpect(content().contentTypeCompatibleWith(
+                            MediaType.APPLICATION_JSON
+                    ))
                     .andExpect(jsonPath("$.id")
                             .value(finalActivePrompt.id()))
+                    .andExpect(jsonPath("$.feature")
+                            .value(FEATURE.name()))
+                    .andExpect(jsonPath("$.type")
+                            .value(TYPE.name()))
+                    .andExpect(jsonPath("$.targetModel")
+                            .value(TARGET_MODEL.name()))
                     .andExpect(jsonPath("$.active")
                             .value(true));
+
+            AiPrompt refreshedPrompt =
+                    cachedActivePromptService.findActivePrompt(promptKey);
+
+            assertThat(refreshedPrompt)
+                    .isNotNull();
+
+            assertThat(refreshedPrompt.id())
+                    .isEqualTo(finalActivePrompt.id());
+
+            assertThat(refreshedPrompt.active())
+                    .isTrue();
+
+            assertThat(cache.get(cacheKey))
+                    .as("Final active prompt must be cached after refresh")
+                    .isNotNull();
+
+            AiPrompt promptFromCache =
+                    cache.get(cacheKey, AiPrompt.class);
+
+            assertThat(promptFromCache)
+                    .isNotNull();
+
+            assertThat(promptFromCache.id())
+                    .isEqualTo(finalActivePrompt.id());
 
         } finally {
             executor.shutdownNow();
@@ -1359,7 +1441,7 @@ class AiPromptManagementApiIT
                     );
 
             assertThat(terminated)
-                    .as("Executor must terminate")
+                    .as("Executor must terminate after the concurrency test")
                     .isTrue();
         }
     }

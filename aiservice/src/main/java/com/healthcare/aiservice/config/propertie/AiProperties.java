@@ -7,9 +7,9 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "ai")
 public record AiProperties(
-        @NotBlank
+        @NotBlank( message = "Provider field must not be blank.")
         String provider,
-        @NotBlank
+        @NotBlank( message = "Model field must not be blank.")
         String model
 ) {
 }

@@ -31,6 +31,13 @@ ai:
   provider: ollama
   model: llama3:latest
 
+  prompt:
+    activation-retry:
+      max-attempts: 3
+      initial-delay: 1ms
+      multiplier: 1.0
+      max-delay: 1ms
+
 eureka:
   client:
     enabled: false

@@ -7,8 +7,10 @@ import java.time.Duration;
 
 public record ActivePromptProperties(
 
-        @NotNull
-        @DurationMin(seconds = 1)
+        @NotNull(message = "Active prompt cache ttl must not be null.")
+        @DurationMin(
+                seconds = 1,
+                message = "Active prompt cache ttl must be at least 1s.")
         Duration ttl
 ) {
 }

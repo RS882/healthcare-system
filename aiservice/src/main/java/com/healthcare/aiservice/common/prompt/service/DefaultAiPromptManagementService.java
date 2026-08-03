@@ -16,11 +16,9 @@ import com.healthcare.aiservice.repository.AiPromptRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -32,7 +30,7 @@ public class DefaultAiPromptManagementService implements AiPromptManagementServi
 
     private final AiPromptRepository repository;
     private final PromptTextNormalizer normalizer;
-    private final ActivePromptChangedEventPublisher publisher;
+    private final PromptActivationRetryExecutor activationRetryExecutor;
 
     @Override
     public AiPromptDetailsResponse createPrompt(CreateAiPromptRequest request) {
@@ -56,26 +54,10 @@ public class DefaultAiPromptManagementService implements AiPromptManagementServi
     }
 
     @Override
-    @Transactional
-    public AiPromptDetailsResponse activatePrompt(String promptId) {
-        AiPrompt prompt = getPromptById(promptId);
-
-        AiPromptKey key = AiPromptMapper.toKey(prompt);
-
-        deactivateOtherActivePrompts(prompt);
-
-        AiPrompt activatedPrompt = prompt.active()
-                ? prompt
-                : repository.save(
-                prompt.activate(
-                        SYSTEM_USER_ID,
-                        SYSTEM_USERNAME
-                )
-        );
-
-        publisher.publish(key);
-
-        return AiPromptMapper.toDetailsResponse(activatedPrompt);
+    public AiPromptDetailsResponse activatePrompt(
+            String promptId
+    ) {
+        return activationRetryExecutor.execute(promptId);
     }
 
     @Override
@@ -167,18 +149,6 @@ public class DefaultAiPromptManagementService implements AiPromptManagementServi
     private AiPrompt getPromptById(String promptId) {
         return repository.findById(promptId)
                 .orElseThrow(() -> new AiPromptNotFoundException(promptId));
-    }
-
-    private void deactivateOtherActivePrompts(AiPrompt prompt) {
-        deactivateOtherActivePrompts(prompt, SYSTEM_USER_ID, SYSTEM_USERNAME);
-    }
-
-    private void deactivateOtherActivePrompts(AiPrompt prompt, String userId, String username) {
-        findActivePrompts(AiPromptMapper.toKey(prompt))
-                .stream()
-                .filter(activePrompt -> !Objects.equals(activePrompt.id(), prompt.id()))
-                .map(activePrompt -> activePrompt.deactivate(userId, username))
-                .forEach(repository::save);
     }
 
     private long resolveNextVersion(AiPromptKey aiPromptKey) {

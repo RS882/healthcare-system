@@ -13,11 +13,13 @@ import java.time.Duration;
 public record CacheProperties(
 
         @Valid
-        @NotNull
+        @NotNull(message = "Active prompt must not be null.")
         ActivePromptProperties activePrompt,
 
-        @NotNull
-        @DurationMin(seconds = 1)
+        @NotNull(message = "Cache default ttl must not be null.")
+        @DurationMin(
+                seconds = 1,
+                message = "Cache default ttl must be at least 1s.")
         Duration defaultTtl
 ) {
 }
