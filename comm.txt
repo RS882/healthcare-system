@@ -1,3 +1,5 @@
 docker-compose up --build -d
 
 docker compose -p ai-mongo -f docker-compose-mongo.yml up -d
+
+docker compose up -d --build --force-recreate
