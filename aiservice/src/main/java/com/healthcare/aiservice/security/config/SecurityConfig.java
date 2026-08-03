@@ -1,6 +1,8 @@
 package com.healthcare.aiservice.security.config;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -11,7 +13,6 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.web.SecurityFilterChain;
 
-import static com.healthcare.aiservice.common.APIPaths.ApiPaths.AI_BASIC_ADMIN_URL;
 import static com.healthcare.aiservice.common.medical_extraction.controller.API.MedicalInfoExtractionApiPaths.EXTRACT_MEDICAL_INFO_URL;
 import static com.healthcare.aiservice.common.medical_summary.controller.API.MedicalSummaryApiPaths.MEDICAL_NOTE_SUMMARY_URL;
 import static com.healthcare.aiservice.common.message_classification.controller.API.MessageClassificationApiPaths.CLASSIFY_MESSAGE_URL;
@@ -36,16 +37,23 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-ui.html",
                                 "/error").permitAll()
+
+                        .requestMatchers(
+                                EndpointRequest.to(HealthEndpoint.class)
+                        ).permitAll()
+
+                        .requestMatchers("/actuator/info").permitAll()
+
                         .requestMatchers(HttpMethod.POST, MEDICAL_NOTE_SUMMARY_URL).permitAll()
                         .requestMatchers(HttpMethod.POST, CLASSIFY_MESSAGE_URL).permitAll()
                         .requestMatchers(HttpMethod.POST, EXTRACT_MEDICAL_INFO_URL).permitAll()
 
                         .requestMatchers(HttpMethod.GET, STATISTICS_ADMIN_URL).permitAll()
 
-                        .requestMatchers(HttpMethod.POST,PROMPTS_URL).permitAll()
-                        .requestMatchers(HttpMethod.GET,PROMPTS_URL).permitAll()
+                        .requestMatchers(HttpMethod.POST, PROMPTS_URL).permitAll()
+                        .requestMatchers(HttpMethod.GET, PROMPTS_URL).permitAll()
                         .requestMatchers(HttpMethod.GET, PROMPT_BY_ID_URL).permitAll()
-                        .requestMatchers(HttpMethod.PATCH,ACTIVATE_PROMPT_URL).permitAll()
+                        .requestMatchers(HttpMethod.PATCH, ACTIVATE_PROMPT_URL).permitAll()
                         .requestMatchers(HttpMethod.GET, CURRENT_PROMPT_URL).permitAll()
 
                         .anyRequest().authenticated()
