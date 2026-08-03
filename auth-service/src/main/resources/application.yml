@@ -3,4 +3,4 @@ spring:
     name: auth-service
 
   config:
-    import: configserver:${CONFIG}
+    import: configserver:${CONFIG_SERVER_URL:http://localhost:8888}
