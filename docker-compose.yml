@@ -21,7 +21,7 @@ services:
       - "8888:8888"
     environment:
       GIT: ${GIT}
-      EUREKA: ${EUREKA}
+      EUREKA_URL: ${EUREKA_URL}
     depends_on:
       service-registry:
         condition: service_healthy
@@ -96,8 +96,8 @@ services:
       BLACKLIST_PREFIX: ${BLACKLIST_PREFIX}
       BLOCKED_PREFIX: ${BLOCKED_PREFIX}
 
-      CONFIG: ${CONFIG}
-      EUREKA: ${EUREKA}
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
+      EUREKA_URL: ${EUREKA_URL}
     depends_on:
       config-server:
         condition: service_healthy
@@ -109,8 +109,8 @@ services:
     ports:
       - "8082:8082"
     environment:
-      CONFIG: ${CONFIG}
-      EUREKA: ${EUREKA}
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
+      EUREKA_URL: ${EUREKA_URL}
 
       DB: ${DB}
       DB_USERNAME: ${DB_USERNAME}
@@ -137,8 +137,8 @@ services:
     ports:
       - "8080:8080"
     environment:
-      CONFIG: ${CONFIG}
-      EUREKA: ${EUREKA}
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
+      EUREKA_URL: ${EUREKA_URL}
 
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
