@@ -1,7 +1,10 @@
 package com.healthcare.aiservice.security;
 
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.aiservice.cache.CacheNames;
+import com.healthcare.aiservice.common.medical_extraction.dto.MedicalInfoExtractionRequest;
+import com.healthcare.aiservice.common.medical_extraction.dto.MedicalInfoExtractionResponse;
+import com.healthcare.aiservice.common.medical_extraction.service.MedicalInfoExtractionService;
 import com.healthcare.aiservice.config.AbstractMongoRedisIntegrationTest;
 import com.healthcare.aiservice.security.constant.Role;
 import com.healthcare.aiservice.security.dto.UserAuthInfoDto;
@@ -19,56 +22,52 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Import;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.healthcare.aiservice.common.medical_extraction.controller.API
+        .MedicalInfoExtractionApiPaths.EXTRACT_MEDICAL_INFO_URL;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Import(SecurityAuthenticationIntegrationTest.TestControllerConfiguration.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Security authentication integration tests: ")
 class SecurityAuthenticationIntegrationTest
         extends AbstractMongoRedisIntegrationTest {
 
-    private static final String TEST_URL =
-            "/test/security/current-user";
+    private static final long USER_ID = 42L;
 
-    private static final long USER_ID =
-            42L;
-
-    private static final String USER_ID_AS_STRING =
-            "42";
+    private static final String USER_ID_AS_STRING = "42";
 
     private static final String SIGNED_USER_CONTEXT =
             "signed-user-context-token";
 
+    private static final String MEDICAL_NOTE =
+            "Patient reports fever and dry cough.";
+
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Autowired
     private StringRedisTemplate redisTemplate;
@@ -77,16 +76,13 @@ class SecurityAuthenticationIntegrationTest
     private CacheManager cacheManager;
 
     @Autowired
-    private HeaderRequestIdProperties
-            headerRequestIdProperties;
+    private HeaderRequestIdProperties headerRequestIdProperties;
 
     @Autowired
-    private UserContextProperties
-            userContextProperties;
+    private UserContextProperties userContextProperties;
 
     @Autowired
-    private RequestIdProperties
-            requestIdProperties;
+    private RequestIdProperties requestIdProperties;
 
     @MockitoBean
     private UserContextVerifier userContextVerifier;
@@ -94,93 +90,61 @@ class SecurityAuthenticationIntegrationTest
     @MockitoBean
     private UserAuthInfoClient userAuthInfoClient;
 
+    @MockitoBean
+    private MedicalInfoExtractionService medicalInfoExtractionService;
+
     @BeforeEach
     void setUp() {
-        Cache cache =
-                cacheManager.getCache(
-                        CacheNames.USER_AUTH_INFO
-                );
+        Cache cache = cacheManager.getCache(
+                CacheNames.USER_AUTH_INFO
+        );
 
-        assertThat(cache)
-                .isNotNull();
+        assertThat(cache).isNotNull();
 
         cache.clear();
 
         reset(
                 userContextVerifier,
-                userAuthInfoClient
+                userAuthInfoClient,
+                medicalInfoExtractionService
         );
     }
 
     @Test
-    void request_ShouldAuthenticateUser_AndPopulateSecurityContext()
+    void request_ShouldAuthenticateUser_AndReachProtectedController()
             throws Exception {
 
         UUID requestId = UUID.randomUUID();
 
-        saveRequestIdInRedis(requestId);
-
-        Claims claims = createClaims(
+        prepareAuthenticatedRequest(
                 requestId,
-                List.of(
-                        Role.ROLE_PATIENT.name(),
-                        Role.ROLE_ADMIN.name()
+                Set.of(
+                        Role.ROLE_PATIENT,
+                        Role.ROLE_ADMIN
                 )
         );
 
-        UserAuthInfoDto authInfo =
-                new UserAuthInfoDto(
-                        USER_ID,
-                        Set.of(
-                                Role.ROLE_PATIENT,
-                                Role.ROLE_ADMIN
-                        )
-                );
-
-        when(userContextVerifier.verifyAndGetClaims(
-                SIGNED_USER_CONTEXT
-        )).thenReturn(claims);
-
-        when(userAuthInfoClient.getUserAuthInfo(USER_ID))
-                .thenReturn(authInfo);
+        when(medicalInfoExtractionService.extract(
+                any(MedicalInfoExtractionRequest.class)
+        )).thenReturn(createMedicalResponse());
 
         mockMvc.perform(
-                        get(TEST_URL)
-                                .header(
-                                        headerRequestIdProperties.name(),
-                                        requestId.toString()
-                                )
-                                .header(
-                                        userContextProperties
-                                                .userContextHeader(),
-                                        SIGNED_USER_CONTEXT
-                                )
-                                .accept(MediaType.APPLICATION_JSON)
+                        authenticatedRequest(requestId)
                 )
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userId")
-                        .value(USER_ID))
-                .andExpect(jsonPath("$.roles")
-                        .isArray())
-                .andExpect(jsonPath("$.roles")
-                        .value(
-                                org.hamcrest.Matchers.containsInAnyOrder(
-                                        Role.ROLE_PATIENT.name(),
-                                        Role.ROLE_ADMIN.name()
-                                )
-                        ));
+                .andExpect(jsonPath("$.symptoms[0]")
+                        .value("Fever"))
+                .andExpect(jsonPath("$.symptoms[1]")
+                        .value("Dry cough"));
 
-        verify(
-                userContextVerifier,
-                times(1)
-        ).verifyAndGetClaims(
-                SIGNED_USER_CONTEXT
-        );
+        verify(userContextVerifier, times(1))
+                .verifyAndGetClaims(SIGNED_USER_CONTEXT);
 
-        verify(
-                userAuthInfoClient,
-                times(1)
-        ).getUserAuthInfo(USER_ID);
+        verify(userAuthInfoClient, times(1))
+                .getUserAuthInfo(USER_ID);
+
+        verify(medicalInfoExtractionService, times(1))
+                .extract(any(MedicalInfoExtractionRequest.class));
     }
 
     @Test
@@ -218,38 +182,21 @@ class SecurityAuthenticationIntegrationTest
         when(userAuthInfoClient.getUserAuthInfo(USER_ID))
                 .thenReturn(authInfo);
 
-        mockMvc.perform(
-                        get(TEST_URL)
-                                .header(
-                                        headerRequestIdProperties.name(),
-                                        firstRequestId.toString()
-                                )
-                                .header(
-                                        userContextProperties
-                                                .userContextHeader(),
-                                        SIGNED_USER_CONTEXT
-                                )
-                )
+        when(medicalInfoExtractionService.extract(
+                any(MedicalInfoExtractionRequest.class)
+        )).thenReturn(createMedicalResponse());
+
+        mockMvc.perform(authenticatedRequest(firstRequestId))
                 .andExpect(status().isOk());
 
-        mockMvc.perform(
-                        get(TEST_URL)
-                                .header(
-                                        headerRequestIdProperties.name(),
-                                        secondRequestId.toString()
-                                )
-                                .header(
-                                        userContextProperties
-                                                .userContextHeader(),
-                                        SIGNED_USER_CONTEXT
-                                )
-                )
+        mockMvc.perform(authenticatedRequest(secondRequestId))
                 .andExpect(status().isOk());
 
-        verify(
-                userAuthInfoClient,
-                times(1)
-        ).getUserAuthInfo(USER_ID);
+        verify(userAuthInfoClient, times(1))
+                .getUserAuthInfo(USER_ID);
+
+        verify(medicalInfoExtractionService, times(2))
+                .extract(any(MedicalInfoExtractionRequest.class));
     }
 
     @Test
@@ -257,16 +204,17 @@ class SecurityAuthenticationIntegrationTest
             throws Exception {
 
         mockMvc.perform(
-                        get(TEST_URL)
+                        post(EXTRACT_MEDICAL_INFO_URL)
                                 .header(
                                         userContextProperties
                                                 .userContextHeader(),
                                         SIGNED_USER_CONTEXT
                                 )
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody())
                 )
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.status")
-                        .value(400))
+                .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.message")
                         .value(
                                 "Header "
@@ -274,17 +222,11 @@ class SecurityAuthenticationIntegrationTest
                                         + " is required"
                         ));
 
-        verify(
+        verifyNoInteractions(
                 userContextVerifier,
-                times(0)
-        ).verifyAndGetClaims(
-                SIGNED_USER_CONTEXT
-        );
-
-        verify(
                 userAuthInfoClient,
-                times(0)
-        ).getUserAuthInfo(USER_ID);
+                medicalInfoExtractionService
+        );
     }
 
     @Test
@@ -296,22 +238,23 @@ class SecurityAuthenticationIntegrationTest
         saveRequestIdInRedis(requestId);
 
         mockMvc.perform(
-                        get(TEST_URL)
+                        post(EXTRACT_MEDICAL_INFO_URL)
                                 .header(
                                         headerRequestIdProperties.name(),
                                         requestId.toString()
                                 )
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(requestBody())
                 )
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.status")
-                        .value(401))
+                .andExpect(jsonPath("$.status").value(401))
                 .andExpect(jsonPath("$.message")
                         .value("Authentication failed"));
 
-        verify(
+        verifyNoInteractions(
                 userAuthInfoClient,
-                times(0)
-        ).getUserAuthInfo(USER_ID);
+                medicalInfoExtractionService
+        );
     }
 
     @Test
@@ -325,31 +268,17 @@ class SecurityAuthenticationIntegrationTest
         when(userContextVerifier.verifyAndGetClaims(
                 SIGNED_USER_CONTEXT
         )).thenThrow(
-                new SecurityException(
-                        "Invalid signature"
-                )
+                new SecurityException("Invalid signature")
         );
 
-        mockMvc.perform(
-                        get(TEST_URL)
-                                .header(
-                                        headerRequestIdProperties.name(),
-                                        requestId.toString()
-                                )
-                                .header(
-                                        userContextProperties
-                                                .userContextHeader(),
-                                        SIGNED_USER_CONTEXT
-                                )
-                )
+        mockMvc.perform(authenticatedRequest(requestId))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.status")
-                        .value(401));
+                .andExpect(jsonPath("$.status").value(401));
 
-        verify(
+        verifyNoInteractions(
                 userAuthInfoClient,
-                times(0)
-        ).getUserAuthInfo(USER_ID);
+                medicalInfoExtractionService
+        );
     }
 
     @Test
@@ -370,26 +299,14 @@ class SecurityAuthenticationIntegrationTest
                 SIGNED_USER_CONTEXT
         )).thenReturn(claims);
 
-        mockMvc.perform(
-                        get(TEST_URL)
-                                .header(
-                                        headerRequestIdProperties.name(),
-                                        headerRequestId.toString()
-                                )
-                                .header(
-                                        userContextProperties
-                                                .userContextHeader(),
-                                        SIGNED_USER_CONTEXT
-                                )
-                )
+        mockMvc.perform(authenticatedRequest(headerRequestId))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.status")
-                        .value(401));
+                .andExpect(jsonPath("$.status").value(401));
 
-        verify(
+        verifyNoInteractions(
                 userAuthInfoClient,
-                times(0)
-        ).getUserAuthInfo(USER_ID);
+                medicalInfoExtractionService
+        );
     }
 
     @Test
@@ -418,21 +335,64 @@ class SecurityAuthenticationIntegrationTest
         when(userAuthInfoClient.getUserAuthInfo(USER_ID))
                 .thenReturn(authInfo);
 
-        mockMvc.perform(
-                        get(TEST_URL)
-                                .header(
-                                        headerRequestIdProperties.name(),
-                                        requestId.toString()
-                                )
-                                .header(
-                                        userContextProperties
-                                                .userContextHeader(),
-                                        SIGNED_USER_CONTEXT
-                                )
-                )
+        mockMvc.perform(authenticatedRequest(requestId))
                 .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.status")
-                        .value(401));
+                .andExpect(jsonPath("$.status").value(401));
+
+        verifyNoInteractions(medicalInfoExtractionService);
+    }
+
+    private void prepareAuthenticatedRequest(
+            UUID requestId,
+            Set<Role> roles
+    ) {
+        saveRequestIdInRedis(requestId);
+
+        Claims claims = createClaims(
+                requestId,
+                roles.stream()
+                        .map(Role::name)
+                        .toList()
+        );
+
+        UserAuthInfoDto authInfo =
+                new UserAuthInfoDto(
+                        USER_ID,
+                        roles
+                );
+
+        when(userContextVerifier.verifyAndGetClaims(
+                SIGNED_USER_CONTEXT
+        )).thenReturn(claims);
+
+        when(userAuthInfoClient.getUserAuthInfo(USER_ID))
+                .thenReturn(authInfo);
+    }
+
+    private org.springframework.test.web.servlet.request
+            .MockHttpServletRequestBuilder authenticatedRequest(
+            UUID requestId
+    ) throws Exception {
+        return post(EXTRACT_MEDICAL_INFO_URL)
+                .header(
+                        headerRequestIdProperties.name(),
+                        requestId.toString()
+                )
+                .header(
+                        userContextProperties.userContextHeader(),
+                        SIGNED_USER_CONTEXT
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(requestBody());
+    }
+
+    private String requestBody() throws Exception {
+        MedicalInfoExtractionRequest request =
+                new MedicalInfoExtractionRequest(
+                        MEDICAL_NOTE
+                );
+
+        return objectMapper.writeValueAsString(request);
     }
 
     private void saveRequestIdInRedis(
@@ -449,58 +409,22 @@ class SecurityAuthenticationIntegrationTest
             UUID requestId,
             List<String> roles
     ) {
-        Claims claims =
-                io.jsonwebtoken.Jwts.claims()
-                        .subject(USER_ID_AS_STRING)
-                        .add(
-                                "rid",
-                                requestId.toString()
-                        )
-                        .add(
-                                "ver",
-                                "1"
-                        )
-                        .add(
-                                "roles",
-                                roles
-                        )
-                        .build();
-
-        return claims;
+        return io.jsonwebtoken.Jwts.claims()
+                .subject(USER_ID_AS_STRING)
+                .add("rid", requestId.toString())
+                .add("ver", "1")
+                .add("roles", roles)
+                .build();
     }
 
-    @TestConfiguration
-    static class TestControllerConfiguration {
-
-        @Bean
-        SecurityTestController securityTestController() {
-            return new SecurityTestController();
-        }
-    }
-
-    @RestController
-    static class SecurityTestController {
-
-        @GetMapping(TEST_URL)
-        Map<String, Object> currentUser(
-                Authentication authentication
-        ) {
-            UserAuthInfoDto principal =
-                    (UserAuthInfoDto)
-                            authentication.getPrincipal();
-
-            List<String> roles =
-                    authentication.getAuthorities()
-                            .stream()
-                            .map(GrantedAuthority::getAuthority)
-                            .toList();
-
-            return Map.of(
-                    "userId",
-                    principal.userId(),
-                    "roles",
-                    roles
-            );
-        }
+    private MedicalInfoExtractionResponse createMedicalResponse() {
+        return new MedicalInfoExtractionResponse(
+                List.of("Fever", "Dry cough"),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of()
+        );
     }
 }

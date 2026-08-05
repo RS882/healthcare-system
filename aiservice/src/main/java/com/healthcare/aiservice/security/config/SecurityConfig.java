@@ -2,6 +2,7 @@ package com.healthcare.aiservice.security.config;
 
 import com.healthcare.aiservice.security.config.configs_components.CustomAccessDeniedHandler;
 import com.healthcare.aiservice.security.config.configs_components.CustomAuthenticationEntryPoint;
+import com.healthcare.aiservice.security.constant.Role;
 import com.healthcare.aiservice.security.filter.AuthFilter;
 import com.healthcare.aiservice.security.filter.RequestIdFilter;
 import com.healthcare.aiservice.security.filter.UserContextFilter;
@@ -49,6 +50,7 @@ public class SecurityConfig {
                         s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
 
+                        // Public infrastructure endpoints
                         .requestMatchers(
                                 SecurityPublicEndpoints.PUBLIC_ENDPOINTS
                         ).permitAll()
@@ -57,19 +59,35 @@ public class SecurityConfig {
                                 EndpointRequest.to(HealthEndpoint.class)
                         ).permitAll()
 
-                        .requestMatchers(HttpMethod.POST, MEDICAL_NOTE_SUMMARY_URL).permitAll()
-                        .requestMatchers(HttpMethod.POST, CLASSIFY_MESSAGE_URL).permitAll()
-                        .requestMatchers(HttpMethod.POST, EXTRACT_MEDICAL_INFO_URL).permitAll()
+                        // Authenticated AI endpoints
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                MEDICAL_NOTE_SUMMARY_URL,
+                                CLASSIFY_MESSAGE_URL,
+                                EXTRACT_MEDICAL_INFO_URL
+                        ).authenticated()
 
-                        .requestMatchers(HttpMethod.GET, STATISTICS_ADMIN_URL).permitAll()
+                        // Admin endpoints
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                STATISTICS_ADMIN_URL,
+                                PROMPTS_URL,
+                                PROMPT_BY_ID_URL,
+                                CURRENT_PROMPT_URL
+                        ).hasAuthority(Role.ROLE_ADMIN.name())
 
-                        .requestMatchers(HttpMethod.POST, PROMPTS_URL).permitAll()
-                        .requestMatchers(HttpMethod.GET, PROMPTS_URL).permitAll()
-                        .requestMatchers(HttpMethod.GET, PROMPT_BY_ID_URL).permitAll()
-                        .requestMatchers(HttpMethod.PATCH, ACTIVATE_PROMPT_URL).permitAll()
-                        .requestMatchers(HttpMethod.GET, CURRENT_PROMPT_URL).permitAll()
+                        .requestMatchers(
+                                HttpMethod.POST,
+                                PROMPTS_URL
+                        ).hasAuthority(Role.ROLE_ADMIN.name())
 
-                        .anyRequest().authenticated()
+                        .requestMatchers(
+                                HttpMethod.PATCH,
+                                ACTIVATE_PROMPT_URL
+                        ).hasAuthority(Role.ROLE_ADMIN.name())
+
+                        // Fail closed
+                        .anyRequest().denyAll()
                 );
 
         RequestIdFilter requestIdFilter = requestIdFilterProvider.getIfAvailable();

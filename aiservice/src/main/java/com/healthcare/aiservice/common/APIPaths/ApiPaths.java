@@ -7,5 +7,5 @@ public final class ApiPaths {
 
     public static final String AI_BASIC_URL = "/v1/ai";
 
-    public static final String AI_BASIC_ADMIN_URL = "/v1/ai/admin";
+    public static final String AI_BASIC_ADMIN_URL = AI_BASIC_URL + "/admin";
 }

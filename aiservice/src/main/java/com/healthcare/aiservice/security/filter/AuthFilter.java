@@ -219,6 +219,7 @@ public class AuthFilter extends OncePerRequestFilter {
     }
 
     private void setAuthentication(HttpServletRequest request, UserAuthInfoDto authDto) {
+
         List<SimpleGrantedAuthority> authorities = authDto.roles().stream()
                 .map(Role::name)
                 .map(SimpleGrantedAuthority::new)

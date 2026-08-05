@@ -3,6 +3,8 @@ package com.healthcare.aiservice.config;
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.examples.Example;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -21,13 +23,13 @@ import static com.healthcare.aiservice.common.statistics.controller.API.AiStatis
 public class OpenApiConfig {
 
     private static final String TIMESTAMP_EXAMPLE = "2028-07-21T11:20:00Z";
-//    private final String BEARER_SCHEME_NAME = "Bearer Authentication";
+    private final String BEARER_SCHEME_NAME = "Bearer Authentication";
 
     @Bean
     public OpenAPI openAPI() {
 
         Components components = new Components()
-//                .addSecuritySchemes(BEARER_SCHEME_NAME, createAPIKeyScheme())
+                .addSecuritySchemes(BEARER_SCHEME_NAME, createAPIKeyScheme())
 
                 // 400
                 .addExamples("Error400ValidationMedicalSummary", ex400ValidationNote(MEDICAL_NOTE_SUMMARY_URL))
@@ -101,16 +103,16 @@ public class OpenApiConfig {
                 .addExamples("Error500InternalServerErrorGetCurrentPrompt", ex500(CURRENT_PROMPT_URL));
 
         return new OpenAPI()
-//                .addSecurityItem(new SecurityRequirement()
-//                        .addList(BEARER_SCHEME_NAME))
+                .addSecurityItem(new SecurityRequirement()
+                        .addList(BEARER_SCHEME_NAME))
                 .components(components);
     }
 
-//    private SecurityScheme createAPIKeyScheme() {
-//        return new SecurityScheme().type(SecurityScheme.Type.HTTP)
-//                .bearerFormat("JWT")
-//                .scheme("bearer");
-//    }
+    private SecurityScheme createAPIKeyScheme() {
+        return new SecurityScheme().type(SecurityScheme.Type.HTTP)
+                .bearerFormat("JWT")
+                .scheme("bearer");
+    }
 
     private static Map<String, Object> errorExample(HttpStatus status,
                                                     String path,
