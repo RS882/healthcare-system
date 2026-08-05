@@ -336,7 +336,166 @@ Security considerations include:
 
 This minimizes risks associated with AI-driven processing.
 
+# 🔒 Security
+
+The AI Service operates behind the API Gateway and relies on signed identity propagation instead of exposing authentication logic directly.
+
+## Authentication Flow
+
+```text
+Client
+    │
+    ▼
+API Gateway
+    │
+    ├── validates access token
+    ├── generates X-Request-Id
+    ├── creates signed X-User-Context (RSA)
+    ▼
+AI Service
+    │
+    ▼
+RequestIdFilter
+    │
+    ▼
+UserContextFilter
+    │
+    ▼
+AuthFilter
+    │
+    ▼
+Spring Security Authorization
+    │
+    ▼
+Controller
+```
+
+### RequestIdFilter
+
+Responsible for validating request correlation.
+
+Validation includes:
+
+- X-Request-Id header presence
+- UUID format validation
+- Request existence in Redis
+- Replay attack protection
+
 ---
+
+### UserContextFilter
+
+Validates the signed user context received from API Gateway.
+
+Responsibilities:
+
+- Verify RSA signature
+- Validate JWT claims
+- Validate request identifier consistency
+- Store verified SignedUserContext for downstream processing
+
+---
+
+### AuthFilter
+
+Creates the authenticated Spring Security context.
+
+Responsibilities:
+
+- Read verified SignedUserContext
+- Load current user roles
+- Compare signed roles with actual roles
+- Create Authentication
+- Populate SecurityContext
+
+Current user information is loaded through a Cache-Aside layer backed by Redis and refreshed from user-service when necessary.
+
+---
+
+## Authorization
+
+Authorization rules follow a fail-closed approach.
+
+### Public endpoints
+
+- Swagger UI
+- OpenAPI documentation
+- Health endpoint
+
+### Authenticated endpoints
+
+Business AI APIs require successful authentication.
+
+Examples:
+
+- Medical Summary
+- Medical Extraction
+- Message Classification
+
+### Administrative endpoints
+
+Administrative APIs require:
+
+```
+ROLE_ADMIN
+```
+
+Examples:
+
+- AI Statistics
+- Prompt Management
+
+### Default policy
+
+All undeclared endpoints are denied.
+
+```
+.anyRequest().denyAll()
+```
+
+This prevents accidental exposure of newly added APIs.
+
+---
+
+## Inter-service Authentication
+
+The AI Service does not trust client-provided role information.
+
+Current user roles are retrieved from user-service using a dedicated internal API through a cached Feign client.
+
+Flow:
+
+```text
+AuthFilter
+      │
+      ▼
+CachedUserAuthInfoService
+      │
+      ├── Redis (cache hit)
+      │
+      └── user-service (cache miss)
+```
+
+This allows role revocation to become effective shortly after cache expiration while avoiding unnecessary inter-service calls.
+
+---
+
+## Error Handling
+
+Authentication failures are handled through a centralized AuthenticationEntryPoint.
+
+Typical responses:
+
+| Scenario | Status |
+|----------|--------|
+| Missing RequestId | 400 |
+| Invalid RequestId | 400 |
+| Missing User Context | 401 |
+| Invalid Signature | 401 |
+| User Not Found | 401 |
+| Role Mismatch | 401 |
+| User Service Unavailable | 503 |
+| Missing ROLE_ADMIN | 403 |
 
 # ⚙ Technology Stack
 
