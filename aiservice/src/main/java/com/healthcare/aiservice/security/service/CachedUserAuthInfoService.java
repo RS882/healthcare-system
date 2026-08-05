@@ -25,9 +25,7 @@ public class CachedUserAuthInfoService
     @Override
     @Cacheable(
             cacheNames = CacheNames.USER_AUTH_INFO,
-            key = "#userId",
-            unless = "#result == null",
-            sync = true
+            key = "#userId"
     )
     public UserAuthInfoDto getUserAuthInfoByUserId(
             long userId

@@ -20,7 +20,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-import static com.healthcare.aiservice.security.filter.SecurityPaths.*;
 import static com.healthcare.aiservice.security.filter.security.constant.AttrNames.ATTR_USER_CONTEXT;
 
 
@@ -45,38 +44,38 @@ public class UserContextFilter extends OncePerRequestFilter {
 
         String userContextToken = request.getHeader(userContextProps.userContextHeader());
 
-        if (StringUtils.hasText(userContextToken)) {
-
-            try {
-                Claims claims =
-                        verifier.verifyAndGetClaims(
-                                userContextToken.strip()
-                        );
-
-                SignedUserContext userContext =
-                        SignedUserContext.from(claims);
-
-                request.setAttribute(
-                        ATTR_USER_CONTEXT,
-                        userContext
-                );
-
-                filterChain.doFilter(request, response);
-
-            } catch (SecurityException ex) {
-
-                SecurityContextHolder.clearContext();
-
-                authenticationEntryPoint.commence(
-                        request,
-                        response,
-                        new BadCredentialsException(ex.getMessage())
-
-                );
-            }
+        if (!StringUtils.hasText(userContextToken)) {
+            filterChain.doFilter(request, response);
+            return;
         }
 
-        filterChain.doFilter(request, response);
+        try {
+            Claims claims =
+                    verifier.verifyAndGetClaims(
+                            userContextToken.strip()
+                    );
+
+            SignedUserContext userContext =
+                    SignedUserContext.from(claims);
+
+            request.setAttribute(
+                    ATTR_USER_CONTEXT,
+                    userContext
+            );
+
+            filterChain.doFilter(request, response);
+
+        } catch (SecurityException ex) {
+
+            SecurityContextHolder.clearContext();
+
+            authenticationEntryPoint.commence(
+                    request,
+                    response,
+                    new BadCredentialsException(ex.getMessage())
+
+            );
+        }
     }
 
     @Override
