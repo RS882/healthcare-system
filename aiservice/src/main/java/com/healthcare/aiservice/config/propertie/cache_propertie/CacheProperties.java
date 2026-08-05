@@ -16,6 +16,10 @@ public record CacheProperties(
         @NotNull(message = "Active prompt must not be null.")
         ActivePromptProperties activePrompt,
 
+        @Valid
+        @NotNull(message = "User auth info must not be null.")
+        UserAuthInfoCacheProperties userAuthInfo,
+
         @NotNull(message = "Cache default ttl must not be null.")
         @DurationMin(
                 seconds = 1,

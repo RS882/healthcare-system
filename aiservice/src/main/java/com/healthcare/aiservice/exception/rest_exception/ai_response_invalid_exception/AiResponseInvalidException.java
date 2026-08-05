@@ -1,7 +1,7 @@
-package com.healthcare.aiservice.exception.ai_response_invalid_exception;
+package com.healthcare.aiservice.exception.rest_exception.ai_response_invalid_exception;
 
 import com.healthcare.aiservice.exception.ErrorCode;
-import com.healthcare.aiservice.exception.RestException;
+import com.healthcare.aiservice.exception.rest_exception.RestException;
 import org.springframework.http.HttpStatus;
 
 public class AiResponseInvalidException extends RestException {

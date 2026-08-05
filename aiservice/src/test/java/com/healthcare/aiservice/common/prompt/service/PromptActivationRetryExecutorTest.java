@@ -3,7 +3,7 @@ package com.healthcare.aiservice.common.prompt.service;
 import com.healthcare.aiservice.common.prompt.dto.AiPromptDetailsResponse;
 import com.healthcare.aiservice.common.prompt.service.interfaces.PromptActivationTransactionalService;
 import com.healthcare.aiservice.common.prompt.service.interfaces.TransactionConflictDetector;
-import com.healthcare.aiservice.exception.AiPromptConcurrentActivationException;
+import com.healthcare.aiservice.exception.rest_exception.AiPromptConcurrentActivationException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;

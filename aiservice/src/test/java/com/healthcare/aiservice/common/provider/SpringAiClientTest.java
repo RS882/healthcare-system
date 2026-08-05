@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryResponse;
 import com.healthcare.aiservice.common.provider.logging.AiParsingErrorLogger;
 import com.healthcare.aiservice.exception.AiResponseParsingException;
-import com.healthcare.aiservice.exception.JsonExtractorException;
+import com.healthcare.aiservice.exception.rest_exception.JsonExtractorException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;

@@ -1,6 +1,7 @@
 package com.healthcare.aiservice.common.medical_summary.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthcare.aiservice.common.medical_extraction.controller.MedicalInfoExtractionController;
 import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryRequest;
 import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryResponse;
 import com.healthcare.aiservice.common.medical_summary.service.MedicalSummaryService;
@@ -31,8 +32,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
-@WebMvcTest(MedicalSummaryController.class)
-@Import(GlobalExceptionHandler.class)
+@WebMvcTest(
+        controllers = MedicalSummaryController.class,
+        properties = {
+                "auth-filter.enabled=false",
+                "request-id-filter.enabled=false",
+                "user-context-filter.enabled=false"
+        }
+)
 @AutoConfigureMockMvc(addFilters = false)
 @ActiveProfiles("test")
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)

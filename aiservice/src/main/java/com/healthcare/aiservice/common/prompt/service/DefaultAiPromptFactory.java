@@ -8,7 +8,7 @@ import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptFactory
 import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptResolver;
 import com.healthcare.aiservice.common.prompt.service.interfaces.PromptProvider;
 import com.healthcare.aiservice.config.constant.FeatureName;
-import com.healthcare.aiservice.exception.AiPromptProviderNotFoundException;
+import com.healthcare.aiservice.exception.rest_exception.AiPromptProviderNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

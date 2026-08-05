@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.healthcare.aiservice.exception.dto.ErrorResponse;
 import com.healthcare.aiservice.exception.dto.ValidationError;
+import com.healthcare.aiservice.exception.rest_exception.RestException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;

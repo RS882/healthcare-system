@@ -6,14 +6,14 @@ import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptFactory
 import com.healthcare.aiservice.common.provider.AiClient;
 import com.healthcare.aiservice.common.provider.logging.annotation.LogAiUsage;
 import com.healthcare.aiservice.config.constant.FeatureName;
-import com.healthcare.aiservice.exception.ai_response_invalid_exception.AiResponseInvalidException;
+import com.healthcare.aiservice.exception.rest_exception.ai_response_invalid_exception.AiResponseInvalidException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import java.util.List;
 
-import static com.healthcare.aiservice.exception.ai_response_invalid_exception.AiResponseInvalidExceptionMessages.MEDICAL_INFORMATION_EXTRACTION_EXCEPTION_MESSAGE;
+import static com.healthcare.aiservice.exception.rest_exception.ai_response_invalid_exception.AiResponseInvalidExceptionMessages.MEDICAL_INFORMATION_EXTRACTION_EXCEPTION_MESSAGE;
 
 @Service
 @RequiredArgsConstructor

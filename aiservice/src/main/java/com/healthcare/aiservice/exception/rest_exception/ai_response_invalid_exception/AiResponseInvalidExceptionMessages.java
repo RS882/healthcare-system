@@ -1,4 +1,4 @@
-package com.healthcare.aiservice.exception.ai_response_invalid_exception;
+package com.healthcare.aiservice.exception.rest_exception.ai_response_invalid_exception;
 
 public final class AiResponseInvalidExceptionMessages {
     private AiResponseInvalidExceptionMessages() {

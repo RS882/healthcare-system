@@ -1,6 +1,6 @@
 package com.healthcare.aiservice.common.prompt.service;
 
-import com.healthcare.aiservice.common.prompt.cache.PromptCacheKey;
+import com.healthcare.aiservice.cache.PromptCacheKey;
 import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
 import com.healthcare.aiservice.config.constant.AiProviderModel;
 import com.healthcare.aiservice.config.constant.PromptType;
@@ -17,7 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
-import static com.healthcare.aiservice.common.prompt.cache.CacheNames.ACTIVE_PROMPTS;
+import static com.healthcare.aiservice.cache.CacheNames.ACTIVE_PROMPTS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;

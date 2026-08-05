@@ -4,7 +4,7 @@ import com.healthcare.aiservice.common.prompt.dto.AiPromptDetailsResponse;
 import com.healthcare.aiservice.common.prompt.service.interfaces.PromptActivationTransactionalService;
 import com.healthcare.aiservice.common.prompt.service.interfaces.TransactionConflictDetector;
 import com.healthcare.aiservice.exception.AiPromptActivationRetryException;
-import com.healthcare.aiservice.exception.AiPromptConcurrentActivationException;
+import com.healthcare.aiservice.exception.rest_exception.AiPromptConcurrentActivationException;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.retry.support.RetryTemplate;
 import org.springframework.stereotype.Service;

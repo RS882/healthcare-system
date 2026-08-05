@@ -1,6 +1,7 @@
-package com.healthcare.aiservice.exception;
+package com.healthcare.aiservice.exception.rest_exception;
 
 import com.healthcare.aiservice.config.constant.FeatureName;
+import com.healthcare.aiservice.exception.ErrorCode;
 import org.springframework.http.HttpStatus;
 
 public class AiPromptProviderNotFoundException extends RestException {

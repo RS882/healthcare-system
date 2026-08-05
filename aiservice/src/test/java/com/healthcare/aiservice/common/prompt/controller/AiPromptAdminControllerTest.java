@@ -1,6 +1,7 @@
 package com.healthcare.aiservice.common.prompt.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthcare.aiservice.common.message_classification.controller.MessageClassificationController;
 import com.healthcare.aiservice.common.prompt.dto.AiPromptDetailsResponse;
 import com.healthcare.aiservice.common.prompt.dto.AiPromptResponse;
 import com.healthcare.aiservice.common.prompt.dto.CreateAiPromptRequest;
@@ -43,7 +44,15 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(AiPromptAdminController.class)
+
+@WebMvcTest(
+        controllers = AiPromptAdminController.class,
+        properties = {
+                "auth-filter.enabled=false",
+                "request-id-filter.enabled=false",
+                "user-context-filter.enabled=false"
+        }
+)
 @AutoConfigureMockMvc(addFilters = false)
 @Import(NormalizedStringToEnumConverterFactory.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)

@@ -5,7 +5,7 @@ import com.healthcare.aiservice.common.message_classification.dto.MessageClassif
 import com.healthcare.aiservice.common.message_classification.dto.MessageClassificationResponse;
 import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptFactory;
 import com.healthcare.aiservice.common.provider.AiClient;
-import com.healthcare.aiservice.exception.ai_response_invalid_exception.AiResponseInvalidException;
+import com.healthcare.aiservice.exception.rest_exception.ai_response_invalid_exception.AiResponseInvalidException;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
@@ -15,7 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static com.healthcare.aiservice.config.constant.FeatureName.MESSAGE_CLASSIFICATION;
-import static com.healthcare.aiservice.exception.ai_response_invalid_exception.AiResponseInvalidExceptionMessages.CLASSIFICATION_EXCEPTION_MESSAGE;
+import static com.healthcare.aiservice.exception.rest_exception.ai_response_invalid_exception.AiResponseInvalidExceptionMessages.CLASSIFICATION_EXCEPTION_MESSAGE;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.eq;

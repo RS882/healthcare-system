@@ -1,7 +1,7 @@
 package com.healthcare.aiservice.common.provider;
 
 
-import com.healthcare.aiservice.exception.JsonExtractorException;
+import com.healthcare.aiservice.exception.rest_exception.JsonExtractorException;
 import org.springframework.util.StringUtils;
 
 public final class JsonExtractor {

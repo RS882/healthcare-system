@@ -1,6 +1,6 @@
 package com.healthcare.aiservice.common.prompt.service;
 
-import com.healthcare.aiservice.common.prompt.cache.CacheNames;
+import com.healthcare.aiservice.cache.CacheNames;
 import com.healthcare.aiservice.common.prompt.model.AiPrompt;
 import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
 import com.healthcare.aiservice.config.constant.AiProviderModel;

@@ -1,8 +1,8 @@
-package com.healthcare.aiservice.exception;
+package com.healthcare.aiservice.exception.rest_exception;
 
 import com.healthcare.aiservice.common.dto.NoteBasedRequest;
 import com.healthcare.aiservice.common.prompt.service.interfaces.PromptProvider;
-import com.healthcare.aiservice.config.constant.FeatureName;
+import com.healthcare.aiservice.exception.ErrorCode;
 import org.springframework.http.HttpStatus;
 
 public class InvalidRequestTypeForFeatureException extends RestException {

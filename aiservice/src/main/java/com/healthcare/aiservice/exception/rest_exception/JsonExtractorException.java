@@ -1,4 +1,4 @@
-package com.healthcare.aiservice.exception;
+package com.healthcare.aiservice.exception.rest_exception;
 
 import org.springframework.http.HttpStatus;
 

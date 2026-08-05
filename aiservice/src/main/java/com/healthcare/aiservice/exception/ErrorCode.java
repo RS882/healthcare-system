@@ -30,7 +30,8 @@ public enum ErrorCode {
     AI_PROMPT_STATE_INVALID("Invalid prompt state"),
 
     // Common
-    INTERNAL_SERVER_ERROR("Unexpected internal server error");
+    INTERNAL_SERVER_ERROR("Unexpected internal server error"),
+    SERVICE_UNAVAILABLE("Service unavailable");
 
     private final String defaultMessage;
 }

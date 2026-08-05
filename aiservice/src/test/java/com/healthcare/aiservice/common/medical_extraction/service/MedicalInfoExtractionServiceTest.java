@@ -4,7 +4,7 @@ import com.healthcare.aiservice.common.medical_extraction.dto.MedicalInfoExtract
 import com.healthcare.aiservice.common.medical_extraction.dto.MedicalInfoExtractionResponse;
 import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptFactory;
 import com.healthcare.aiservice.common.provider.AiClient;
-import com.healthcare.aiservice.exception.ai_response_invalid_exception.AiResponseInvalidException;
+import com.healthcare.aiservice.exception.rest_exception.ai_response_invalid_exception.AiResponseInvalidException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,7 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Arrays;
 
 import static com.healthcare.aiservice.config.constant.FeatureName.MEDICAL_EXTRACTION;
-import static com.healthcare.aiservice.exception.ai_response_invalid_exception.AiResponseInvalidExceptionMessages.MEDICAL_INFORMATION_EXTRACTION_EXCEPTION_MESSAGE;
+import static com.healthcare.aiservice.exception.rest_exception.ai_response_invalid_exception.AiResponseInvalidExceptionMessages.MEDICAL_INFORMATION_EXTRACTION_EXCEPTION_MESSAGE;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 import static org.mockito.Mockito.when;

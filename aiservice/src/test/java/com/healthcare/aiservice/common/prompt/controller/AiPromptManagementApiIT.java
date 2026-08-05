@@ -1,8 +1,8 @@
 package com.healthcare.aiservice.common.prompt.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.healthcare.aiservice.common.prompt.cache.CacheNames;
-import com.healthcare.aiservice.common.prompt.cache.PromptCacheKey;
+import com.healthcare.aiservice.cache.CacheNames;
+import com.healthcare.aiservice.cache.PromptCacheKey;
 import com.healthcare.aiservice.common.prompt.dto.CreateAiPromptRequest;
 import com.healthcare.aiservice.common.prompt.model.AiPrompt;
 import com.healthcare.aiservice.common.prompt.model.AiPromptKey;

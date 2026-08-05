@@ -26,6 +26,8 @@ cache:
   default-ttl: 5m
   active-prompt:
     ttl: 10m
+  user-auth-info:
+    ttl: 10s
 
 ai:
   provider: ollama

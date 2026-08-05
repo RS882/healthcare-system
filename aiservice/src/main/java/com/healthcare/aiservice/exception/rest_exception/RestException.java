@@ -1,5 +1,6 @@
-package com.healthcare.aiservice.exception;
+package com.healthcare.aiservice.exception.rest_exception;
 
+import com.healthcare.aiservice.exception.ErrorCode;
 import com.healthcare.aiservice.exception.dto.ErrorResponse;
 import com.healthcare.aiservice.exception.dto.ValidationError;
 import lombok.Getter;

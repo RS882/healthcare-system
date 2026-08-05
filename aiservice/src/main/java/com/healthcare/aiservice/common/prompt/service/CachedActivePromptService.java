@@ -3,8 +3,8 @@ package com.healthcare.aiservice.common.prompt.service;
 
 import com.healthcare.aiservice.common.prompt.model.AiPrompt;
 import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
-import com.healthcare.aiservice.common.prompt.cache.CacheNames;
-import com.healthcare.aiservice.exception.AiPromptStateInvalidException;
+import com.healthcare.aiservice.cache.CacheNames;
+import com.healthcare.aiservice.exception.rest_exception.AiPromptStateInvalidException;
 import com.healthcare.aiservice.repository.AiPromptRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
@@ -21,7 +21,7 @@ public class CachedActivePromptService {
 
     @Cacheable(
             cacheNames = CacheNames.ACTIVE_PROMPTS,
-            key = "T(com.healthcare.aiservice.common.prompt.cache.PromptCacheKey).of(#key)",
+            key = "T(com.healthcare.aiservice.cache.PromptCacheKey).of(#key)",
             unless = "#result == null"
     )
     public AiPrompt findActivePrompt(AiPromptKey key) {

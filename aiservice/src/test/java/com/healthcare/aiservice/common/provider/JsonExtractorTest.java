@@ -1,6 +1,6 @@
 package com.healthcare.aiservice.common.provider;
 
-import com.healthcare.aiservice.exception.JsonExtractorException;
+import com.healthcare.aiservice.exception.rest_exception.JsonExtractorException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;

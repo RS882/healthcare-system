@@ -1,10 +1,10 @@
 package com.healthcare.aiservice.common.prompt.service;
 
-import com.healthcare.aiservice.common.prompt.cache.CacheNames;
-import com.healthcare.aiservice.common.prompt.cache.PromptCacheKey;
+import com.healthcare.aiservice.cache.CacheNames;
+import com.healthcare.aiservice.cache.PromptCacheKey;
 import com.healthcare.aiservice.common.prompt.model.AiPrompt;
 import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
-import com.healthcare.aiservice.config.AbstractRedisIntegrationTest;
+import com.healthcare.aiservice.config.AbstractMongoRedisIntegrationTest;
 import com.healthcare.aiservice.config.constant.AiProviderModel;
 import com.healthcare.aiservice.config.constant.FeatureName;
 import com.healthcare.aiservice.config.constant.PromptType;
@@ -17,7 +17,6 @@ import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -30,7 +29,7 @@ import static org.mockito.Mockito.*;
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Cached active prompt Redis integration tests: ")
 class CachedActivePromptServiceRedisIntegrationTest
-        extends AbstractRedisIntegrationTest {
+        extends AbstractMongoRedisIntegrationTest {
 
     private static final AiPromptKey PROMPT_KEY = new AiPromptKey(
             FeatureName.MEDICAL_SUMMARY,

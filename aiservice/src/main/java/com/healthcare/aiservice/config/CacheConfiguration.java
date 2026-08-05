@@ -1,8 +1,10 @@
 package com.healthcare.aiservice.config;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.healthcare.aiservice.common.prompt.cache.CacheNames;
-import com.healthcare.aiservice.common.prompt.model.AiPrompt;
+import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+
+import com.healthcare.aiservice.cache.CacheNames;
 import com.healthcare.aiservice.config.propertie.cache_propertie.CacheProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.CacheManager;
@@ -13,9 +15,7 @@ import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializationContext;
-import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import java.time.Duration;
@@ -26,21 +26,43 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CacheConfiguration {
 
-    private final CacheProperties props;
-    private final ObjectMapper objectMapper;
+    private final CacheProperties properties;
 
     @Bean
     public CacheManager cacheManager(
-            RedisConnectionFactory connectionFactory
+            RedisConnectionFactory connectionFactory,
+            ObjectMapper objectMapper
     ) {
+        ObjectMapper cacheObjectMapper =
+                objectMapper.copy();
+
+        cacheObjectMapper.activateDefaultTyping(
+                LaissezFaireSubTypeValidator.instance,
+                ObjectMapper.DefaultTyping.EVERYTHING,
+                JsonTypeInfo.As.PROPERTY
+        );
+
+        GenericJackson2JsonRedisSerializer valueSerializer =
+                new GenericJackson2JsonRedisSerializer(
+                        cacheObjectMapper
+                );
+
         RedisCacheConfiguration defaultConfiguration =
-                createDefaultCacheConfiguration(
-                        props.defaultTtl()
+                createCacheConfiguration(
+                        properties.defaultTtl(),
+                        valueSerializer
                 );
 
         RedisCacheConfiguration activePromptsConfiguration =
-                createActivePromptsCacheConfiguration(
-                        props.activePrompt().ttl()
+                createCacheConfiguration(
+                        properties.activePrompt().ttl(),
+                        valueSerializer
+                );
+
+        RedisCacheConfiguration userAuthInfoConfiguration =
+                createCacheConfiguration(
+                        properties.userAuthInfo().ttl(),
+                        valueSerializer
                 );
 
         return RedisCacheManager.builder(connectionFactory)
@@ -48,45 +70,19 @@ public class CacheConfiguration {
                 .withInitialCacheConfigurations(
                         Map.of(
                                 CacheNames.ACTIVE_PROMPTS,
-                                activePromptsConfiguration
+                                activePromptsConfiguration,
+
+                                CacheNames.USER_AUTH_INFO,
+                                userAuthInfoConfiguration
                         )
                 )
                 .transactionAware()
                 .build();
     }
 
-    private RedisCacheConfiguration createDefaultCacheConfiguration(
-            Duration ttl
-    ) {
-        GenericJackson2JsonRedisSerializer valueSerializer =
-                new GenericJackson2JsonRedisSerializer(
-                        objectMapper.copy()
-                );
-
-        return createCacheConfiguration(
-                ttl,
-                valueSerializer
-        );
-    }
-
-    private RedisCacheConfiguration createActivePromptsCacheConfiguration(
-            Duration ttl
-    ) {
-        Jackson2JsonRedisSerializer<AiPrompt> valueSerializer =
-                new Jackson2JsonRedisSerializer<>(
-                        objectMapper.copy(),
-                        AiPrompt.class
-                );
-
-        return createCacheConfiguration(
-                ttl,
-                valueSerializer
-        );
-    }
-
     private RedisCacheConfiguration createCacheConfiguration(
             Duration ttl,
-            RedisSerializer<?> valueSerializer
+            GenericJackson2JsonRedisSerializer valueSerializer
     ) {
         return RedisCacheConfiguration
                 .defaultCacheConfig()

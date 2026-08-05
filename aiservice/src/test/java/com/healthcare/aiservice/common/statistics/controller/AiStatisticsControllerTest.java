@@ -6,6 +6,7 @@ import com.healthcare.aiservice.common.statistics.dto.FeatureStatistics;
 import com.healthcare.aiservice.common.statistics.service.interfaces.AiStatisticService;
 import com.healthcare.aiservice.common.web.converter.NormalizedStringToEnumConverterFactory;
 import com.healthcare.aiservice.config.constant.FeatureName;
+import com.healthcare.aiservice.security.service.interfacies.UserAuthInfoService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -25,7 +26,14 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(AiStatisticsController.class)
+@WebMvcTest(
+        controllers = AiStatisticsController.class,
+        properties = {
+                "auth-filter.enabled=false",
+                "request-id-filter.enabled=false",
+                "user-context-filter.enabled=false"
+        }
+)
 @AutoConfigureMockMvc(addFilters = false)
 @Import(NormalizedStringToEnumConverterFactory.class)
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)

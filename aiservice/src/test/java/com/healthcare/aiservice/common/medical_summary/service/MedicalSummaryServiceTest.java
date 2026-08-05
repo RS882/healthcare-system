@@ -5,7 +5,7 @@ import com.healthcare.aiservice.common.medical_summary.dto.MedicalSummaryRespons
 import com.healthcare.aiservice.common.medical_summary.dto.MedicationInfo;
 import com.healthcare.aiservice.common.prompt.service.interfaces.AiPromptFactory;
 import com.healthcare.aiservice.common.provider.AiClient;
-import com.healthcare.aiservice.exception.ai_response_invalid_exception.AiResponseInvalidException;
+import com.healthcare.aiservice.exception.rest_exception.ai_response_invalid_exception.AiResponseInvalidException;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
@@ -18,7 +18,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static com.healthcare.aiservice.config.constant.FeatureName.MEDICAL_SUMMARY;
-import static com.healthcare.aiservice.exception.ai_response_invalid_exception.AiResponseInvalidExceptionMessages.MEDICAL_SUMMARY_EXCEPTION_MESSAGE;
+import static com.healthcare.aiservice.exception.rest_exception.ai_response_invalid_exception.AiResponseInvalidExceptionMessages.MEDICAL_SUMMARY_EXCEPTION_MESSAGE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.Mockito.verify;

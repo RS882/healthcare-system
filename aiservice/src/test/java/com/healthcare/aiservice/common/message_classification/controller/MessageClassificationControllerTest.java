@@ -2,6 +2,7 @@ package com.healthcare.aiservice.common.message_classification.controller;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthcare.aiservice.common.medical_extraction.controller.MedicalInfoExtractionController;
 import com.healthcare.aiservice.common.message_classification.category.MessageCategory;
 import com.healthcare.aiservice.common.message_classification.dto.MessageClassificationRequest;
 import com.healthcare.aiservice.common.message_classification.dto.MessageClassificationResponse;
@@ -9,11 +10,15 @@ import com.healthcare.aiservice.common.message_classification.service.MessageCla
 import com.healthcare.aiservice.common.web.converter.NormalizedStringToEnumConverterFactory;
 import com.healthcare.aiservice.security.config.SecurityConfig;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
@@ -27,8 +32,19 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(MessageClassificationController.class)
-@Import(SecurityConfig.class)
+
+@WebMvcTest(
+        controllers = MessageClassificationController.class,
+        properties = {
+                "auth-filter.enabled=false",
+                "request-id-filter.enabled=false",
+                "user-context-filter.enabled=false"
+        }
+)
+@AutoConfigureMockMvc(addFilters = false)
+@ActiveProfiles("test")
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
+@DisplayName("Message сlassification controller tests: ")
 class MessageClassificationControllerTest {
 
     @Autowired

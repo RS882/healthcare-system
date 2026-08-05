@@ -1,17 +1,22 @@
-package com.healthcare.aiservice.exception;
+package com.healthcare.aiservice.exception.rest_exception;
 
 import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
+import com.healthcare.aiservice.exception.ErrorCode;
 import org.springframework.http.HttpStatus;
 
-public class AiPromptStateInvalidException extends RestException {
+public class AiPromptVersionConflictException extends RestException {
 
     private static final HttpStatus STATUS = HttpStatus.CONFLICT;
 
-    public AiPromptStateInvalidException(AiPromptKey key) {
+    public AiPromptVersionConflictException(
+            AiPromptKey key,
+            long version
+    ) {
         super(
                 STATUS,
                 String.format(
-                        "Multiple active AI prompts found for feature '%s', type '%s', and target model '%s'.",
+                        "AI prompt version '%d' already exists for feature '%s', type '%s', and target model '%s'.",
+                        version,
                         key.feature(),
                         key.type(),
                         key.targetModel()

@@ -6,7 +6,7 @@ import com.healthcare.aiservice.common.prompt.model.AiPromptKey;
 import com.healthcare.aiservice.config.constant.AiProviderModel;
 import com.healthcare.aiservice.config.constant.FeatureName;
 import com.healthcare.aiservice.config.constant.PromptType;
-import com.healthcare.aiservice.exception.AiPromptNotFoundException;
+import com.healthcare.aiservice.exception.rest_exception.AiPromptNotFoundException;
 import com.healthcare.aiservice.repository.AiPromptRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DisplayNameGeneration;
