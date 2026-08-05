@@ -11,6 +11,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -27,12 +28,12 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.healthcare.aiservice.security.filter.SecurityPaths.*;
 import static com.healthcare.aiservice.security.filter.security.constant.AttrNames.ATTR_REQUEST_ID;
 import static com.healthcare.aiservice.security.filter.security.constant.AttrNames.ATTR_USER_CONTEXT;
 
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 @ConditionalOnProperty(
         name = "auth-filter.enabled",
@@ -55,6 +56,7 @@ public class AuthFilter extends OncePerRequestFilter {
         }
 
         try {
+
             SignedUserContext userContext = extractValidUserContext(request);
 
             UserAuthInfoDto authInfo =
@@ -140,6 +142,11 @@ public class AuthFilter extends OncePerRequestFilter {
                     "User ID in signed user context is less than zero");
         }
 
+        log.debug(
+                "Validating authentication for userId={}.",
+                userId
+        );
+
         return userService.getUserAuthInfoByUserId(userId);
     }
 
@@ -193,9 +200,22 @@ public class AuthFilter extends OncePerRequestFilter {
                 .collect(Collectors.toSet());
 
         if (!actualRoleNames.equals(tokenRoleNames)) {
+
+            log.debug(
+                    "Role validation failed for userId={}. Token roles={}, actual roles={}.",
+                    userId,
+                    tokenRoleNames,
+                    actualRoleNames
+            );
+
             throw new BadCredentialsException(
                     "Signed user context roles does not match current user roles");
         }
+
+        log.debug(
+                "Role validation succeeded for userId={}.",
+                userId
+        );
     }
 
     private void setAuthentication(HttpServletRequest request, UserAuthInfoDto authDto) {

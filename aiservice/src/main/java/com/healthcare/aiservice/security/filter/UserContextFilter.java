@@ -11,6 +11,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +25,7 @@ import static com.healthcare.aiservice.security.filter.security.constant.AttrNam
 
 
 @Component
+@Slf4j
 @RequiredArgsConstructor
 @ConditionalOnProperty(
         name = "user-context-filter.enabled",
@@ -55,6 +57,10 @@ public class UserContextFilter extends OncePerRequestFilter {
                             userContextToken.strip()
                     );
 
+            log.debug(
+                    "Signed user context successfully verified."
+            );
+
             SignedUserContext userContext =
                     SignedUserContext.from(claims);
 
@@ -68,6 +74,11 @@ public class UserContextFilter extends OncePerRequestFilter {
         } catch (SecurityException ex) {
 
             SecurityContextHolder.clearContext();
+
+            log.debug(
+                    "Signed user context verification failed.",
+                    ex
+            );
 
             authenticationEntryPoint.commence(
                     request,

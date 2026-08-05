@@ -58,9 +58,22 @@ public class RequestIdFilter extends OncePerRequestFilter {
                         "Header " + props.name() + " must be a valid UUID"
                 );
             }
+
+            log.debug(
+                    "RequestId {} successfully validated.",
+                    requestId
+            );
+
             request.setAttribute(ATTR_REQUEST_ID, requestId);
+
             filterChain.doFilter(request, response);
+
         } catch (RequestIdInvalideException ex) {
+
+            log.debug(
+                    "RequestId is invalid."
+            );
+
             handlerExceptionResolver.resolveException(request, response, null, ex);
         }
     }

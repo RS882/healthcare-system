@@ -10,12 +10,16 @@ import com.healthcare.aiservice.security.service.interfacies.UserAuthInfoService
 import feign.FeignException;
 import feign.RetryableException;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
+
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class CachedUserAuthInfoService
         implements UserAuthInfoService {
@@ -30,6 +34,11 @@ public class CachedUserAuthInfoService
     public UserAuthInfoDto getUserAuthInfoByUserId(
             long userId
     ) {
+        log.debug(
+                "Authentication information not found in cache. Loading from user-service. userId={}",
+                userId
+        );
+
         validateUserId(userId);
 
         UserAuthInfoDto authInfo =
@@ -37,6 +46,11 @@ public class CachedUserAuthInfoService
 
         validateResponse(
                 authInfo,
+                userId
+        );
+
+        log.debug(
+                "Authentication information successfully loaded for userId={}.",
                 userId
         );
 
@@ -58,7 +72,22 @@ public class CachedUserAuthInfoService
             long userId
     ) {
         try {
-            return client.getUserAuthInfo(userId);
+
+            log.debug(
+                    "Authentication information not found in cache. Loading from user-service. userId={}.",
+                    userId
+            );
+            long started = System.nanoTime();
+
+            UserAuthInfoDto userAuthInfoDto = client.getUserAuthInfo(userId);
+
+            log.debug(
+                    "Authentication information received from user-service. userId={}, duration={} ms.",
+                    userId,
+                    Duration.ofNanos(System.nanoTime() - started).toMillis()
+            );
+
+            return userAuthInfoDto;
 
         } catch (AuthenticationException exception) {
             throw exception;
