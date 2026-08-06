@@ -1,4 +1,4 @@
-package com.healthcare.auth_service.service.internal_request;
+package com.healthcare.auth_service.service.internal_request.properties;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -17,6 +17,9 @@ public record InternalRequestIssuerProperties(
 
         @NotBlank(message = "Internal request grant key prefix must not be null.")
         String keyPrefix,
+
+        @NotBlank(message ="Header internal request name must not be null.")
+        String headerName,
 
         @NotNull(message = "Internal request grant ttl must not be null.")
         @DurationMin(

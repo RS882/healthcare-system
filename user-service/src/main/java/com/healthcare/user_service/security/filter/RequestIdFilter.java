@@ -19,6 +19,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import static com.healthcare.user_service.security.filter.security.constant.AttrNames.ATTR_REQUEST_ID;
 
@@ -59,7 +60,7 @@ public class RequestIdFilter extends OncePerRequestFilter {
                         "Header " + props.name() + " must be a valid UUID"
                 );
             }
-            request.setAttribute(ATTR_REQUEST_ID, requestId);
+            request.setAttribute(ATTR_REQUEST_ID, UUID.fromString(requestId));
             filterChain.doFilter(request, response);
         } catch (RequestIdException ex) {
             handlerExceptionResolver.resolveException(request, response, null, ex);

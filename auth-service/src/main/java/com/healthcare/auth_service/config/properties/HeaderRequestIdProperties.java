@@ -7,7 +7,7 @@ import org.springframework.validation.annotation.Validated;
 @Validated
 @ConfigurationProperties(prefix = "header-request-id")
 public record HeaderRequestIdProperties(
-        @NotBlank
+        @NotBlank(message ="Header request id must not be null.")
         String name
 ) {
 }

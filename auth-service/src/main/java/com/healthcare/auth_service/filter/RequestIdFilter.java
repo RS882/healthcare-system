@@ -13,27 +13,37 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.UUID;
+
+import static com.healthcare.auth_service.filter.context.constant.RequestContextAttributes.ATTR_REQUEST_ID;
 
 @Component
 @RequiredArgsConstructor
 public class RequestIdFilter extends OncePerRequestFilter {
 
-    public final HeaderRequestIdProperties props;
+    private final HeaderRequestIdProperties props;
 
     private final RequestIdService requestIdService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    protected void doFilterInternal(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            FilterChain filterChain
+    ) throws ServletException, IOException {
 
-        String requestId = request.getHeader(props.name());
-        if (requestId == null || requestId.isBlank()) {
+        String rawRequestId =
+                request.getHeader(props.name());
+
+        if (rawRequestId == null || rawRequestId.isBlank()) {
             throw new RequestIdAuthenticationException(
                     HttpStatus.BAD_REQUEST,
                     "Header " + props.name() + " is required"
             );
         }
+
+        String requestId =
+                rawRequestId.strip();
 
         if (!requestIdService.isRequestIdValid(requestId)) {
             throw new RequestIdAuthenticationException(
@@ -41,9 +51,20 @@ public class RequestIdFilter extends OncePerRequestFilter {
                     "Header " + props.name() + " must be a valid UUID"
             );
         }
-        filterChain.doFilter(request, response);
-    }
 
+        UUID requestIdValue =
+                UUID.fromString(requestId);
+
+        request.setAttribute(
+                ATTR_REQUEST_ID,
+                requestIdValue
+        );
+
+        filterChain.doFilter(
+                request,
+                response
+        );
+    }
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         return SecurityPaths.shouldSkipSecurity(request);

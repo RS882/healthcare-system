@@ -7,7 +7,7 @@ import java.util.UUID;
 public interface InternalRequestGrantIssuer {
 
     UUID issue(
-            String target,
+            String targetService,
             HttpMethod method,
             String path
     );

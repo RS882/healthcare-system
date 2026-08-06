@@ -1,4 +1,4 @@
-package com.healthcare.auth_service.service.internal_request;
+package com.healthcare.auth_service.service.internal_request.dto;
 
 import lombok.Builder;
 
