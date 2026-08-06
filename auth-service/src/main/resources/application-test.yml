@@ -35,3 +35,8 @@ request-id:
 header-request-id:
   name: "X-Test-Request-Id"
 
+internal-request:
+  issuer: auth-service
+  key-prefix: ${INTERNAL_REQUEST_PREFIX:internal-request:}
+  ttl: 30s
+
