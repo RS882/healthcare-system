@@ -1,15 +1,17 @@
 package com.healthcare.user_service.config;
 
 import com.healthcare.user_service.constant.Role;
+import com.healthcare.user_service.security.SecurityPublicEndpoints;
 import com.healthcare.user_service.security.auth_manager_factory.AuthManagerFactory;
-import com.healthcare.user_service.security.auth_manager_factory.RoleAuthorizationManager;
 import com.healthcare.user_service.config.configs_components.CustomAccessDeniedHandler;
 import com.healthcare.user_service.config.configs_components.CustomAuthenticationEntryPoint;
-import com.healthcare.user_service.filter.AuthFilter;
-import com.healthcare.user_service.filter.RequestIdFilter;
-import com.healthcare.user_service.filter.UserContextFilter;
+import com.healthcare.user_service.security.filter.AuthFilter;
+import com.healthcare.user_service.security.filter.RequestIdFilter;
+import com.healthcare.user_service.security.filter.UserContextFilter;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -45,24 +47,24 @@ public class SecurityConfig {
                 .sessionManagement(s ->
                         s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+
+                        // Public infrastructure endpoints
                         .requestMatchers(
-                                "/swagger-ui.html",
-                                "/swagger-ui/**",
-                                "/v3/api-docs",
-                                "/v3/api-docs/**",
-                                "/webjars/**",
-                                "/error",
-                                "/actuator/**",
-                                "/api/actuator/**"
+                                SecurityPublicEndpoints.PUBLIC_ENDPOINTS
                         ).permitAll()
+
+                        .requestMatchers(
+                                EndpointRequest.to(HealthEndpoint.class)
+                        ).permitAll()
+
                         .requestMatchers(HttpMethod.POST, REGISTRATION_URL).permitAll()
 
-                        .requestMatchers(HttpMethod.POST, LOOKUP_URL).permitAll()
+                        .requestMatchers(HttpMethod.POST, LOOKUP_INTERNAL_URL).permitAll()
 
                         .requestMatchers(HttpMethod.GET, BY_ID_URL)
                         .access(authManagerFactory.roleOrOwnerBased(Set.of(Role.ROLE_ADMIN)))
 
-                        .anyRequest().authenticated()
+                        .anyRequest().denyAll()
 
                 );
 

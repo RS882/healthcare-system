@@ -1,7 +1,10 @@
 package com.healthcare.user_service.filter;
 
 import com.healthcare.user_service.constant.Role;
-import com.healthcare.user_service.filter.security.SignedUserContext;
+import com.healthcare.user_service.security.filter.AuthFilter;
+import com.healthcare.user_service.security.filter.RequestIdFilter;
+import com.healthcare.user_service.security.filter.UserContextFilter;
+import com.healthcare.user_service.security.filter.security.SignedUserContext;
 import com.healthcare.user_service.model.dto.auth.UserAuthInfoDto;
 import com.healthcare.user_service.service.interfacies.UserService;
 import jakarta.servlet.FilterChain;
@@ -31,10 +34,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
-import static com.healthcare.user_service.filter.security.constant.AttrNames.ATTR_REQUEST_ID;
-import static com.healthcare.user_service.filter.security.constant.AttrNames.ATTR_USER_CONTEXT;
+import static com.healthcare.user_service.security.filter.security.constant.AttrNames.ATTR_REQUEST_ID;
+import static com.healthcare.user_service.security.filter.security.constant.AttrNames.ATTR_USER_CONTEXT;
 import static com.healthcare.user_service.support.TestConstants.*;
 import static com.healthcare.user_service.support.TestDataFactory.randomUserId;
 import static com.healthcare.user_service.support.TestDataFactory.requestId;

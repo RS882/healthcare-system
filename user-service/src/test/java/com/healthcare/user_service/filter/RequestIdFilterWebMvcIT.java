@@ -3,6 +3,7 @@ package com.healthcare.user_service.filter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.user_service.config.properties.HeaderRequestIdProperties;
 import com.healthcare.user_service.exception_handler.dto.ErrorResponse;
+import com.healthcare.user_service.security.filter.RequestIdFilter;
 import com.healthcare.user_service.service.interfacies.RequestIdService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.DisplayName;
@@ -29,7 +30,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import static com.healthcare.user_service.filter.security.constant.AttrNames.ATTR_REQUEST_ID;
+import static com.healthcare.user_service.security.filter.security.constant.AttrNames.ATTR_REQUEST_ID;
 import static com.healthcare.user_service.support.TestDataFactory.requestId;
 import static com.healthcare.user_service.support.TestConstants.HEADER_REQUEST_ID;
 import static com.healthcare.user_service.support.TestConstants.TEST_BASE_URI;

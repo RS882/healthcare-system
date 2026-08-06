@@ -2,6 +2,7 @@ package com.healthcare.user_service.filter;
 
 import com.healthcare.user_service.config.properties.HeaderRequestIdProperties;
 import com.healthcare.user_service.exception_handler.exception.RequestIdException;
+import com.healthcare.user_service.security.filter.RequestIdFilter;
 import com.healthcare.user_service.service.interfacies.RequestIdService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -19,7 +20,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 
-import static com.healthcare.user_service.filter.security.constant.AttrNames.ATTR_REQUEST_ID;
+import static com.healthcare.user_service.security.filter.security.constant.AttrNames.ATTR_REQUEST_ID;
 import static com.healthcare.user_service.support.TestDataFactory.requestId;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;

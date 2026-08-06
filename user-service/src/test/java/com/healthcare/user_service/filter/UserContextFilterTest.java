@@ -1,8 +1,9 @@
 package com.healthcare.user_service.filter;
 
 import com.healthcare.user_service.config.properties.UserContextProperties;
-import com.healthcare.user_service.filter.security.SignedUserContext;
-import com.healthcare.user_service.filter.security.interfaces.UserContextVerifier;
+import com.healthcare.user_service.security.filter.UserContextFilter;
+import com.healthcare.user_service.security.filter.security.SignedUserContext;
+import com.healthcare.user_service.security.filter.security.interfaces.UserContextVerifier;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -20,7 +21,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 
 import java.io.IOException;
 
-import static com.healthcare.user_service.filter.security.constant.AttrNames.ATTR_USER_CONTEXT;
+import static com.healthcare.user_service.security.filter.security.constant.AttrNames.ATTR_USER_CONTEXT;
 import static com.healthcare.user_service.support.TestConstants.HEADER_USER_CONTEXT;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

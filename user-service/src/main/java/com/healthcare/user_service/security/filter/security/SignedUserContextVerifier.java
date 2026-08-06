@@ -1,7 +1,7 @@
-package com.healthcare.user_service.filter.security;
+package com.healthcare.user_service.security.filter.security;
 
 import com.healthcare.user_service.config.properties.UserContextVerifyProperties;
-import com.healthcare.user_service.filter.security.interfaces.UserContextVerifier;
+import com.healthcare.user_service.security.filter.security.interfaces.UserContextVerifier;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;

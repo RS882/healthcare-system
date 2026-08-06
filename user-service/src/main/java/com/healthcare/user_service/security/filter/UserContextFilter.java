@@ -1,8 +1,8 @@
-package com.healthcare.user_service.filter;
+package com.healthcare.user_service.security.filter;
 
 import com.healthcare.user_service.config.properties.UserContextProperties;
-import com.healthcare.user_service.filter.security.SignedUserContext;
-import com.healthcare.user_service.filter.security.interfaces.UserContextVerifier;
+import com.healthcare.user_service.security.filter.security.SignedUserContext;
+import com.healthcare.user_service.security.filter.security.interfaces.UserContextVerifier;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -16,7 +16,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-import static com.healthcare.user_service.filter.security.constant.AttrNames.ATTR_USER_CONTEXT;
+import static com.healthcare.user_service.security.filter.security.constant.AttrNames.ATTR_USER_CONTEXT;
 
 @Component
 @RequiredArgsConstructor

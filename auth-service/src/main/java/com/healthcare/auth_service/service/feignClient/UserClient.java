@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
         configuration = FeignRequestIdConfig.class)
 public interface UserClient {
 
-    @GetMapping("/lookup")
+    @GetMapping("/lookup/internal")
     UserAuthDto lookupUser(
             UserLookupDto dto);
 }

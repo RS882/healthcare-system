@@ -1,7 +1,8 @@
 package com.healthcare.user_service.filter;
 
 import com.healthcare.user_service.constant.Role;
-import com.healthcare.user_service.filter.security.SignedUserContext;
+import com.healthcare.user_service.security.filter.AuthFilter;
+import com.healthcare.user_service.security.filter.security.SignedUserContext;
 import com.healthcare.user_service.model.dto.auth.UserAuthInfoDto;
 import com.healthcare.user_service.service.interfacies.UserService;
 import jakarta.servlet.FilterChain;
@@ -22,8 +23,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.healthcare.user_service.filter.security.constant.AttrNames.ATTR_REQUEST_ID;
-import static com.healthcare.user_service.filter.security.constant.AttrNames.ATTR_USER_CONTEXT;
+import static com.healthcare.user_service.security.filter.security.constant.AttrNames.ATTR_REQUEST_ID;
+import static com.healthcare.user_service.security.filter.security.constant.AttrNames.ATTR_USER_CONTEXT;
 import static com.healthcare.user_service.support.TestDataFactory.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;

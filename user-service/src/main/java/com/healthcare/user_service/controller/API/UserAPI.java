@@ -2,13 +2,11 @@ package com.healthcare.user_service.controller.API;
 
 import com.healthcare.user_service.exception_handler.dto.ErrorResponse;
 import com.healthcare.user_service.model.dto.auth.UserAuthDto;
-import com.healthcare.user_service.model.dto.auth.UserAuthInfoDto;
 import com.healthcare.user_service.model.dto.request.RegistrationDto;
 import com.healthcare.user_service.model.dto.request.UserLookupDto;
 import com.healthcare.user_service.model.dto.response.RegistrationResponse;
 import com.healthcare.user_service.model.dto.response.UserDto;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,7 +18,6 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -86,9 +83,9 @@ public interface UserAPI {
 
     //=====================================
 
-    @Operation(summary = "Get user for authorization",
+    @Operation(summary = "Get user for authorization (Only internal)",
             description = "This method get user information for authorization from UserLookupDto , returns UserAuthDto " +
-                    "with full user information for authorization.",
+                    "with full user information for authorization.(Only internal)",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
                             schema = @Schema(implementation = RegistrationDto.class)))
@@ -141,7 +138,7 @@ public interface UserAPI {
                             }
                     ))
     })
-    @PostMapping(LOOKUP)
+    @PostMapping(LOOKUP_INTERNAL)
     ResponseEntity<UserAuthDto> getUserAuth(
             @Valid
             @org.springframework.web.bind.annotation.RequestBody

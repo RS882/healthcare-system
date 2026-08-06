@@ -1,4 +1,4 @@
-package com.healthcare.user_service.filter.security;
+package com.healthcare.user_service.security.filter.security;
 
 
 import java.math.BigInteger;

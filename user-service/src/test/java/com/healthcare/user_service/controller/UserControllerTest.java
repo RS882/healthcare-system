@@ -27,7 +27,7 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Stream;
 
-import static com.healthcare.user_service.controller.API.ApiPaths.LOOKUP_URL;
+import static com.healthcare.user_service.controller.API.ApiPaths.LOOKUP_INTERNAL_URL;
 import static com.healthcare.user_service.controller.API.ApiPaths.REGISTRATION_URL;
 import static com.healthcare.user_service.support.TestDataFactory.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -207,7 +207,7 @@ class UserControllerTest {
     }
 
     @Nested
-    @DisplayName("POST " + LOOKUP_URL)
+    @DisplayName("POST " + LOOKUP_INTERNAL_URL)
     class UserByEmailTest {
 
         @Test
@@ -220,7 +220,7 @@ class UserControllerTest {
 
             UUID requestId = requestIdService.getRequestId();
 
-            MvcResult result = mockMvc.perform(post(LOOKUP_URL)
+            MvcResult result = mockMvc.perform(post(LOOKUP_INTERNAL_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                                     .header(headerRequestIdProps.name(), requestId)
                             .content(dtoJson))
@@ -262,7 +262,7 @@ class UserControllerTest {
             String dtoJson = mapper.writeValueAsString(dto);
             UUID requestId = requestIdService.getRequestId();
 
-            MvcResult result = mockMvc.perform(post(LOOKUP_URL)
+            MvcResult result = mockMvc.perform(post(LOOKUP_INTERNAL_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .header(headerRequestIdProps.name(), requestId)
                             .content(dtoJson))
@@ -274,7 +274,7 @@ class UserControllerTest {
             assertNotNull(error.getMessage());
             assertEquals(error.getStatus(), status.value());
             assertEquals(error.getError(), status.getReasonPhrase());
-            assertEquals(error.getPath(), LOOKUP_URL);
+            assertEquals(error.getPath(), LOOKUP_INTERNAL_URL);
         }
 
         @Test
@@ -287,7 +287,7 @@ class UserControllerTest {
             String dtoJson = mapper.writeValueAsString(dto);
             UUID requestId = requestIdService.getRequestId();
 
-            MvcResult result = mockMvc.perform(post(LOOKUP_URL)
+            MvcResult result = mockMvc.perform(post(LOOKUP_INTERNAL_URL)
                             .contentType(MediaType.APPLICATION_JSON)
                             .header(headerRequestIdProps.name(), requestId)
                             .content(dtoJson))
@@ -299,7 +299,7 @@ class UserControllerTest {
             assertNotNull(error.getMessage());
             assertEquals(error.getStatus(), status.value());
             assertEquals(error.getError(), status.getReasonPhrase());
-            assertEquals(error.getPath(), LOOKUP_URL);
+            assertEquals(error.getPath(), LOOKUP_INTERNAL_URL);
         }
     }
 }

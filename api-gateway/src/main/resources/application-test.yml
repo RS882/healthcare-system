@@ -3,12 +3,36 @@ server:
 
 spring:
   application:
-    name:  test-api-gateway
+    name: api-gateway-test
+
+  config:
+    import: ""
+
+  cloud:
+    config:
+      enabled: false
+      fail-fast: false
+
+    discovery:
+      enabled: false
+
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+
+      routes: []
 
   data:
     redis:
       host: localhost
       port: 6379
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
 
 request-id:
   prefix: "test-request-id:"
@@ -17,3 +41,4 @@ request-id:
 
 header-request-id:
   name: "X-Test-Request-Id"
+

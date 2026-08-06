@@ -75,4 +75,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             authenticationEntryPoint.commence(request, response, new JwtAuthenticationException("Token is invalid", e));
         }
     }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return SecurityPaths.shouldSkipSecurity(request);
+    }
 }

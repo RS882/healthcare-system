@@ -1,4 +1,4 @@
-package com.healthcare.user_service.filter;
+package com.healthcare.user_service.security.filter;
 
 
 import com.healthcare.user_service.config.properties.HeaderRequestIdProperties;
@@ -20,7 +20,7 @@ import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
 
-import static com.healthcare.user_service.filter.security.constant.AttrNames.ATTR_REQUEST_ID;
+import static com.healthcare.user_service.security.filter.security.constant.AttrNames.ATTR_REQUEST_ID;
 
 @Component
 @Slf4j

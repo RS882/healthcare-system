@@ -2,9 +2,12 @@ package com.healthcare.auth_service.config;
 
 import com.healthcare.auth_service.config.configs_components.CustomAccessDeniedHandler;
 import com.healthcare.auth_service.config.configs_components.CustomAuthenticationEntryPoint;
+import com.healthcare.auth_service.config.configs_components.SecurityPublicEndpoints;
 import com.healthcare.auth_service.filter.JwtAuthFilter;
 import com.healthcare.auth_service.filter.RequestIdFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
+import org.springframework.boot.actuate.health.HealthEndpoint;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -42,16 +45,21 @@ public class SecurityConfig {
                 .sessionManagement(s ->
                         s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+
+                        // Public infrastructure endpoints
                         .requestMatchers(
-                                "/swagger-ui/**",
-                                "/v3/api-docs/**",
-                                "/swagger-ui.html",
-                                "/error").permitAll()
+                                SecurityPublicEndpoints.PUBLIC_ENDPOINTS
+                        ).permitAll()
+
+                        .requestMatchers(
+                                EndpointRequest.to(HealthEndpoint.class)
+                        ).permitAll()
+
                         .requestMatchers(HttpMethod.POST, LOGIN_URL).permitAll()
                         .requestMatchers(HttpMethod.POST, REFRESH_URL).permitAll()
                         .requestMatchers(HttpMethod.POST, LOGOUT_URL).authenticated()
                         .requestMatchers(HttpMethod.GET, VALIDATION_URL).authenticated()
-                        .anyRequest().authenticated()
+                        .anyRequest().denyAll()
                 )
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authenticationProvider(authenticationProvider())
