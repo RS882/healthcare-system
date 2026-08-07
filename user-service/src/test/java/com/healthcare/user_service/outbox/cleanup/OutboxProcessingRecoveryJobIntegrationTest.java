@@ -20,17 +20,27 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@ActiveProfiles("it")
-@TestPropertySource(properties = {
+@SpringBootTest(properties = {
+        "spring.cloud.config.enabled=false",
+        "spring.cloud.config.fail-fast=false",
+
+        "spring.cloud.discovery.enabled=false",
+
+        "eureka.client.enabled=false",
+        "eureka.client.register-with-eureka=false",
+        "eureka.client.fetch-registry=false",
+
+        "spring.kafka.listener.auto-startup=false",
+
         "user-context-filter.enabled=false",
         "spring.task.scheduling.enabled=false",
+
         "app.outbox.recovery.cron=0 */5 * * * *",
         "app.outbox.recovery.timeout-minutes=15"
 })
-@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
-@DisplayName("Outbox processing recovery integration test")
-class OutboxProcessingRecoveryJobIntegrationTest extends AbstractMySqlTestContainer {
+@ActiveProfiles("it")
+class OutboxProcessingRecoveryJobIntegrationTest
+        extends AbstractMySqlTestContainer {
 
     @Autowired
     private OutboxProcessingRecoveryJob recoveryJob;

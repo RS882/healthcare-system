@@ -20,17 +20,28 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-@ActiveProfiles("it")
-@TestPropertySource(properties = {
+@SpringBootTest(properties = {
+        "spring.cloud.config.enabled=false",
+        "spring.cloud.config.fail-fast=false",
+        "spring.config.import=",
+
+        "spring.cloud.discovery.enabled=false",
+
+        "eureka.client.enabled=false",
+        "eureka.client.register-with-eureka=false",
+        "eureka.client.fetch-registry=false",
+
         "user-context-filter.enabled=false",
         "spring.task.scheduling.enabled=false",
+
         "app.processed-event.cleanup.cron=0 30 3 * * *",
         "app.processed-event.cleanup.retention-days=30"
 })
+@ActiveProfiles("it")
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Processed event cleanup integration test")
-class ProcessedEventCleanupJobIntegrationTest extends AbstractMySqlTestContainer {
+class ProcessedEventCleanupJobIntegrationTest
+        extends AbstractMySqlTestContainer {
 
     @Autowired
     private ProcessedEventCleanupJob processedEventCleanupJob;

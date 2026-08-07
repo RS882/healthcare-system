@@ -4,6 +4,15 @@ server:
 spring:
   application:
     name: user-service-it
+  config:
+    import: ""
+
+  cloud:
+    config:
+      enabled: false
+
+    discovery:
+      enabled: false
 
   jpa:
     hibernate:
@@ -17,6 +26,12 @@ spring:
   task:
     scheduling:
       enabled: true
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
 
 cors:
   allowed-origins: http://localhost
