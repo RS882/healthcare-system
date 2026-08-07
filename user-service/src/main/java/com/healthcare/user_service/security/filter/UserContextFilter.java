@@ -31,9 +31,9 @@ public class UserContextFilter extends OncePerRequestFilter {
     private final UserContextProperties userContextProps;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain filterChain) throws ServletException, IOException {
+    public void doFilterInternal(HttpServletRequest request,
+                                 HttpServletResponse response,
+                                 FilterChain filterChain) throws ServletException, IOException {
 
         String userContextToken = request.getHeader(userContextProps.userContextHeader());
 
@@ -50,11 +50,8 @@ public class UserContextFilter extends OncePerRequestFilter {
     }
 
     @Override
-    protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getServletPath();
-        return path.startsWith("/actuator")
-                || path.startsWith("/swagger-ui")
-                || path.startsWith("/v3/api-docs");
+    public boolean shouldNotFilter(HttpServletRequest request) {
+        return SecurityPaths.shouldSkipSecurity(request);
     }
 }
 

@@ -37,6 +37,7 @@ header-request-id:
 
 internal-request:
   issuer: auth-service
-  key-prefix: ${INTERNAL_REQUEST_PREFIX:internal-request:}
+  key-prefix: "internal-request:"
+  header-name: "X-Internal-Request-Id"
   ttl: 30s
 

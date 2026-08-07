@@ -32,6 +32,10 @@ header-request-id:
 user-context:
   userContextHeader: "X-Test-User-Context"
 
+internal-request:
+  key-prefix: "internal-request:"
+  header-name: "X-Internal-Request-Id"
+
 app:
   kafka:
     bootstrap-servers: localhost:9092

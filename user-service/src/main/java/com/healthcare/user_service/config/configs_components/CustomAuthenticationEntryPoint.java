@@ -36,6 +36,7 @@ public class CustomAuthenticationEntryPoint implements AuthenticationEntryPoint 
         }
 
         log.debug("<User service> Authentication failed: {}", authException.getMessage(), authException);
+
         writeError(request, response, HttpStatus.UNAUTHORIZED, List.of("Unauthorized access"));
     }
 
