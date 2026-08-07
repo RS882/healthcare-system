@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 @FeignClient(
         name = "user-service",
-        path = "/api/v1/users",
+        path = "/api/v1/users/internal",
         contextId = "internalUserServiceClient",
         configuration = {
                 CorrelationRequestIdFeignConfiguration.class,
@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 public interface UserClient {
 
     @PostMapping(
-            value = "/lookup/internal",
+            value = "/lookup",
             consumes = MediaType.APPLICATION_JSON_VALUE
     )
     UserAuthDto lookupUser(

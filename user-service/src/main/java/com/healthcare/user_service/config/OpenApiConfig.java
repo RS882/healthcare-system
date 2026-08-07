@@ -39,16 +39,16 @@ public class OpenApiConfig {
                 // 403
                 .addExamples("Error403ById", ex403(BY_ID_URL))
                 // 404
-                .addExamples("Error404LookupUserIsNotFound", ex404(LOOKUP_INTERNAL_URL))
+                .addExamples("Error404LookupUserIsNotFound", ex404(INTERNAL_LOOKUP_URL))
                 .addExamples("Error404ByIdUserIsNotFound", ex404(BY_ID_URL))
                 // 500
                 .addExamples("Error500RegTemporaryServiceError", ex500(REGISTRATION_URL))
-                .addExamples("Error500LookupTemporaryServiceError", ex500(LOOKUP_INTERNAL_URL))
+                .addExamples("Error500LookupTemporaryServiceError", ex500(INTERNAL_LOOKUP_URL))
                 .addExamples("Error500ByIdTemporaryServiceError", ex500(BY_ID_URL))
 //                .addExamples("Error500ValidationTemporaryServiceError", ex500(VALIDATION_URL))
                 // 503
                 .addExamples("Error503RegServiceUnavailable", ex503(REGISTRATION_URL))
-                .addExamples("Error503LookupServiceUnavailable", ex503(LOOKUP_INTERNAL_URL))
+                .addExamples("Error503LookupServiceUnavailable", ex503(INTERNAL_LOOKUP_URL))
                 .addExamples("Error503ByIdServiceUnavailable", ex503(BY_ID_URL))
                     ;
 
@@ -114,7 +114,7 @@ public class OpenApiConfig {
         return ex(
                 "Email is not valid.",
                 "Email is not valid.",
-                errorExample(HttpStatus.BAD_REQUEST, LOOKUP_INTERNAL_URL,
+                errorExample(HttpStatus.BAD_REQUEST, INTERNAL_LOOKUP_URL,
                         "Email is not valid"));
     }
 
@@ -122,7 +122,7 @@ public class OpenApiConfig {
         return ex(
                 "Id is wrong.",
                 "Id is wrong.",
-                errorExample(HttpStatus.BAD_REQUEST, LOOKUP_INTERNAL_URL,
+                errorExample(HttpStatus.BAD_REQUEST, INTERNAL_LOOKUP_URL,
                         "Id is wrong"));
     }
 

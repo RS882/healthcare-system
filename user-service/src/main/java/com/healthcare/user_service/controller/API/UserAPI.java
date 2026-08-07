@@ -138,7 +138,7 @@ public interface UserAPI {
                             }
                     ))
     })
-    @PostMapping(LOOKUP_INTERNAL)
+    @PostMapping(INTERNAL_LOOKUP)
     ResponseEntity<UserAuthDto> getUserAuth(
             @Valid
             @org.springframework.web.bind.annotation.RequestBody

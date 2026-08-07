@@ -59,7 +59,7 @@ public class SecurityConfig {
 
                         .requestMatchers(HttpMethod.POST, REGISTRATION_URL).permitAll()
 
-                        .requestMatchers(HttpMethod.POST, LOOKUP_INTERNAL_URL).permitAll()
+                        .requestMatchers(HttpMethod.POST, INTERNAL_LOOKUP_URL).permitAll()
 
                         .requestMatchers(HttpMethod.GET, BY_ID_URL)
                         .access(authManagerFactory.roleOrOwnerBased(Set.of(Role.ROLE_ADMIN)))

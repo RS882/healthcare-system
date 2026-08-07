@@ -11,9 +11,9 @@ public final class ApiPaths {
 
     public static final String REGISTRATION_URL = USER_BASIC_URL + REGISTRATION;
 
-    public static final String LOOKUP_INTERNAL = "/lookup/internal";
+    public static final String INTERNAL_LOOKUP = "/internal/lookup";
 
-    public static final String LOOKUP_INTERNAL_URL = USER_BASIC_URL + LOOKUP_INTERNAL;
+    public static final String INTERNAL_LOOKUP_URL = USER_BASIC_URL + INTERNAL_LOOKUP;
 
     public static final String PATH_VARIABLE_ID = "id";
 
