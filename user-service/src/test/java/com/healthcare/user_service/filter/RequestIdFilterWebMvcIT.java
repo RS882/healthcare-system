@@ -58,6 +58,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "header-request-id.name=" + HEADER_REQUEST_ID,
         "spring.cloud.config.enabled=false",
         "user-context-filter.enabled=false",
+        "internal-request-filter.enabled=false",
         "auth-filter.enabled=false"
 })
 @DisplayName("Request id filter integration tests: ")

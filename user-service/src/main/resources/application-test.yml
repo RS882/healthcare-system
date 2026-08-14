@@ -4,6 +4,12 @@ server:
 spring:
   application:
     name: test-user-service
+  config:
+    import: ""
+
+  cloud:
+    config:
+      enabled: false
 
   datasource:
     url: jdbc:h2:mem:testdb
@@ -35,7 +41,10 @@ user-context:
 
 internal-request:
   key-prefix: "internal-request:"
-  header-name: "X-Internal-Request-Id"
+  header-name: "X-Test-Internal-Request-Id"
+  service-name: "user-service"
+  allowed-issuers:
+    - "auth-service"
 
 security:
   user-context:

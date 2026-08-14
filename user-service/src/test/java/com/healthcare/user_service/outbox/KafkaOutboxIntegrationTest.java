@@ -3,7 +3,7 @@ package com.healthcare.user_service.outbox;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.user_service.audit.repository.AuditLogRepository;
-import com.healthcare.user_service.config.AbstractKafkaMsqlTestContainer;
+import com.healthcare.user_service.config.AbstractKafkaRedisMsqlTestContainer;
 import com.healthcare.user_service.kafka.event.UserRegisteredEvent;
 import com.healthcare.user_service.kafka.idempotency.model.ProcessedEventId;
 import com.healthcare.user_service.kafka.idempotency.repository.ProcessedEventRepository;
@@ -37,7 +37,7 @@ import static org.awaitility.Awaitility.await;
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Kafka outbox integration test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class KafkaOutboxIntegrationTest extends AbstractKafkaMsqlTestContainer {
+class KafkaOutboxIntegrationTest extends AbstractKafkaRedisMsqlTestContainer {
 
     @Autowired
     private UserService userService;

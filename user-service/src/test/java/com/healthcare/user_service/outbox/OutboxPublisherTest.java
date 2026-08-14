@@ -1,5 +1,6 @@
 package com.healthcare.user_service.outbox;
 
+import com.healthcare.user_service.config.AbstractKafkaRedisMsqlTestContainer;
 import com.healthcare.user_service.config.AbstractMySqlTestContainer;
 import com.healthcare.user_service.kafka.producer.interfaces.KafkaEventSender;
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
@@ -10,7 +11,6 @@ import com.healthcare.user_service.outbox.repository.OutboxEventRepository;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -18,11 +18,9 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
 
 import static com.healthcare.user_service.outbox.constant.OutboxConstant.MAX_ATTEMPTS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 
@@ -31,7 +29,9 @@ import static org.mockito.Mockito.*;
 })
 @ActiveProfiles("it")
 @TestPropertySource(properties = {
-        "user-context-filter.enabled=false"
+        "user-context-filter.enabled=false",
+        "spring.cloud.config.enabled=false",
+        "spring.kafka.listener.auto-startup=false"
 })
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Outbox publisher test")

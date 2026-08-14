@@ -1,7 +1,7 @@
 package com.healthcare.user_service.kafka;
 
 
-import com.healthcare.user_service.config.AbstractKafkaMsqlTestContainer;
+import com.healthcare.user_service.config.AbstractKafkaRedisMsqlTestContainer;
 import com.healthcare.user_service.kafka.properties.KafkaCustomProperties;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -34,7 +34,7 @@ import static org.awaitility.Awaitility.await;
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 @DisplayName("Kafka DLT integration test")
-class KafkaDltIntegrationTest extends AbstractKafkaMsqlTestContainer {
+class KafkaDltIntegrationTest extends AbstractKafkaRedisMsqlTestContainer {
 
     @Autowired
     private KafkaTemplate<String, String> stringKafkaTemplate;

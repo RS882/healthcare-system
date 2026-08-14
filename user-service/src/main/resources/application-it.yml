@@ -49,7 +49,10 @@ user-context:
 
 internal-request:
   key-prefix: "internal-request:"
-  header-name: "X-Internal-Request-Id"
+  header-name: "X-Test-Internal-Request-Id"
+  service-name: "user-service"
+  allowed-issuers:
+    - "auth-service"
 
 app:
   kafka:
@@ -91,3 +94,4 @@ app:
     cleanup:
       cron: "0 30 3 * * *"
       retention-days: 30
+

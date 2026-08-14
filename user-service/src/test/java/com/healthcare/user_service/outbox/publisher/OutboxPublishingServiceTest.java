@@ -1,7 +1,6 @@
 package com.healthcare.user_service.outbox.publisher;
 
-import com.healthcare.user_service.config.AbstractMySqlTestContainer;
-
+import com.healthcare.user_service.config.AbstractKafkaRedisMsqlTestContainer;
 import com.healthcare.user_service.kafka.producer.interfaces.KafkaEventSender;
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
 import com.healthcare.user_service.outbox.model.OutboxEvent;
@@ -27,11 +26,12 @@ import static org.mockito.Mockito.*;
 @ActiveProfiles("it")
 @TestPropertySource(properties = {
         "spring.task.scheduling.enabled=false",
-        "user-context-filter.enabled=false"
+        "user-context-filter.enabled=false",
+        "spring.kafka.listener.auto-startup=false"
 })
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Outbox publishing service test")
-class OutboxPublishingServiceTest extends AbstractMySqlTestContainer {
+class OutboxPublishingServiceTest extends AbstractKafkaRedisMsqlTestContainer {
 
     @Autowired
     private OutboxPublishingService publishingService;

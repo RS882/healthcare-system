@@ -57,6 +57,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 })
 @TestPropertySource(properties = {
         "auth-filter.enabled=true",
+        "internal-request-filter.enabled=false",
         "spring.cloud.config.enabled=false"
 })
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)

@@ -4,7 +4,7 @@ package com.healthcare.user_service.kafka;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.user_service.audit.service.interfacies.AuditService;
 
-import com.healthcare.user_service.config.AbstractKafkaMsqlTestContainer;
+import com.healthcare.user_service.config.AbstractKafkaRedisMsqlTestContainer;
 import com.healthcare.user_service.kafka.event.UserRegisteredEvent;
 import com.healthcare.user_service.kafka.idempotency.model.ProcessedEventId;
 import com.healthcare.user_service.kafka.idempotency.repository.ProcessedEventRepository;
@@ -51,7 +51,7 @@ import static org.mockito.Mockito.doThrow;
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Kafka consumer transaction integration test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class KafkaConsumerTransactionIntegrationTest extends AbstractKafkaMsqlTestContainer {
+class KafkaConsumerTransactionIntegrationTest extends AbstractKafkaRedisMsqlTestContainer {
 
     @Autowired
     private KafkaTemplate<String, String> stringKafkaTemplate;

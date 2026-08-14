@@ -3,7 +3,9 @@ package com.healthcare.user_service.config;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.MySQLContainer;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
+@Testcontainers(disabledWithoutDocker = true)
 public abstract class AbstractMySqlTestContainer {
 
     protected static final MySQLContainer<?> mysql =

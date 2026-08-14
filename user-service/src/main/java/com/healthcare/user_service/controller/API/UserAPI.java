@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import static com.healthcare.user_service.controller.API.ApiPaths.*;
 
-@RequestMapping(USER_BASIC_URL)
+@RequestMapping(USERS_BASIC_URL)
 
 @Tag(name = "User controller", description = "Controller for registration and CRUD operation of user")
 public interface UserAPI {

@@ -16,8 +16,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -40,13 +46,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
+@Import(UserControllerTest.TestSecurityConfig.class)
 @DisplayName("Users controller integration tests: ")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-@DisplayNameGeneration(value = DisplayNameGenerator.ReplaceUnderscores.class)
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @TestPropertySource(properties = {
+        "security.config.enabled=false",
         "user-context-filter.enabled=false",
         "auth-filter.enabled=false",
-        "spring.cloud.config.enabled=false"
+        "internal-request-filter.enabled=false",
+        "spring.cloud.config.enabled=false",
+        "spring.kafka.listener.auto-startup=false"
 })
 class UserControllerTest {
 
@@ -302,4 +312,26 @@ class UserControllerTest {
             assertEquals(error.getPath(), INTERNAL_LOOKUP_URL);
         }
     }
+
+    @TestConfiguration
+    static class TestSecurityConfig {
+
+        @Bean
+        SecurityFilterChain testSecurityFilterChain(
+                HttpSecurity http
+        ) throws Exception {
+
+            return http
+                    .csrf(AbstractHttpConfigurer::disable)
+
+                    .authorizeHttpRequests(auth -> auth
+                            .requestMatchers(REGISTRATION_URL).permitAll()
+                            .requestMatchers(INTERNAL_LOOKUP_URL).permitAll()
+                            .anyRequest().permitAll()
+                    )
+
+                    .build();
+        }
+    }
+
 }

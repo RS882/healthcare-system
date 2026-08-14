@@ -20,6 +20,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import static com.healthcare.user_service.security.filter.security.constant.AttrNames.ATTR_REQUEST_ID;
 import static com.healthcare.user_service.support.TestDataFactory.requestId;
@@ -122,7 +123,7 @@ class RequestIdFilterTest {
 
         Object ridAttr = request.getAttribute(ATTR_REQUEST_ID);
 
-        assertInstanceOf(String.class, ridAttr);
+        assertInstanceOf(UUID.class, ridAttr);
         assertEquals(id, ridAttr.toString());
 
         verify(filterChain).doFilter(request, response);

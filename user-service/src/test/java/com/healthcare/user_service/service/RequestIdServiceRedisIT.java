@@ -1,6 +1,7 @@
 package com.healthcare.user_service.service;
 
 
+import com.healthcare.user_service.config.AbstractKafkaRedisMsqlTestContainer;
 import com.healthcare.user_service.config.properties.RequestIdProperties;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
         "auth-filter.enabled=false",
         "request-id-filter.enabled=false"
 })
-class RequestIdServiceRedisIT {
+class RequestIdServiceRedisIT  extends AbstractKafkaRedisMsqlTestContainer {
 
     @Autowired
     private RequestIdServiceImpl requestIdService;

@@ -1,5 +1,6 @@
 package com.healthcare.user_service.outbox.cleanup;
 
+import com.healthcare.user_service.config.AbstractKafkaRedisMsqlTestContainer;
 import com.healthcare.user_service.config.AbstractMySqlTestContainer;
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
 import com.healthcare.user_service.outbox.model.OutboxEvent;
@@ -29,7 +30,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 })
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Outbox cleanup integration test")
-class OutboxCleanupJobIntegrationTest extends AbstractMySqlTestContainer {
+class OutboxCleanupJobIntegrationTest extends AbstractKafkaRedisMsqlTestContainer {
 
     @Autowired
     private OutboxCleanupJob outboxCleanupJob;
