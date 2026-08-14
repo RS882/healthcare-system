@@ -32,12 +32,15 @@ import static org.awaitility.Awaitility.await;
 @ActiveProfiles("it")
 @TestPropertySource(properties = {
         "user-context-filter.enabled=false",
+        "spring.kafka.listener.auto-startup=true",
+        "spring.cloud.config.enabled=false",
         "app.kafka.groups.user-service.id=user-service-outbox-test"
 })
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Kafka outbox integration test")
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-class KafkaOutboxIntegrationTest extends AbstractKafkaRedisMsqlTestContainer {
+class KafkaOutboxIntegrationTest
+        extends AbstractKafkaRedisMsqlTestContainer {
 
     @Autowired
     private UserService userService;

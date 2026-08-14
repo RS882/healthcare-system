@@ -4,6 +4,7 @@ server:
 spring:
   application:
     name: user-service-it
+
   config:
     import: ""
 
@@ -13,6 +14,10 @@ spring:
 
     discovery:
       enabled: false
+
+  kafka:
+    listener:
+      auto-startup: false
 
   jpa:
     hibernate:
@@ -25,7 +30,7 @@ spring:
 
   task:
     scheduling:
-      enabled: true
+      enabled: false
 
 eureka:
   client:
@@ -63,10 +68,12 @@ app:
         name: user.registered.v1
         partitions: 3
         replicas: 1
+
       user-updated:
         name: user.updated.v1
         partitions: 3
         replicas: 1
+
       user-deleted:
         name: user.deleted.v1
         partitions: 3
@@ -86,6 +93,7 @@ app:
     cleanup:
       cron: "0 0 3 * * *"
       retention-days: 7
+
     recovery:
       cron: "0 */5 * * * *"
       timeout-minutes: 15
@@ -94,4 +102,3 @@ app:
     cleanup:
       cron: "0 30 3 * * *"
       retention-days: 30
-

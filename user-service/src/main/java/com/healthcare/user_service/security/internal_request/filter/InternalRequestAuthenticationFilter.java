@@ -1,5 +1,8 @@
 package com.healthcare.user_service.security.internal_request.filter;
 
+import com.healthcare.user_service.config.configs_components.CustomAuthenticationEntryPoint;
+import com.healthcare.user_service.exception_handler.exception.InternalRequestAuthenticationServiceException;
+import com.healthcare.user_service.exception_handler.exception.handler.InternalRequestAuthenticationServiceFailureHandler;
 import com.healthcare.user_service.security.internal_request.authentication.InternalServiceAuthenticationToken;
 import com.healthcare.user_service.security.internal_request.authentication.InternalServicePrincipal;
 import com.healthcare.user_service.security.internal_request.constant.InternalService;
@@ -41,6 +44,9 @@ public class InternalRequestAuthenticationFilter
     private final InternalRequestGrantValidator grantValidator;
     private final InternalServiceAuthorityResolver authorityResolver;
     private final InternalRequestConsumerProperties props;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
+    private final InternalRequestAuthenticationServiceFailureHandler
+            authenticationServiceFailureHandler;
 
     @Override
     protected void doFilterInternal(
@@ -49,37 +55,57 @@ public class InternalRequestAuthenticationFilter
             FilterChain filterChain
     ) throws ServletException, IOException {
 
-        String headerValue = request.getHeader(props.headerName());
+        try {
 
-        if (!StringUtils.hasText(headerValue)) {
-            throw new BadCredentialsException("Internal request id header is required");
+            String headerValue = request.getHeader(props.headerName());
+
+            if (!StringUtils.hasText(headerValue)) {
+                throw new BadCredentialsException("Internal request id header is required");
+            }
+
+            UUID internalRequestId = parseInternalRequestId(headerValue);
+
+            InternalRequestGrant grant = grantConsumer.consume(internalRequestId);
+
+            grantValidator.validate(grant, request);
+
+            InternalService service = grant.issuer();
+
+            Collection<? extends GrantedAuthority> authorities = authorityResolver.resolve(service);
+
+            InternalServicePrincipal principal = buildPrincipal(service);
+
+            InternalServiceAuthenticationToken authentication =
+                    new InternalServiceAuthenticationToken(
+                            principal,
+                            authorities
+                    );
+
+            SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
+
+            securityContext.setAuthentication(authentication);
+
+            SecurityContextHolder.setContext(securityContext);
+
+            filterChain.doFilter(request, response);
+
+        } catch (BadCredentialsException exception) {
+
+            handleAuthenticationFailure(
+                    request,
+                    response,
+                    exception
+            );
+        } catch (InternalRequestAuthenticationServiceException exception) {
+
+            SecurityContextHolder.clearContext();
+
+            authenticationServiceFailureHandler.handle(
+                    request,
+                    response,
+                    exception
+            );
         }
-
-        UUID internalRequestId = parseInternalRequestId(headerValue);
-
-        InternalRequestGrant grant = grantConsumer.consume(internalRequestId);
-
-        grantValidator.validate(grant, request);
-
-        InternalService service = grant.issuer();
-
-        Collection<? extends GrantedAuthority> authorities = authorityResolver.resolve(service);
-
-        InternalServicePrincipal principal = buildPrincipal(service);
-
-        InternalServiceAuthenticationToken authentication =
-                new InternalServiceAuthenticationToken(
-                        principal,
-                        authorities
-                );
-
-        SecurityContext securityContext = SecurityContextHolder.createEmptyContext();
-
-        securityContext.setAuthentication(authentication);
-
-        SecurityContextHolder.setContext(securityContext);
-
-        filterChain.doFilter(request, response);
     }
 
     private UUID parseInternalRequestId(String headerValue) {
@@ -92,9 +118,24 @@ public class InternalRequestAuthenticationFilter
     }
 
     private InternalServicePrincipal buildPrincipal(InternalService service) {
-      return   InternalServicePrincipal.builder()
+        return InternalServicePrincipal.builder()
                 .service(service)
                 .authenticatedAt(Instant.now())
                 .build();
+    }
+
+    private void handleAuthenticationFailure(
+            HttpServletRequest request,
+            HttpServletResponse response,
+            BadCredentialsException exception
+    ) throws IOException, ServletException {
+
+        SecurityContextHolder.clearContext();
+
+        authenticationEntryPoint.commence(
+                request,
+                response,
+                exception
+        );
     }
 }

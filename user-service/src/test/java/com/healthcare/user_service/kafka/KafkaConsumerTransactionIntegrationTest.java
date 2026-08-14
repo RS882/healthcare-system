@@ -41,7 +41,7 @@ import static org.mockito.Mockito.doThrow;
 @ActiveProfiles("it")
 @TestPropertySource(properties = {
         "user-context-filter.enabled=false",
-
+        "spring.kafka.listener.auto-startup=true",
         "app.kafka.topics.user-registered.name=user.registered.transaction-test.v1",
         "app.kafka.topics.user-updated.name=user.updated.transaction-test.v1",
         "app.kafka.topics.user-deleted.name=user.deleted.transaction-test.v1",
