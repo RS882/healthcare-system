@@ -1,6 +1,7 @@
 package com.healthcare.user_service.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.healthcare.user_service.config.AbstractKafkaRedisMsqlTestContainer;
 import com.healthcare.user_service.config.properties.HeaderRequestIdProperties;
 import com.healthcare.user_service.constant.Role;
 import com.healthcare.user_service.exception_handler.dto.ErrorResponse;
@@ -58,7 +59,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "spring.cloud.config.enabled=false",
         "spring.kafka.listener.auto-startup=false"
 })
-class UserControllerTest {
+class UserControllerTest extends AbstractKafkaRedisMsqlTestContainer {
 
     @Autowired
     private ObjectMapper mapper;
@@ -137,7 +138,7 @@ class UserControllerTest {
         }
 
 
-        @ParameterizedTest(name = "Тест {index}:registration_with_status_400_registration_data_is_incorrect [{arguments}]")
+        @ParameterizedTest(name = "Test {index}:registration_with_status_400_registration_data_is_incorrect [{arguments}]")
         @MethodSource("incorrectLoginData")
         public void registration_user_should_return_400_when_registration_data_is_wrong(RegistrationDto dto) throws Exception {
 
@@ -232,7 +233,7 @@ class UserControllerTest {
 
             MvcResult result = mockMvc.perform(post(INTERNAL_LOOKUP_URL)
                             .contentType(MediaType.APPLICATION_JSON)
-                                    .header(headerRequestIdProps.name(), requestId)
+                            .header(headerRequestIdProps.name(), requestId)
                             .content(dtoJson))
                     .andExpect(status().isOk())
                     .andReturn();

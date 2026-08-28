@@ -13,17 +13,21 @@ import java.util.List;
 @Component
 public class InternalServiceAuthorityResolver {
 
-    public Collection<? extends GrantedAuthority> resolve(
+    public Collection<GrantedAuthority> resolve(
             InternalService service
     ) {
         return switch (service) {
 
             case AUTH_SERVICE -> List.of(
-                    new SimpleGrantedAuthority(InternalAuthority.USER_LOOKUP.authority())
+                    new SimpleGrantedAuthority(
+                            InternalAuthority.USER_LOOKUP.authority()
+                    )
             );
 
             case AI_SERVICE -> List.of(
-                    new SimpleGrantedAuthority(InternalAuthority.USER_AUTH_INFO.authority())
+                    new SimpleGrantedAuthority(
+                            InternalAuthority.USER_AUTH_INFO.authority()
+                    )
             );
         };
     }

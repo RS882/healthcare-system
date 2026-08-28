@@ -21,11 +21,9 @@ public class DefaultInternalRequestGrantValidator
             InternalRequestGrant grant,
             HttpServletRequest request
     ) {
-        if (grant == null) {
-            throw invalid("Internal request grant is invalid");
-        }
-
-        if (!StringUtils.hasText(grant.issuer().serviceName())
+        if (grant == null
+                || grant.issuer() == null
+                || !StringUtils.hasText(grant.issuer().serviceName())
                 || !StringUtils.hasText(grant.target())
                 || !StringUtils.hasText(grant.method())
                 || !StringUtils.hasText(grant.path())) {
