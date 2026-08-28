@@ -6,6 +6,7 @@ import com.healthcare.user_service.model.dto.request.RegistrationDto;
 import com.healthcare.user_service.model.dto.request.UserLookupDto;
 import com.healthcare.user_service.model.dto.response.RegistrationResponse;
 import com.healthcare.user_service.model.dto.response.UserDto;
+import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
@@ -138,6 +139,7 @@ public interface UserAPI {
                             }
                     ))
     })
+    @Hidden
     @PostMapping(INTERNAL_LOOKUP)
     ResponseEntity<UserAuthDto> getUserAuth(
             @Valid
