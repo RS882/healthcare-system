@@ -1,7 +1,6 @@
 package com.healthcare.user_service.outbox;
 
 import com.healthcare.user_service.config.AbstractKafkaRedisMsqlTestContainer;
-import com.healthcare.user_service.config.AbstractMySqlTestContainer;
 import com.healthcare.user_service.kafka.producer.interfaces.KafkaEventSender;
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
 import com.healthcare.user_service.outbox.model.OutboxEvent;
@@ -35,10 +34,7 @@ import static org.mockito.Mockito.*;
 })
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Outbox publisher test")
-class OutboxPublisherTest extends AbstractMySqlTestContainer {
-
-    @Autowired
-    private OutboxPublisher outboxPublisher;
+class OutboxPublisherTest extends AbstractKafkaRedisMsqlTestContainer {
 
     @Autowired
     private OutboxEventRepository outboxEventRepository;

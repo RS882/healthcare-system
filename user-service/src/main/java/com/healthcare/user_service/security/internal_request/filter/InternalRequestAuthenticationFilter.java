@@ -71,7 +71,7 @@ public class InternalRequestAuthenticationFilter
 
             InternalService service = grant.issuer();
 
-            Collection<? extends GrantedAuthority> authorities = authorityResolver.resolve(service);
+            Collection<GrantedAuthority> authorities = authorityResolver.resolve(service);
 
             InternalServicePrincipal principal = buildPrincipal(service);
 
@@ -128,7 +128,7 @@ public class InternalRequestAuthenticationFilter
             HttpServletRequest request,
             HttpServletResponse response,
             BadCredentialsException exception
-    ) throws IOException, ServletException {
+    ) throws IOException {
 
         SecurityContextHolder.clearContext();
 

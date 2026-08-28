@@ -23,7 +23,6 @@ public class DefaultInternalRequestGrantValidator
     ) {
         if (grant == null
                 || grant.issuer() == null
-                || !StringUtils.hasText(grant.issuer().serviceName())
                 || !StringUtils.hasText(grant.target())
                 || !StringUtils.hasText(grant.method())
                 || !StringUtils.hasText(grant.path())) {

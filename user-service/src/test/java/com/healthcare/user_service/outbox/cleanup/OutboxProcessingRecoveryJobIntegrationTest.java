@@ -1,18 +1,14 @@
 package com.healthcare.user_service.outbox.cleanup;
 
-import com.healthcare.user_service.config.AbstractMySqlTestContainer;
+import com.healthcare.user_service.config.AbstractKafkaRedisMsqlTestContainer;
 import com.healthcare.user_service.outbox.constant.OutboxStatus;
 import com.healthcare.user_service.outbox.model.OutboxEvent;
 import com.healthcare.user_service.outbox.repository.OutboxEventRepository;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -40,7 +36,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 })
 @ActiveProfiles("it")
 class OutboxProcessingRecoveryJobIntegrationTest
-        extends AbstractMySqlTestContainer {
+        extends AbstractKafkaRedisMsqlTestContainer {
 
     @Autowired
     private OutboxProcessingRecoveryJob recoveryJob;

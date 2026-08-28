@@ -16,12 +16,15 @@ import com.healthcare.user_service.service.interfacies.UserService;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.env.Environment;
 import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.core.ProducerFactory;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
 
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.healthcare.user_service.kafka.consumer.ConsumerNames.USER_EVENT_CONSUMER;
@@ -41,6 +44,13 @@ import static org.awaitility.Awaitility.await;
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class KafkaOutboxIntegrationTest
         extends AbstractKafkaRedisMsqlTestContainer {
+
+    @Autowired
+    private Environment environment;
+
+    @Autowired
+    private ProducerFactory<String, String> producerFactory;
+
 
     @Autowired
     private UserService userService;
@@ -68,6 +78,63 @@ class KafkaOutboxIntegrationTest
         auditLogRepository.deleteAll();
         processedEventRepository.deleteAll();
         outboxEventRepository.deleteAll();
+    }
+
+    @Test
+    void should_use_testcontainers_kafka_configuration() {
+
+        String expectedBootstrapServers =
+                kafka.getBootstrapServers();
+
+        String springBootstrapServers =
+                environment.getProperty(
+                        "spring.kafka.bootstrap-servers"
+                );
+
+        String appBootstrapServers =
+                environment.getProperty(
+                        "app.kafka.bootstrap-servers"
+                );
+
+        Map<String, Object> producerProperties =
+                producerFactory.getConfigurationProperties();
+
+        Object producerBootstrapServers =
+                producerProperties.get(
+                        "bootstrap.servers"
+                );
+
+        System.out.println(
+                "Kafka container: " + expectedBootstrapServers
+        );
+
+        System.out.println(
+                "spring.kafka.bootstrap-servers: "
+                        + springBootstrapServers
+        );
+
+        System.out.println(
+                "app.kafka.bootstrap-servers: "
+                        + appBootstrapServers
+        );
+
+        System.out.println(
+                "ProducerFactory bootstrap.servers: "
+                        + producerBootstrapServers
+        );
+
+        assertThat(springBootstrapServers)
+                .isEqualTo(expectedBootstrapServers);
+
+        assertThat(appBootstrapServers)
+                .isEqualTo(expectedBootstrapServers);
+
+        assertThat(
+                String.valueOf(producerBootstrapServers)
+        )
+                .contains(
+                        expectedBootstrapServers
+                );
     }
 
     @Test
@@ -105,6 +172,7 @@ class KafkaOutboxIntegrationTest
                             .isTrue();
                 });
     }
+
     @Test
     void should_not_create_second_audit_log_for_duplicate_event() throws Exception {
         UserRegisteredEvent event = UserRegisteredEvent.of(

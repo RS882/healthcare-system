@@ -1,6 +1,6 @@
 package com.healthcare.user_service.kafka.idempotency.cleanup;
 
-import com.healthcare.user_service.config.AbstractMySqlTestContainer;
+import com.healthcare.user_service.config.AbstractKafkaRedisMsqlTestContainer;
 import com.healthcare.user_service.kafka.idempotency.model.ProcessedEvent;
 import com.healthcare.user_service.kafka.idempotency.model.ProcessedEventId;
 import com.healthcare.user_service.kafka.idempotency.repository.ProcessedEventRepository;
@@ -11,7 +11,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -41,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Processed event cleanup integration test")
 class ProcessedEventCleanupJobIntegrationTest
-        extends AbstractMySqlTestContainer {
+        extends AbstractKafkaRedisMsqlTestContainer {
 
     @Autowired
     private ProcessedEventCleanupJob processedEventCleanupJob;

@@ -88,7 +88,7 @@ public interface UserAPI {
                     "with full user information for authorization.(Only internal)",
             requestBody = @io.swagger.v3.oas.annotations.parameters.RequestBody(
                     content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
-                            schema = @Schema(implementation = RegistrationDto.class)))
+                            schema = @Schema(implementation = UserLookupDto.class)))
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Request is successfully",

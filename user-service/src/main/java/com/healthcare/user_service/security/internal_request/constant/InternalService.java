@@ -1,5 +1,11 @@
 package com.healthcare.user_service.security.internal_request.constant;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonValue;
+import com.healthcare.user_service.exception_handler.exception.UnknownInternalServiceException;
+
+import java.util.Arrays;
+
 public enum InternalService {
 
     AUTH_SERVICE("auth-service"),
@@ -11,19 +17,18 @@ public enum InternalService {
         this.serviceName = serviceName;
     }
 
+    @JsonValue
     public String serviceName() {
         return serviceName;
     }
 
+    @JsonCreator
     public static InternalService fromServiceName(String serviceName) {
-        for (InternalService service : values()) {
-            if (service.serviceName.equals(serviceName)) {
-                return service;
-            }
-        }
-
-        throw new IllegalArgumentException(
-                "Unknown internal service: " + serviceName
-        );
+        return Arrays.stream(values())
+                .filter(service ->
+                        service.serviceName.equals(serviceName))
+                .findFirst()
+                .orElseThrow(() -> new UnknownInternalServiceException(serviceName)
+                );
     }
 }
