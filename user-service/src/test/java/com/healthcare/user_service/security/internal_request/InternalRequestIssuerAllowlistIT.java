@@ -44,7 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "request-id-filter.enabled=false",
 
         "spring.kafka.listener.auto-startup=false",
-        "spring.task.scheduling.enabled=false",
+        "app.outbox.publisher.enabled=false",
         "spring.cloud.config.enabled=false",
 
         "internal-request.allowed-issuers[0]=auth-service"

@@ -3,6 +3,7 @@ package com.healthcare.user_service.controller;
 
 import com.healthcare.user_service.controller.API.UserAPI;
 import com.healthcare.user_service.model.dto.auth.UserAuthDto;
+import com.healthcare.user_service.model.dto.auth.UserAuthInfoDto;
 import com.healthcare.user_service.model.dto.request.RegistrationDto;
 import com.healthcare.user_service.model.dto.request.UserLookupDto;
 import com.healthcare.user_service.model.dto.response.RegistrationResponse;
@@ -36,6 +37,13 @@ public class UserController implements UserAPI {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(userService.getUserInfoByEmail(email));
     }
+
+    @Override
+    public ResponseEntity<UserAuthInfoDto> getUserAuthInfo(Long userId) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(userService.getUserAuthInfoDtoById(userId));
+    }
+
 
     @Override
     public ResponseEntity<UserDto> getUserInfoById(Long id) {

@@ -84,6 +84,14 @@ public class SecurityConfig {
                                 InternalAuthority.USER_LOOKUP.authority()
                         )
 
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                INTERNAL_AUTH_INFO_URL
+                        )
+                        .hasAuthority(
+                                InternalAuthority.USER_AUTH_INFO.authority()
+                        )
+
                         .anyRequest().denyAll()
                 )
 

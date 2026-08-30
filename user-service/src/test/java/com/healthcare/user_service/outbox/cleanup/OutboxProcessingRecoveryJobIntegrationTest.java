@@ -29,9 +29,11 @@ import static org.assertj.core.api.Assertions.assertThat;
         "spring.kafka.listener.auto-startup=false",
 
         "user-context-filter.enabled=false",
-        "spring.task.scheduling.enabled=false",
 
-        "app.outbox.recovery.cron=0 */5 * * * *",
+        "spring.task.scheduling.enabled=false",
+        "app.outbox.publisher.enabled=false",
+
+        "app.outbox.recovery.cron=0 0 0 1 1 *",
         "app.outbox.recovery.timeout-minutes=15"
 })
 @ActiveProfiles("it")

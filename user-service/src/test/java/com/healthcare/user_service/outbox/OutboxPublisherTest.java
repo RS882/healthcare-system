@@ -23,14 +23,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 
-@SpringBootTest(properties = {
-        "spring.task.scheduling.enabled=false"
-})
+@SpringBootTest
 @ActiveProfiles("it")
 @TestPropertySource(properties = {
         "user-context-filter.enabled=false",
         "spring.cloud.config.enabled=false",
-        "spring.kafka.listener.auto-startup=false"
+
+        "spring.kafka.listener.auto-startup=false",
+        "app.outbox.publisher.enabled=false"
 })
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Outbox publisher test")

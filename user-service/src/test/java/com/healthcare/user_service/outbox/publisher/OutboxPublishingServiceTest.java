@@ -25,7 +25,7 @@ import static org.mockito.Mockito.*;
 @SpringBootTest
 @ActiveProfiles("it")
 @TestPropertySource(properties = {
-        "spring.task.scheduling.enabled=false",
+        "app.outbox.publisher.enabled=false",
         "user-context-filter.enabled=false",
         "spring.kafka.listener.auto-startup=false"
 })

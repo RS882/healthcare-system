@@ -11,9 +11,11 @@ public final class ApiPaths {
 
     public static final String REGISTRATION_URL = USERS_BASIC_URL + REGISTRATION;
 
+
     public static final String INTERNAL = "/internal";
 
     public static final String INTERNAL_BASIC_URL = USERS_BASIC_URL + INTERNAL;
+
 
     public static final String LOOKUP = "/lookup";
 
@@ -21,7 +23,18 @@ public final class ApiPaths {
 
     public static final String INTERNAL_LOOKUP_URL = INTERNAL_BASIC_URL + LOOKUP;
 
+
+    public static final String PATH_VARIABLE_USER_ID = "userId";
+
+    public static final String AUTH_INFO_BY_USER_ID = "/{" + PATH_VARIABLE_USER_ID + "}/auth-info";
+
+    public static final String INTERNAL_AUTH_INFO = INTERNAL + AUTH_INFO_BY_USER_ID;
+
+    public static final String INTERNAL_AUTH_INFO_URL = INTERNAL_BASIC_URL + AUTH_INFO_BY_USER_ID;
+
+
     public static final String INTERNAL_ALL_URL = INTERNAL_BASIC_URL + "/**";
+
 
     public static final String PATH_VARIABLE_ID = "id";
 

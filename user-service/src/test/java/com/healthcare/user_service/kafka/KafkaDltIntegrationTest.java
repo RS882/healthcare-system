@@ -2,6 +2,7 @@ package com.healthcare.user_service.kafka;
 
 
 import com.healthcare.user_service.config.AbstractKafkaRedisMsqlTestContainer;
+import com.healthcare.user_service.config.KafkaTestIsolationConfig;
 import com.healthcare.user_service.kafka.properties.KafkaCustomProperties;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -11,6 +12,7 @@ import org.apache.kafka.common.serialization.StringDeserializer;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
@@ -28,8 +30,19 @@ import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
 @ActiveProfiles("it")
+@Import(KafkaTestIsolationConfig.class)
 @TestPropertySource(properties = {
-        "user-context-filter.enabled=false"
+        "user-context-filter.enabled=false",
+
+        "spring.kafka.listener.auto-startup=true",
+        "app.outbox.publisher.enabled=false",
+
+        "app.kafka.topics.user-registered.name=user.registered.dlt-test.v1",
+        "app.kafka.topics.user-updated.name=user.updated.dlt-test.v1",
+        "app.kafka.topics.user-deleted.name=user.deleted.dlt-test.v1",
+
+        "app.kafka.groups.user-service.id=user-service-dlt-test",
+        "test.kafka.transaction-id-prefix=user-service-dlt-test-tx-"
 })
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)

@@ -2,12 +2,14 @@ package com.healthcare.user_service.controller.API;
 
 import com.healthcare.user_service.exception_handler.dto.ErrorResponse;
 import com.healthcare.user_service.model.dto.auth.UserAuthDto;
+import com.healthcare.user_service.model.dto.auth.UserAuthInfoDto;
 import com.healthcare.user_service.model.dto.request.RegistrationDto;
 import com.healthcare.user_service.model.dto.request.UserLookupDto;
 import com.healthcare.user_service.model.dto.response.RegistrationResponse;
 import com.healthcare.user_service.model.dto.response.UserDto;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -146,6 +148,127 @@ public interface UserAPI {
             @org.springframework.web.bind.annotation.RequestBody
             UserLookupDto dto);
 
+    //=====================================
+
+
+    @Operation(
+            summary = "Get user authentication information",
+            description = """
+                    Internal service-to-service endpoint for retrieving
+                    current user authentication and authorization information.
+                    
+                    The endpoint is intended for trusted internal services only.
+                    
+                    Access requires a valid one-time internal request grant
+                    supplied through the X-Internal-Request-Id header.
+                    
+                    The grant must:
+                    - be issued for the user-service;
+                    - match the current HTTP method and request path;
+                    - be issued by an allowed internal service;
+                    - provide the USER_AUTH_INFO authority.
+                    
+                    Currently this endpoint is intended for the AI service.
+                    """
+    )
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "User authentication information returned successfully",
+                    content = @Content(
+                            mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(
+                                    implementation = UserAuthInfoDto.class
+                            )
+                    )
+            ),
+
+            @ApiResponse(
+                    responseCode = "400", description = "Invalid user id",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Error400InvalidUserID",
+                                            ref = "#/components/examples/Error400InvalidUserID"
+                                    )
+                            })),
+
+            @ApiResponse(
+                    responseCode = "401",
+                    description = """
+                            Internal authentication failed.
+                            The internal request id is missing, malformed,
+                            expired, already consumed, or the grant does not
+                            match the current request.
+                            """,
+
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Error401InternalAuthenticationFailed",
+                                            ref = "#/components/examples/Error401InternalAuthenticationFailed"
+                                    )
+                            })),
+
+            @ApiResponse(
+                    responseCode = "403",
+                    description = """
+                            The calling internal service is authenticated
+                            but does not have USER_AUTH_INFO authority.
+                            """,
+
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Error403DoesNotHaveAuthority",
+                                            ref = "#/components/examples/Error403DoesNotHaveAuthority"
+                                    )
+                            })),
+
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "User was not found",
+
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Error404UserNotFound",
+                                            ref = "#/components/examples/Error404UserNotFound"
+                                    )
+                            })),
+
+            @ApiResponse(
+                    responseCode = "503",
+                    description = """
+                            Internal authentication infrastructure is
+                            temporarily unavailable.
+                            """,
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE,
+                            schema = @Schema(implementation = ErrorResponse.class),
+                            examples = {
+                                    @ExampleObject(
+                                            name = "Error503AuthInfoByIdServiceUnavailable",
+                                            ref = "#/components/examples/Error503AuthInfoByIdServiceUnavailable"
+                                    )
+                            }))
+    })
+    @Hidden
+    @GetMapping(INTERNAL_AUTH_INFO)
+    ResponseEntity<UserAuthInfoDto> getUserAuthInfo(
+
+            @Parameter(
+                    description = "Unique identifier of the user",
+                    required = true,
+                    example = "123"
+            )
+            @PathVariable(PATH_VARIABLE_USER_ID)
+            @Positive
+            Long userId
+    );
 
     //=====================================
     @Operation(summary = "Get user by id",

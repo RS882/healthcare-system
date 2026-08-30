@@ -23,8 +23,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 @ActiveProfiles("it")
 @TestPropertySource(properties = {
         "user-context-filter.enabled=false",
+
+        "spring.kafka.listener.auto-startup=false",
+
         "spring.task.scheduling.enabled=false",
-        "app.outbox.cleanup.cron=0 0 3 * * *",
+        "app.outbox.publisher.enabled=false",
+
+        "app.outbox.cleanup.cron=0 0 0 1 1 *",
         "app.outbox.cleanup.retention-days=7"
 })
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)

@@ -29,28 +29,27 @@ public class OpenApiConfig {
                 // 400
                 .addExamples("Error400RegMissingField", ex400Reg())
                 .addExamples("Error400LookupEmailIsWrong", ex400LookUp())
-                .addExamples("Error400ById", ex400ById())
-//                .addExamples("Error400LogoutIncorrectCookie", ex400(LOGOUT_URL))
+                .addExamples("Error400ById", ex400ById(INTERNAL_LOOKUP_URL))
+                .addExamples("Error400InvalidUserID", ex400ById(INTERNAL_AUTH_INFO_URL))
                 // 401
                 .addExamples("Error401ById", ex401(BY_ID_URL))
-//                .addExamples("Error401RefreshTokenIsIncorrect", ex401(REFRESH_URL))
-//                .addExamples("Error401LogoutTokenIsIncorrect", ex401(LOGOUT_URL))
-//                .addExamples("Error401ValidationTokenIsIncorrect", ex401(VALIDATION_URL))
+                .addExamples("Error401InternalAuthenticationFailed", ex401(INTERNAL_AUTH_INFO_URL))
                 // 403
                 .addExamples("Error403ById", ex403(BY_ID_URL))
+                .addExamples("Error403DoesNotHaveAuthority", ex403(INTERNAL_AUTH_INFO_URL))
                 // 404
                 .addExamples("Error404LookupUserIsNotFound", ex404(INTERNAL_LOOKUP_URL))
                 .addExamples("Error404ByIdUserIsNotFound", ex404(BY_ID_URL))
+                .addExamples("Error404UserNotFound", ex404(INTERNAL_AUTH_INFO_URL))
                 // 500
                 .addExamples("Error500RegTemporaryServiceError", ex500(REGISTRATION_URL))
                 .addExamples("Error500LookupTemporaryServiceError", ex500(INTERNAL_LOOKUP_URL))
                 .addExamples("Error500ByIdTemporaryServiceError", ex500(BY_ID_URL))
-//                .addExamples("Error500ValidationTemporaryServiceError", ex500(VALIDATION_URL))
                 // 503
                 .addExamples("Error503RegServiceUnavailable", ex503(REGISTRATION_URL))
                 .addExamples("Error503LookupServiceUnavailable", ex503(INTERNAL_LOOKUP_URL))
                 .addExamples("Error503ByIdServiceUnavailable", ex503(BY_ID_URL))
-                    ;
+                .addExamples("Error503AuthInfoByIdServiceUnavailable", ex503(INTERNAL_AUTH_INFO_URL));
 
         return new OpenAPI()
                 .addSecurityItem(new SecurityRequirement().
@@ -109,7 +108,6 @@ public class OpenApiConfig {
         );
     }
 
-
     private static Example ex400LookUp() {
         return ex(
                 "Email is not valid.",
@@ -118,20 +116,12 @@ public class OpenApiConfig {
                         "Email is not valid"));
     }
 
-    private static Example ex400ById() {
+    private static Example ex400ById(String url) {
         return ex(
                 "Id is wrong.",
                 "Id is wrong.",
-                errorExample(HttpStatus.BAD_REQUEST, INTERNAL_LOOKUP_URL,
-                        "Id is wrong"));
-    }
-
-    private static Example ex400(String url) {
-        return ex(
-                "Cookie is incorrect.",
-                "Cookie is incorrect.",
                 errorExample(HttpStatus.BAD_REQUEST, url,
-                        "Cookie is incorrect."));
+                        "Id is wrong"));
     }
 
     private static Example ex401(String url) {
@@ -173,9 +163,4 @@ public class OpenApiConfig {
                 errorExample(HttpStatus.SERVICE_UNAVAILABLE, url,
                         "The server is currently overloaded or under maintenance. Please try again later."));
     }
-
 }
-
-
-
-

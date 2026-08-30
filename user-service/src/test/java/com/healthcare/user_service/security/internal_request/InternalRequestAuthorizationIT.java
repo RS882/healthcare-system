@@ -24,6 +24,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -48,7 +49,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
         "request-id-filter.enabled=false",
 
         "spring.kafka.listener.auto-startup=false",
-        "spring.task.scheduling.enabled=false",
+        "app.outbox.publisher.enabled=false",
         "spring.cloud.config.enabled=false",
 
         "internal-request.allowed-issuers[0]=auth-service",
@@ -335,6 +336,327 @@ class InternalRequestAuthorizationIT
                 .andExpect(status().isForbidden());
 
         verifyNoInteractions(userService);
+    }
+
+    @Test
+    void should_allow_ai_service_to_access_user_auth_info()
+            throws Exception {
+
+        long userId = 1L;
+
+        String path =
+                "/v1/users/internal/"
+                        + userId
+                        + "/auth-info";
+
+        UUID internalRequestId =
+                UUID.randomUUID();
+
+        InternalRequestGrant grant =
+                InternalRequestGrant.builder()
+                        .issuer(
+                                InternalService.AI_SERVICE
+                        )
+                        .target(
+                                "user-service"
+                        )
+                        .method(
+                                HttpMethod.GET.name()
+                        )
+                        .path(
+                                path
+                        )
+                        .createdAt(
+                                Instant.now()
+                        )
+                        .build();
+
+        saveGrant(
+                internalRequestId,
+                grant
+        );
+
+        mockMvc.perform(
+                        get(path)
+                                .header(
+                                        "X-Test-Internal-Request-Id",
+                                        internalRequestId
+                                )
+                )
+                .andExpect(
+                        status().isOk()
+                );
+    }
+
+    @Test
+    void should_forbid_auth_service_from_accessing_user_auth_info()
+            throws Exception {
+
+        long userId = 1L;
+
+        String path =
+                "/v1/users/internal/"
+                        + userId
+                        + "/auth-info";
+
+        UUID internalRequestId =
+                UUID.randomUUID();
+
+        InternalRequestGrant grant =
+                InternalRequestGrant.builder()
+                        .issuer(
+                                InternalService.AUTH_SERVICE
+                        )
+                        .target(
+                                "user-service"
+                        )
+                        .method(
+                                HttpMethod.GET.name()
+                        )
+                        .path(
+                                path
+                        )
+                        .createdAt(
+                                Instant.now()
+                        )
+                        .build();
+
+        saveGrant(
+                internalRequestId,
+                grant
+        );
+
+        mockMvc.perform(
+                        get(path)
+                                .header(
+                                        "X-Test-Internal-Request-Id",
+                                        internalRequestId
+                                )
+                )
+                .andExpect(
+                        status().isForbidden()
+                );
+    }
+
+    @Test
+    void should_forbid_ai_service_from_accessing_internal_user_lookup()
+            throws Exception {
+
+        String path =
+                "/v1/users/internal/lookup";
+
+        UUID internalRequestId =
+                UUID.randomUUID();
+
+        InternalRequestGrant grant =
+                InternalRequestGrant.builder()
+                        .issuer(
+                                InternalService.AI_SERVICE
+                        )
+                        .target(
+                                "user-service"
+                        )
+                        .method(
+                                HttpMethod.POST.name()
+                        )
+                        .path(
+                                path
+                        )
+                        .createdAt(
+                                Instant.now()
+                        )
+                        .build();
+
+        saveGrant(
+                internalRequestId,
+                grant
+        );
+
+        mockMvc.perform(
+                        post(path)
+                                .header(
+                                        "X-Test-Internal-Request-Id",
+                                        internalRequestId
+                                )
+                                .contentType(
+                                        MediaType.APPLICATION_JSON
+                                )
+                                .content("""
+                                    {
+                                      "userEmail": "test@example.com"
+                                    }
+                                    """)
+                )
+                .andExpect(
+                        status().isForbidden()
+                );
+    }
+
+    @Test
+    void should_reject_replayed_ai_service_internal_request()
+            throws Exception {
+
+        long userId = 1L;
+
+        String path =
+                "/v1/users/internal/"
+                        + userId
+                        + "/auth-info";
+
+        UUID internalRequestId =
+                UUID.randomUUID();
+
+        InternalRequestGrant grant =
+                InternalRequestGrant.builder()
+                        .issuer(
+                                InternalService.AI_SERVICE
+                        )
+                        .target(
+                                "user-service"
+                        )
+                        .method(
+                                HttpMethod.GET.name()
+                        )
+                        .path(
+                                path
+                        )
+                        .createdAt(
+                                Instant.now()
+                        )
+                        .build();
+
+        saveGrant(
+                internalRequestId,
+                grant
+        );
+
+        mockMvc.perform(
+                        get(path)
+                                .header(
+                                        "X-Test-Internal-Request-Id",
+                                        internalRequestId
+                                )
+                )
+                .andExpect(
+                        status().isOk()
+                );
+
+        mockMvc.perform(
+                        get(path)
+                                .header(
+                                        "X-Test-Internal-Request-Id",
+                                        internalRequestId
+                                )
+                )
+                .andExpect(
+                        status().isUnauthorized()
+                );
+    }
+
+    @Test
+    void should_reject_ai_service_grant_for_different_user_path()
+            throws Exception {
+
+        long grantedUserId = 10L;
+        long requestedUserId = 11L;
+
+        String grantedPath =
+                "/v1/users/internal/"
+                        + grantedUserId
+                        + "/auth-info";
+
+        String requestedPath =
+                "/v1/users/internal/"
+                        + requestedUserId
+                        + "/auth-info";
+
+        UUID internalRequestId =
+                UUID.randomUUID();
+
+        InternalRequestGrant grant =
+                InternalRequestGrant.builder()
+                        .issuer(
+                                InternalService.AI_SERVICE
+                        )
+                        .target(
+                                "user-service"
+                        )
+                        .method(
+                                HttpMethod.GET.name()
+                        )
+                        .path(
+                                grantedPath
+                        )
+                        .createdAt(
+                                Instant.now()
+                        )
+                        .build();
+
+        saveGrant(
+                internalRequestId,
+                grant
+        );
+
+        mockMvc.perform(
+                        get(requestedPath)
+                                .header(
+                                        "X-Test-Internal-Request-Id",
+                                        internalRequestId
+                                )
+                )
+                .andExpect(
+                        status().isUnauthorized()
+                );
+    }
+
+    @Test
+    void should_reject_ai_service_grant_with_wrong_http_method()
+            throws Exception {
+
+        long userId = 1L;
+
+        String path =
+                "/v1/users/internal/"
+                        + userId
+                        + "/auth-info";
+
+        UUID internalRequestId =
+                UUID.randomUUID();
+
+        InternalRequestGrant grant =
+                InternalRequestGrant.builder()
+                        .issuer(
+                                InternalService.AI_SERVICE
+                        )
+                        .target(
+                                "user-service"
+                        )
+                        .method(
+                                HttpMethod.GET.name()
+                        )
+                        .path(
+                                path
+                        )
+                        .createdAt(
+                                Instant.now()
+                        )
+                        .build();
+
+        saveGrant(
+                internalRequestId,
+                grant
+        );
+
+        mockMvc.perform(
+                        post(path)
+                                .header(
+                                        "X-Test-Internal-Request-Id",
+                                        internalRequestId
+                                )
+                )
+                .andExpect(
+                        status().isUnauthorized()
+                );
     }
 
     private ResultActions performInternalLookup(

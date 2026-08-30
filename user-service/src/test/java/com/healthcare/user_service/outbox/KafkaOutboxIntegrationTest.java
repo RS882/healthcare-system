@@ -4,6 +4,7 @@ package com.healthcare.user_service.outbox;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.healthcare.user_service.audit.repository.AuditLogRepository;
 import com.healthcare.user_service.config.AbstractKafkaRedisMsqlTestContainer;
+import com.healthcare.user_service.config.KafkaTestIsolationConfig;
 import com.healthcare.user_service.kafka.event.UserRegisteredEvent;
 import com.healthcare.user_service.kafka.idempotency.model.ProcessedEventId;
 import com.healthcare.user_service.kafka.idempotency.repository.ProcessedEventRepository;
@@ -16,6 +17,7 @@ import com.healthcare.user_service.service.interfacies.UserService;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.core.env.Environment;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.core.ProducerFactory;
@@ -33,11 +35,21 @@ import static org.awaitility.Awaitility.await;
 
 @SpringBootTest
 @ActiveProfiles("it")
+@Import(KafkaTestIsolationConfig.class)
 @TestPropertySource(properties = {
         "user-context-filter.enabled=false",
+
         "spring.kafka.listener.auto-startup=true",
+        "app.outbox.publisher.enabled=true",
+
         "spring.cloud.config.enabled=false",
-        "app.kafka.groups.user-service.id=user-service-outbox-test"
+
+        "app.kafka.topics.user-registered.name=user.registered.outbox-test.v1",
+        "app.kafka.topics.user-updated.name=user.updated.outbox-test.v1",
+        "app.kafka.topics.user-deleted.name=user.deleted.outbox-test.v1",
+
+        "app.kafka.groups.user-service.id=user-service-outbox-test",
+        "test.kafka.transaction-id-prefix=user-service-outbox-test-tx-"
 })
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Kafka outbox integration test")
@@ -50,7 +62,6 @@ class KafkaOutboxIntegrationTest
 
     @Autowired
     private ProducerFactory<String, String> producerFactory;
-
 
     @Autowired
     private UserService userService;

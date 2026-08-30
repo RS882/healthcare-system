@@ -31,9 +31,12 @@ import static org.assertj.core.api.Assertions.assertThat;
         "eureka.client.fetch-registry=false",
 
         "user-context-filter.enabled=false",
-        "spring.task.scheduling.enabled=false",
 
-        "app.processed-event.cleanup.cron=0 30 3 * * *",
+        "spring.kafka.listener.auto-startup=false",
+        "spring.task.scheduling.enabled=false",
+        "app.outbox.publisher.enabled=false",
+
+        "app.processed-event.cleanup.cron=0 0 0 1 1 *",
         "app.processed-event.cleanup.retention-days=30"
 })
 @ActiveProfiles("it")

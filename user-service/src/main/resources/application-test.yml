@@ -12,6 +12,13 @@ spring:
     config:
       enabled: false
 
+    discovery:
+      enabled: false
+
+    service-registry:
+      auto-registration:
+        enabled: false
+
   kafka:
     listener:
       auto-startup: false
@@ -33,6 +40,12 @@ spring:
   liquibase:
     enabled: false
 
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
 cors:
   allowed-origins: http://localhost
 
@@ -53,6 +66,7 @@ internal-request:
   service-name: "user-service"
   allowed-issuers:
     - "auth-service"
+    - "ai-service"
 
 security:
   user-context:
@@ -90,15 +104,18 @@ app:
         acks: all
 
   outbox:
+    publisher:
+      enabled: false
+
     cleanup:
-      cron: "0 0 3 * * *"
+      cron: "0 0 0 1 1 *"
       retention-days: 7
 
     recovery:
-      cron: "0 */5 * * * *"
+      cron: "0 0 0 1 1 *"
       timeout-minutes: 15
 
   processed-event:
     cleanup:
-      cron: "0 30 3 * * *"
+      cron: "0 0 0 1 1 *"
       retention-days: 30
