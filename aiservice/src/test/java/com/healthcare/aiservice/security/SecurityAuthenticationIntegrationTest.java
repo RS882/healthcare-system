@@ -29,6 +29,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.security.interfaces.RSAPublicKey;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -46,7 +47,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "request-id-filter.enabled=true",
+        "auth-filter.enabled=true",
+        "user-context-filter.enabled=true"
+})
 @AutoConfigureMockMvc
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Security authentication integration tests: ")
@@ -86,6 +91,9 @@ class SecurityAuthenticationIntegrationTest
 
     @MockitoBean
     private UserContextVerifier userContextVerifier;
+
+    @MockitoBean
+    private RSAPublicKey userContextPublicKey;
 
     @MockitoBean
     private UserAuthInfoClient userAuthInfoClient;

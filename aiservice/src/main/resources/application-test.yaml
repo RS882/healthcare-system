@@ -9,8 +9,13 @@ spring:
     config:
       enabled: false
       fail-fast: false
+
     discovery:
       enabled: false
+
+    service-registry:
+      auto-registration:
+        enabled: false
 
   cache:
     type: redis
@@ -22,10 +27,18 @@ spring:
         options:
           model: llama3:latest
 
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
 cache:
   default-ttl: 5m
+
   active-prompt:
     ttl: 10m
+
   user-auth-info:
     ttl: 10s
 
@@ -40,8 +53,22 @@ ai:
       multiplier: 1.1
       max-delay: 2ms
 
-eureka:
-  client:
-    enabled: false
-    register-with-eureka: false
-    fetch-registry: false
+request-id:
+  prefix: "test:request-id:"
+  value: "test"
+  ttl: 5m
+
+user-context:
+  user-context-header: X-User-Context
+
+header-request-id:
+  name: X-Request-Id
+
+request-id-filter:
+  enabled: false
+
+auth-filter:
+  enabled: false
+
+user-context-filter:
+  enabled: false

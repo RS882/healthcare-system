@@ -27,6 +27,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.security.interfaces.RSAPublicKey;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -41,7 +42,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(properties = {
+        "request-id-filter.enabled=true",
+        "auth-filter.enabled=true",
+        "user-context-filter.enabled=true"
+})
 @AutoConfigureMockMvc
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 @DisplayName("Admin endpoint authorization integration tests: ")
@@ -88,6 +93,9 @@ class AdminEndpointAuthorizationIT
     @Autowired
     private RequestIdProperties
             requestIdProperties;
+
+    @MockitoBean
+    private RSAPublicKey userContextPublicKey;
 
     @MockitoBean
     private UserContextVerifier userContextVerifier;
