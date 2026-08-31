@@ -72,3 +72,15 @@ auth-filter:
 
 user-context-filter:
   enabled: false
+
+internal-request:
+  issuer: ai-service
+  key-prefix: "internal-request:"
+  header-name: X-Internal-Request-Id
+  ttl: 30s
+
+clients:
+  user-service:
+    internal:
+      target-service: user-service
+      base-path: /api/v1/users/internal

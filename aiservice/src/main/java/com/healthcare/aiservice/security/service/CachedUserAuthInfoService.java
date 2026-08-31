@@ -21,8 +21,7 @@ import java.time.Duration;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class CachedUserAuthInfoService
-        implements UserAuthInfoService {
+public class CachedUserAuthInfoService implements UserAuthInfoService {
 
     private final UserAuthInfoClient client;
 
@@ -31,9 +30,7 @@ public class CachedUserAuthInfoService
             cacheNames = CacheNames.USER_AUTH_INFO,
             key = "#userId"
     )
-    public UserAuthInfoDto getUserAuthInfoByUserId(
-            long userId
-    ) {
+    public UserAuthInfoDto getUserAuthInfoByUserId(long userId) {
         log.debug(
                 "Authentication information not found in cache. Loading from user-service. userId={}",
                 userId
@@ -41,13 +38,9 @@ public class CachedUserAuthInfoService
 
         validateUserId(userId);
 
-        UserAuthInfoDto authInfo =
-                loadFromUserService(userId);
+        UserAuthInfoDto authInfo = loadFromUserService(userId);
 
-        validateResponse(
-                authInfo,
-                userId
-        );
+        validateResponse(authInfo, userId);
 
         log.debug(
                 "Authentication information successfully loaded for userId={}.",
@@ -68,9 +61,7 @@ public class CachedUserAuthInfoService
         // Spring Cache removes the entry after successful method execution.
     }
 
-    private UserAuthInfoDto loadFromUserService(
-            long userId
-    ) {
+    private UserAuthInfoDto loadFromUserService(long userId) {
         try {
 
             log.debug(

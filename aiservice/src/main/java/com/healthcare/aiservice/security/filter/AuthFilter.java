@@ -59,8 +59,7 @@ public class AuthFilter extends OncePerRequestFilter {
 
             SignedUserContext userContext = extractValidUserContext(request);
 
-            UserAuthInfoDto authInfo =
-                    resolveUserAuthInfo(userContext);
+            UserAuthInfoDto authInfo = resolveUserAuthInfo(userContext);
 
             validateConsistency(userContext, authInfo);
 

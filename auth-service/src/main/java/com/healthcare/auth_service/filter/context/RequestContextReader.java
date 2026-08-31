@@ -14,15 +14,13 @@ public final class RequestContextReader {
     private RequestContextReader() {
     }
 
-    public static Optional<UUID> getRequestId(
-            HttpServletRequest request
-    ) {
+    public static Optional<UUID> getRequestId(HttpServletRequest request) {
+
         if (request == null) {
             return Optional.empty();
         }
 
-        Object attribute =
-                request.getAttribute(ATTR_REQUEST_ID);
+        Object attribute = request.getAttribute(ATTR_REQUEST_ID);
 
         if (attribute instanceof UUID requestId) {
             return Optional.of(requestId);
