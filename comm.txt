@@ -3,3 +3,8 @@ docker-compose up --build -d
 docker compose -p ai-mongo -f docker-compose-mongo.yml up -d
 
 docker compose up -d --build --force-recreate
+
+docker compose down
+docker compose build --no-cache --pull
+docker compose up -d
+docker compose ps

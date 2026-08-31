@@ -123,7 +123,7 @@ class RequestIdFilterTest {
 
         Object ridAttr = request.getAttribute(ATTR_REQUEST_ID);
 
-        assertInstanceOf(UUID.class, ridAttr);
+        assertInstanceOf(String.class, ridAttr);
         assertEquals(id, ridAttr.toString());
 
         verify(filterChain).doFilter(request, response);

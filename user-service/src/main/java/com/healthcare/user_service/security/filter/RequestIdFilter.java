@@ -61,7 +61,7 @@ public class RequestIdFilter extends OncePerRequestFilter {
                 );
             }
 
-            request.setAttribute(ATTR_REQUEST_ID, UUID.fromString(requestId));
+            request.setAttribute(ATTR_REQUEST_ID, requestId);
 
             filterChain.doFilter(request, response);
         } catch (RequestIdException ex) {

@@ -131,6 +131,46 @@ services:
       - ./secrets:/app/secrets
     restart: unless-stopped
 
+  ai-service:
+    build: ./aiservice
+    container_name: ai-service
+    ports:
+      - "8087:8087"
+
+    environment:
+      CONFIG_SERVER_URL: ${CONFIG_SERVER_URL}
+      EUREKA_URL: ${EUREKA_URL}
+
+      MONGO_USERNAME: ${MONGO_USERNAME}
+      MONGO_PASSWORD: ${MONGO_PASSWORD}
+      MONGO_HOST: ${MONGO_HOST}
+      MONGO_PORT: ${MONGO_PORT}
+      MONGO_DATABASE: ${MONGO_DATABASE}
+      MONGO_AUTH_DATABASE: ${MONGO_AUTH_DATABASE}
+
+      REDIS_HOST: ${REDIS_HOST}
+      REDIS_PORT: ${REDIS_PORT}
+
+      OLLAMA_BASE_URL: ${OLLAMA_BASE_URL}
+
+    depends_on:
+      config-server:
+        condition: service_healthy
+      user-service:
+        condition: service_started
+
+    volumes:
+      - ./secrets:/app/secrets
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8087/api/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 20s
+
+    restart: unless-stopped
+
   api-gateway:
     build: ./api-gateway
     container_name: api-gateway
@@ -149,6 +189,8 @@ services:
         condition: service_started
       user-service:
         condition: service_started
+      ai-service:
+        condition: service_healthy
     volumes:
       - ./secrets:/app/secrets
     restart: unless-stopped
