@@ -1,0 +1,68 @@
+services:
+
+  postgres:
+    image: postgres:17
+    container_name: healthcare-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+
+    ports:
+      - "${POSTGRES_PORT}:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+    networks:
+      - healthcare-postgres-network
+
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: healthcare-pgadmin
+    restart: unless-stopped
+
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+
+    ports:
+      - "${PGADMIN_PORT}:80"
+
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    networks:
+      - healthcare-postgres-network
+
+
+volumes:
+  postgres_data:
+    name: healthcare_postgres_data
+
+  pgadmin_data:
+    name: healthcare_pgadmin_data
+
+
+networks:
+  healthcare-postgres-network:
+    name: healthcare-postgres-network
+    driver: bridge
