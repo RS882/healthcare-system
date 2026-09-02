@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: billing-service-test
+
+  config:
+    import: ""
+
+  cloud:
+    config:
+      enabled: false
+      fail-fast: false
+
+    discovery:
+      enabled: false
+
+    service-registry:
+      auto-registration:
+        enabled: false
+
+eureka:
+  client:
+    enabled: false
+    register-with-eureka: false
+    fetch-registry: false
+
+billing:
+  currency: EUR
