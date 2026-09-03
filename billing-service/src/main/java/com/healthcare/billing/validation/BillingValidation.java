@@ -63,4 +63,24 @@ public final class BillingValidation {
             );
         }
     }
+
+    public static void validateDiscountRate(BigDecimal discountRate) {
+        if (discountRate == null) {
+            throw new IllegalArgumentException(
+                    "Discount rate must not be null"
+            );
+        }
+
+        if (discountRate.signum() < 0) {
+            throw new IllegalArgumentException(
+                    "Discount rate must not be negative"
+            );
+        }
+
+        if (discountRate.compareTo(BigDecimal.ONE) > 0) {
+            throw new IllegalArgumentException(
+                    "Discount rate must not be greater than 1"
+            );
+        }
+    }
 }

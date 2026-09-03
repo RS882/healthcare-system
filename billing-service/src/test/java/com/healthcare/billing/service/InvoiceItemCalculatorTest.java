@@ -1,6 +1,5 @@
 package com.healthcare.billing.service;
 
-
 import com.healthcare.billing.config.propertie.BillingProperties;
 import com.healthcare.billing.model.entity.InvoiceItem;
 import com.healthcare.billing.money.MoneyPolicy;
@@ -18,7 +17,7 @@ class InvoiceItemCalculatorTest {
 
     @BeforeEach
     void setUp() {
-        BillingProperties properties = new BillingProperties("EUR");
+        BillingProperties properties = new BillingProperties("EUR", 7);
 
         MoneyPolicy moneyPolicy = new MoneyPolicy(properties);
 
@@ -31,6 +30,7 @@ class InvoiceItemCalculatorTest {
                 "Consultation",
                 new BigDecimal("1.5"),
                 new BigDecimal("80.00"),
+                BigDecimal.ZERO,
                 new BigDecimal("0.19")
         );
 
@@ -41,6 +41,13 @@ class InvoiceItemCalculatorTest {
                 item.getNetAmount()
                         .amount()
                         .compareTo(new BigDecimal("120.00"))
+        );
+
+        assertEquals(
+                0,
+                item.getDiscountAmount()
+                        .amount()
+                        .compareTo(new BigDecimal("0.00"))
         );
 
         assertEquals(
@@ -64,11 +71,51 @@ class InvoiceItemCalculatorTest {
     }
 
     @Test
+    void shouldCalculateInvoiceItemWithDiscount() {
+        InvoiceItem item = calculator.calculate(
+                "Consultation",
+                BigDecimal.ONE,
+                new BigDecimal("100.00"),
+                new BigDecimal("0.10"),
+                new BigDecimal("0.19")
+        );
+
+        assertEquals(
+                0,
+                item.getNetAmount()
+                        .amount()
+                        .compareTo(new BigDecimal("100.00"))
+        );
+
+        assertEquals(
+                0,
+                item.getDiscountAmount()
+                        .amount()
+                        .compareTo(new BigDecimal("10.00"))
+        );
+
+        assertEquals(
+                0,
+                item.getTaxAmount()
+                        .amount()
+                        .compareTo(new BigDecimal("17.10"))
+        );
+
+        assertEquals(
+                0,
+                item.getTotalAmount()
+                        .amount()
+                        .compareTo(new BigDecimal("107.10"))
+        );
+    }
+
+    @Test
     void shouldCalculateItemWithoutTax() {
         InvoiceItem item = calculator.calculate(
                 "Free tax service",
                 BigDecimal.ONE,
                 new BigDecimal("100.00"),
+                BigDecimal.ZERO,
                 BigDecimal.ZERO
         );
 
@@ -77,6 +124,13 @@ class InvoiceItemCalculatorTest {
                 item.getNetAmount()
                         .amount()
                         .compareTo(new BigDecimal("100.00"))
+        );
+
+        assertEquals(
+                0,
+                item.getDiscountAmount()
+                        .amount()
+                        .compareTo(new BigDecimal("0.00"))
         );
 
         assertEquals(
@@ -100,13 +154,13 @@ class InvoiceItemCalculatorTest {
                 "Included service",
                 BigDecimal.ONE,
                 BigDecimal.ZERO,
+                BigDecimal.ZERO,
                 new BigDecimal("0.19")
         );
 
         assertTrue(item.getNetAmount().isZero());
-
+        assertTrue(item.getDiscountAmount().isZero());
         assertTrue(item.getTaxAmount().isZero());
-
         assertTrue(item.getTotalAmount().isZero());
     }
 
@@ -116,6 +170,7 @@ class InvoiceItemCalculatorTest {
                 "Medical material",
                 new BigDecimal("100"),
                 new BigDecimal("0.075"),
+                BigDecimal.ZERO,
                 BigDecimal.ZERO
         );
 
@@ -128,11 +183,44 @@ class InvoiceItemCalculatorTest {
     }
 
     @Test
+    void shouldCalculateFractionalDiscountRate() {
+        InvoiceItem item = calculator.calculate(
+                "Medical material",
+                new BigDecimal("100"),
+                new BigDecimal("0.075"),
+                new BigDecimal("0.075"),
+                BigDecimal.ZERO
+        );
+
+        assertEquals(
+                0,
+                item.getNetAmount()
+                        .amount()
+                        .compareTo(new BigDecimal("7.50"))
+        );
+
+        assertEquals(
+                0,
+                item.getDiscountAmount()
+                        .amount()
+                        .compareTo(new BigDecimal("0.56"))
+        );
+
+        assertEquals(
+                0,
+                item.getTotalAmount()
+                        .amount()
+                        .compareTo(new BigDecimal("6.94"))
+        );
+    }
+
+    @Test
     void shouldStripDescription() {
         InvoiceItem item = calculator.calculate(
                 "   Consultation   ",
                 BigDecimal.ONE,
                 new BigDecimal("80.00"),
+                BigDecimal.ZERO,
                 new BigDecimal("0.19")
         );
 
@@ -147,6 +235,7 @@ class InvoiceItemCalculatorTest {
                         null,
                         BigDecimal.ONE,
                         new BigDecimal("80.00"),
+                        BigDecimal.ZERO,
                         new BigDecimal("0.19")
                 )
         );
@@ -160,6 +249,7 @@ class InvoiceItemCalculatorTest {
                         "   ",
                         BigDecimal.ONE,
                         new BigDecimal("80.00"),
+                        BigDecimal.ZERO,
                         new BigDecimal("0.19")
                 )
         );
@@ -173,6 +263,7 @@ class InvoiceItemCalculatorTest {
                         "Consultation",
                         BigDecimal.ZERO,
                         new BigDecimal("80.00"),
+                        BigDecimal.ZERO,
                         new BigDecimal("0.19")
                 )
         );
@@ -186,6 +277,7 @@ class InvoiceItemCalculatorTest {
                         "Consultation",
                         new BigDecimal("-1"),
                         new BigDecimal("80.00"),
+                        BigDecimal.ZERO,
                         new BigDecimal("0.19")
                 )
         );
@@ -199,6 +291,35 @@ class InvoiceItemCalculatorTest {
                         "Consultation",
                         BigDecimal.ONE,
                         new BigDecimal("-80.00"),
+                        BigDecimal.ZERO,
+                        new BigDecimal("0.19")
+                )
+        );
+    }
+
+    @Test
+    void shouldRejectNegativeDiscountRate() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> calculator.calculate(
+                        "Consultation",
+                        BigDecimal.ONE,
+                        new BigDecimal("80.00"),
+                        new BigDecimal("-0.01"),
+                        new BigDecimal("0.19")
+                )
+        );
+    }
+
+    @Test
+    void shouldRejectDiscountRateGreaterThanOne() {
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> calculator.calculate(
+                        "Consultation",
+                        BigDecimal.ONE,
+                        new BigDecimal("80.00"),
+                        new BigDecimal("1.01"),
                         new BigDecimal("0.19")
                 )
         );
@@ -212,6 +333,7 @@ class InvoiceItemCalculatorTest {
                         "Consultation",
                         BigDecimal.ONE,
                         new BigDecimal("80.00"),
+                        BigDecimal.ZERO,
                         new BigDecimal("-0.01")
                 )
         );
@@ -225,6 +347,7 @@ class InvoiceItemCalculatorTest {
                         "Consultation",
                         BigDecimal.ONE,
                         new BigDecimal("80.00"),
+                        BigDecimal.ZERO,
                         new BigDecimal("1.01")
                 )
         );

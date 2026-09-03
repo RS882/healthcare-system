@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.Currency;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -17,7 +18,7 @@ class MoneyPolicyTest {
 
     @BeforeEach
     void setUp() {
-        BillingProperties properties = new BillingProperties("EUR");
+        BillingProperties properties = new BillingProperties("EUR", 7);
 
         moneyPolicy = new MoneyPolicy(properties);
     }

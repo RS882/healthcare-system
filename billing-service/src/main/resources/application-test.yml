@@ -25,3 +25,4 @@ eureka:
 
 billing:
   currency: EUR
+  payment-term-days: 7

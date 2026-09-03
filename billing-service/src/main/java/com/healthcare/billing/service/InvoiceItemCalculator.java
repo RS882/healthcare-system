@@ -18,33 +18,35 @@ public class InvoiceItemCalculator {
             String description,
             BigDecimal quantity,
             BigDecimal unitPrice,
+            BigDecimal discountRate,
             BigDecimal taxRate
     ) {
         BillingValidation.validateDescription(description);
         BillingValidation.validateQuantity(quantity);
         BillingValidation.validateUnitPrice(unitPrice);
+        BillingValidation.validateDiscountRate(discountRate);
         BillingValidation.validateTaxRate(taxRate);
 
         BigDecimal rawNetAmount = quantity.multiply(unitPrice);
 
-        BigDecimal rawTaxAmount = rawNetAmount.multiply(taxRate);
+        BigDecimal rawDiscountAmount = rawNetAmount.multiply(discountRate);
 
-        BigDecimal rawTotalAmount = rawNetAmount.add(rawTaxAmount);
+        BigDecimal rawTaxableAmount = rawNetAmount.subtract(rawDiscountAmount);
+
+        BigDecimal rawTaxAmount = rawTaxableAmount.multiply(taxRate);
+
+        BigDecimal rawTotalAmount = rawTaxableAmount.add(rawTaxAmount);
 
         return InvoiceItem.builder()
                 .description(description.strip())
                 .quantity(quantity)
                 .unitPrice(unitPrice)
+                .discountRate(discountRate)
                 .taxRate(taxRate)
-                .netAmount(
-                        moneyPolicy.moneyOf(rawNetAmount)
-                )
-                .taxAmount(
-                        moneyPolicy.moneyOf(rawTaxAmount)
-                )
-                .totalAmount(
-                        moneyPolicy.moneyOf(rawTotalAmount)
-                )
+                .netAmount(moneyPolicy.moneyOf(rawNetAmount))
+                .discountAmount(moneyPolicy.moneyOf(rawDiscountAmount))
+                .taxAmount(moneyPolicy.moneyOf(rawTaxAmount))
+                .totalAmount(moneyPolicy.moneyOf(rawTotalAmount))
                 .build();
     }
 }

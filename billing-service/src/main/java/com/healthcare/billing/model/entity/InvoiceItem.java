@@ -18,6 +18,8 @@ public class InvoiceItem {
 
     private BigDecimal unitPrice;
 
+    private BigDecimal discountRate;
+
     /**
      * Tax rate as decimal fraction.
      *
@@ -29,6 +31,8 @@ public class InvoiceItem {
     private BigDecimal taxRate;
 
     private Money netAmount;
+
+    private Money discountAmount;
 
     private Money taxAmount;
 
