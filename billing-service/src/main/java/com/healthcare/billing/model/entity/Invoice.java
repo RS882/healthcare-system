@@ -7,7 +7,6 @@ import lombok.Getter;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 
 @Getter
 @Builder
@@ -50,5 +49,26 @@ public class Invoice {
         this.status = InvoiceStatus.ISSUED;
     }
 
+    public void cancel() {
 
+        if (status != InvoiceStatus.DRAFT
+                && status != InvoiceStatus.ISSUED) {
+            throw new IllegalStateException(
+                    "Only draft or issued invoice can be cancelled"
+            );
+        }
+
+        this.status = InvoiceStatus.CANCELLED;
+    }
+
+    public void markAsPaid() {
+
+        if (status != InvoiceStatus.ISSUED) {
+            throw new IllegalStateException(
+                    "Only issued invoice can be paid"
+            );
+        }
+
+        this.status = InvoiceStatus.PAID;
+    }
 }

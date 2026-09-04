@@ -35,10 +35,7 @@ public class MoneyPolicy {
                 ROUNDING_MODE
         );
 
-        return Money.of(
-                roundedAmount,
-                currency
-        );
+        return Money.of(roundedAmount, currency);
     }
 
     public Money zero() {

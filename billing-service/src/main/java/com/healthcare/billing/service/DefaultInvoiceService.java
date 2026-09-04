@@ -24,7 +24,7 @@ public class DefaultInvoiceService implements InvoiceService {
     @Override
     public Invoice issue(Invoice invoice) {
 
-        validateForIssue(invoice);
+        validateInvoice(invoice);
 
         LocalDate issuedDate = LocalDate.now(clock);
 
@@ -44,7 +44,25 @@ public class DefaultInvoiceService implements InvoiceService {
         return invoice;
     }
 
-    private void validateForIssue(Invoice invoice) {
+    @Override
+    public Invoice cancel(Invoice invoice) {
+        validateInvoice(invoice);
+
+        invoice.cancel();
+
+        return invoice;
+    }
+
+    @Override
+    public Invoice markAsPaid(Invoice invoice) {
+        validateInvoice(invoice);
+
+        invoice.markAsPaid();
+
+        return invoice;
+    }
+
+    private void validateInvoice(Invoice invoice) {
         if (invoice == null) {
             throw new IllegalArgumentException("Invoice must not be null");
         }
