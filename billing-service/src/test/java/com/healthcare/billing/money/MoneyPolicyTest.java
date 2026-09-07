@@ -6,7 +6,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.util.Currency;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,7 +43,7 @@ class MoneyPolicyTest {
 
     @Test
     void shouldRoundMoneyDownWhenThirdDigitIsLessThanFive() {
-        Money money = moneyPolicy.moneyOf(                new BigDecimal("10.124")        );
+        Money money = moneyPolicy.moneyOf(new BigDecimal("10.124"));
 
         assertEquals(
                 0,
@@ -55,7 +54,7 @@ class MoneyPolicyTest {
 
     @Test
     void shouldRoundMoneyUpWhenThirdDigitIsGreaterThanFive() {
-        Money money = moneyPolicy.moneyOf(                new BigDecimal("10.126")        );
+        Money money = moneyPolicy.moneyOf(new BigDecimal("10.126"));
 
         assertEquals(
                 0,

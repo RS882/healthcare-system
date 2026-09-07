@@ -1,12 +1,10 @@
 package com.healthcare.billing.validation;
 
-import com.healthcare.billing.model.entity.Invoice;
 import com.healthcare.billing.model.entity.InvoiceItem;
+import com.healthcare.billing.model.entity.invoice.Invoice;
 import com.healthcare.billing.model.value.Money;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 
@@ -14,51 +12,19 @@ import java.util.Objects;
 public class InvoiceValidator {
 
 
-    public void validateForIssue(
-            Invoice invoice,
-            String invoiceNumber,
-            LocalDate issuedDate,
-            LocalDate dueDate
-    ) {
-        validateInvoiceNumber(invoiceNumber);
-        validateDatesForIssue(issuedDate, dueDate);
-        validateParties(invoice.getPatientId(), invoice.getMedicalFacilityId());
+    public void validateForPay(Invoice invoice) {
+        validateInvoice(invoice);
         validateItems(invoice.getItems());
         validateAmounts(invoice);
         validateAmountConsistency(invoice);
     }
 
-
-    private void validateInvoiceNumber(String invoiceNumber) {
-
-        if (!StringUtils.hasText(invoiceNumber)) {
-            throw new IllegalArgumentException(
-                    "Invoice number must not be blank"
-            );
-        }
-    }
-
-    private void validateDatesForIssue(
-            LocalDate issuedDate,
-            LocalDate dueDate
-    ) {
-        if (issuedDate == null) {
-            throw new IllegalArgumentException(
-                    "Issued date must not be null"
-            );
-        }
-
-        if (dueDate == null) {
-            throw new IllegalArgumentException(
-                    "Due date must not be null"
-            );
-        }
-
-        if (dueDate.isBefore(issuedDate)) {
-            throw new IllegalArgumentException(
-                    "Due date must not be before issued date"
-            );
-        }
+    public void validateForIssue(Invoice invoice) {
+        validateInvoice(invoice);
+        validateParties(invoice.getPatientId(), invoice.getMedicalFacilityId());
+        validateItems(invoice.getItems());
+        validateAmounts(invoice);
+        validateAmountConsistency(invoice);
     }
 
     private void validateParties(Long patientId, Long medicalFacilityId) {
@@ -174,5 +140,10 @@ public class InvoiceValidator {
         }
     }
 
+    public void validateInvoice(Invoice invoice) {
+        if (invoice == null) {
+            throw new IllegalArgumentException("Invoice must not be null");
+        }
+    }
 
 }

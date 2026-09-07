@@ -1,6 +1,6 @@
 package com.healthcare.billing.service.interfaces;
 
-import com.healthcare.billing.model.entity.Invoice;
+import com.healthcare.billing.model.entity.invoice.Invoice;
 
 public interface InvoiceService {
 

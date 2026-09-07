@@ -1,70 +1,53 @@
 package com.healthcare.billing.service;
 
-import com.healthcare.billing.config.propertie.BillingProperties;
-import com.healthcare.billing.generator.InvoiceNumberGenerator;
-import com.healthcare.billing.model.entity.Invoice;
+import com.healthcare.billing.model.entity.invoice.Invoice;
+import com.healthcare.billing.model.entity.invoice.InvoiceStateMachine;
+import com.healthcare.billing.model.entity.invoice.enums.InvoiceEvent;
 import com.healthcare.billing.service.interfaces.InvoiceService;
-import com.healthcare.billing.validation.InvoiceValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.time.Clock;
-import java.time.LocalDate;
 
 @Service
 @RequiredArgsConstructor
 public class DefaultInvoiceService implements InvoiceService {
 
-    private final InvoiceNumberGenerator invoiceNumberGenerator;
-    private final BillingProperties billingProperties;
-    private final InvoiceValidator invoiceValidator;
-    private final Clock clock;
+
+    private final InvoiceStateMachine invoiceStateMachine;
 
 
     @Override
     public Invoice issue(Invoice invoice) {
 
-        validateInvoice(invoice);
-
-        LocalDate issuedDate = LocalDate.now(clock);
-
-        LocalDate dueDate = issuedDate.plusDays(billingProperties.paymentTermDays());
-
-        String invoiceNumber = invoiceNumberGenerator.nextNumber();
-
-        invoiceValidator.validateForIssue(
+        invoiceStateMachine.changeState(
                 invoice,
-                invoiceNumber,
-                issuedDate,
-                dueDate
+                InvoiceEvent.ISSUE
         );
-
-        invoice.issue(invoiceNumber, issuedDate, dueDate);
 
         return invoice;
     }
 
     @Override
     public Invoice cancel(Invoice invoice) {
-        validateInvoice(invoice);
 
-        invoice.cancel();
+
+        invoiceStateMachine.changeState(
+                invoice,
+                InvoiceEvent.CANCEL
+        );
 
         return invoice;
     }
 
     @Override
     public Invoice markAsPaid(Invoice invoice) {
-        validateInvoice(invoice);
 
-        invoice.markAsPaid();
+
+        invoiceStateMachine.changeState(
+                invoice,
+                InvoiceEvent.PAY
+        );
 
         return invoice;
     }
 
-    private void validateInvoice(Invoice invoice) {
-        if (invoice == null) {
-            throw new IllegalArgumentException("Invoice must not be null");
-        }
-    }
 }

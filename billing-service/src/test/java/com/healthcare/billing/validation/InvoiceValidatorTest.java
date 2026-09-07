@@ -1,14 +1,13 @@
 package com.healthcare.billing.validation;
 
-import com.healthcare.billing.model.entity.Invoice;
 import com.healthcare.billing.model.entity.InvoiceItem;
-import com.healthcare.billing.model.enums.InvoiceStatus;
+import com.healthcare.billing.model.entity.invoice.Invoice;
+import com.healthcare.billing.model.entity.invoice.enums.InvoiceStatus;
 import com.healthcare.billing.model.value.Money;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Currency;
 import java.util.List;
@@ -18,17 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class InvoiceValidatorTest {
 
-    private static final Currency EUR =
-            Currency.getInstance("EUR");
-
-    private static final LocalDate ISSUED_DATE =
-            LocalDate.of(2026, 9, 3);
-
-    private static final LocalDate DUE_DATE =
-            LocalDate.of(2026, 9, 10);
-
-    private static final String INVOICE_NUMBER =
-            "INV-2026-000001";
+    private static final Currency EUR = Currency.getInstance("EUR");
 
     private InvoiceValidator validator;
 
@@ -38,92 +27,29 @@ class InvoiceValidatorTest {
     }
 
     @Test
-    void shouldValidateCorrectInvoiceForIssue() {
+    void shouldValidateCorrectDraftInvoice() {
         Invoice invoice = createValidInvoice();
 
-        assertDoesNotThrow(
-                () -> validator.validateForIssue(
-                        invoice,
-                        INVOICE_NUMBER,
-                        ISSUED_DATE,
-                        DUE_DATE
-                )
-        );
+        assertDoesNotThrow(() -> validator.validateForIssue(invoice));
     }
 
     @Test
-    void shouldRejectNullInvoiceNumber() {
+    void shouldValidateCorrectInvoiceForPay() {
         Invoice invoice = createValidInvoice();
 
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> validator.validateForIssue(
-                        invoice,
-                        null,
-                        ISSUED_DATE,
-                        DUE_DATE
-                )
-        );
+        assertDoesNotThrow(() -> validator.validateForPay(invoice));
     }
 
     @Test
-    void shouldRejectBlankInvoiceNumber() {
-        Invoice invoice = createValidInvoice();
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> validator.validateForIssue(
-                        invoice,
-                        " ",
-                        ISSUED_DATE,
-                        DUE_DATE
-                )
-        );
+    void shouldRejectNullInvoiceForDraftValidation() {
+        assertThrows(IllegalArgumentException.class,
+                () -> validator.validateForIssue(null));
     }
 
     @Test
-    void shouldRejectNullIssuedDate() {
-        Invoice invoice = createValidInvoice();
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> validator.validateForIssue(
-                        invoice,
-                        INVOICE_NUMBER,
-                        null,
-                        DUE_DATE
-                )
-        );
-    }
-
-    @Test
-    void shouldRejectNullDueDate() {
-        Invoice invoice = createValidInvoice();
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> validator.validateForIssue(
-                        invoice,
-                        INVOICE_NUMBER,
-                        ISSUED_DATE,
-                        null
-                )
-        );
-    }
-
-    @Test
-    void shouldRejectDueDateBeforeIssuedDate() {
-        Invoice invoice = createValidInvoice();
-
-        assertThrows(
-                IllegalArgumentException.class,
-                () -> validator.validateForIssue(
-                        invoice,
-                        INVOICE_NUMBER,
-                        LocalDate.of(2026, 9, 10),
-                        LocalDate.of(2026, 9, 9)
-                )
-        );
+    void shouldRejectNullInvoiceForPayValidation() {
+        assertThrows(IllegalArgumentException.class,
+                () -> validator.validateForPay(null));
     }
 
     @Test
@@ -138,10 +64,7 @@ class InvoiceValidatorTest {
                 money("107.10")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -156,10 +79,7 @@ class InvoiceValidatorTest {
                 money("107.10")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -174,10 +94,7 @@ class InvoiceValidatorTest {
                 money("107.10")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -192,10 +109,7 @@ class InvoiceValidatorTest {
                 money("107.10")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -210,10 +124,7 @@ class InvoiceValidatorTest {
                 money("107.10")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -228,10 +139,7 @@ class InvoiceValidatorTest {
                 money("107.10")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -246,10 +154,7 @@ class InvoiceValidatorTest {
                 money("107.10")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -264,10 +169,7 @@ class InvoiceValidatorTest {
                 money("107.10")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -288,10 +190,7 @@ class InvoiceValidatorTest {
                 money("107.10")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -306,10 +205,7 @@ class InvoiceValidatorTest {
                 money("107.10")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -324,10 +220,7 @@ class InvoiceValidatorTest {
                 money("107.10")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -342,10 +235,7 @@ class InvoiceValidatorTest {
                 money("107.10")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -360,10 +250,7 @@ class InvoiceValidatorTest {
                 null
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -378,10 +265,7 @@ class InvoiceValidatorTest {
                 money("107.10")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -396,10 +280,7 @@ class InvoiceValidatorTest {
                 money("127.10")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -414,10 +295,7 @@ class InvoiceValidatorTest {
                 money("72.90")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -432,10 +310,7 @@ class InvoiceValidatorTest {
                 money("-107.10")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
     @Test
@@ -450,19 +325,41 @@ class InvoiceValidatorTest {
                 money("200.00")
         );
 
-        assertThrows(
-                IllegalStateException.class,
-                () -> validate(invoice)
-        );
+        assertThrows(IllegalStateException.class, () -> validateDraft(invoice));
     }
 
-    private void validate(Invoice invoice) {
-        validator.validateForIssue(
-                invoice,
-                INVOICE_NUMBER,
-                ISSUED_DATE,
-                DUE_DATE
+    @Test
+    void shouldRejectNullItemsForPay() {
+        Invoice invoice = createInvoice(
+                1L,
+                10L,
+                null,
+                money("100.00"),
+                money("10.00"),
+                money("17.10"),
+                money("107.10")
         );
+
+        assertThrows(IllegalStateException.class, () -> validator.validateForPay(invoice));
+    }
+
+    @Test
+    void shouldRejectInvalidAmountsForPay() {
+        Invoice invoice = createInvoice(
+                1L,
+                10L,
+                createValidItems(),
+                money("100.00"),
+                money("10.00"),
+                money("17.10"),
+                money("200.00")
+        );
+
+        assertThrows(IllegalStateException.class, () -> validator.validateForPay(invoice));
+    }
+
+    private void validateDraft(Invoice invoice) {
+        validator.validateForIssue(invoice);
     }
 
     private Invoice createValidInvoice() {
@@ -494,14 +391,11 @@ class InvoiceValidatorTest {
                 .discountAmount(discountAmount)
                 .taxAmount(taxAmount)
                 .totalAmount(totalAmount)
-                .status(InvoiceStatus.DRAFT)
                 .build();
     }
 
     private List<InvoiceItem> createValidItems() {
-        return List.of(
-                createValidItem()
-        );
+        return List.of(createValidItem());
     }
 
     private InvoiceItem createValidItem() {
@@ -519,9 +413,6 @@ class InvoiceValidatorTest {
     }
 
     private Money money(String amount) {
-        return Money.of(
-                new BigDecimal(amount),
-                EUR
-        );
+        return Money.of(new BigDecimal(amount), EUR);
     }
 }

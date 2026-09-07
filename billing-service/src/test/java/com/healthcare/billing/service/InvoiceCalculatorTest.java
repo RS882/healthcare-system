@@ -1,9 +1,9 @@
 package com.healthcare.billing.service;
 
 import com.healthcare.billing.config.propertie.BillingProperties;
-import com.healthcare.billing.model.entity.Invoice;
+import com.healthcare.billing.model.entity.invoice.Invoice;
 import com.healthcare.billing.model.entity.InvoiceItem;
-import com.healthcare.billing.model.enums.InvoiceStatus;
+import com.healthcare.billing.model.entity.invoice.enums.InvoiceStatus;
 import com.healthcare.billing.money.MoneyPolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

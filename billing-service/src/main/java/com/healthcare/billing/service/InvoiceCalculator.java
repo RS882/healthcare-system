@@ -1,8 +1,8 @@
 package com.healthcare.billing.service;
 
-import com.healthcare.billing.model.entity.Invoice;
+import com.healthcare.billing.model.entity.invoice.Invoice;
 import com.healthcare.billing.model.entity.InvoiceItem;
-import com.healthcare.billing.model.enums.InvoiceStatus;
+import com.healthcare.billing.model.entity.invoice.enums.InvoiceStatus;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.money.MoneyPolicy;
 import lombok.RequiredArgsConstructor;
@@ -41,7 +41,6 @@ public class InvoiceCalculator {
                 .discountAmount(discountAmount)
                 .taxAmount(taxAmount)
                 .totalAmount(totalAmount)
-                .status(InvoiceStatus.DRAFT)
                 .build();
     }
 
