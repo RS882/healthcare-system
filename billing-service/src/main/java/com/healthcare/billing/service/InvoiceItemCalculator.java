@@ -15,12 +15,14 @@ public class InvoiceItemCalculator {
     private final MoneyPolicy moneyPolicy;
 
     public InvoiceItem calculate(
+            Long serviceId,
             String description,
             BigDecimal quantity,
             BigDecimal unitPrice,
             BigDecimal discountRate,
             BigDecimal taxRate
     ) {
+        BillingValidation.validateId(serviceId);
         BillingValidation.validateDescription(description);
         BillingValidation.validateQuantity(quantity);
         BillingValidation.validateUnitPrice(unitPrice);
@@ -38,6 +40,7 @@ public class InvoiceItemCalculator {
         BigDecimal rawTotalAmount = rawTaxableAmount.add(rawTaxAmount);
 
         return InvoiceItem.builder()
+                .serviceId(serviceId)
                 .description(description.strip())
                 .quantity(quantity)
                 .unitPrice(unitPrice)

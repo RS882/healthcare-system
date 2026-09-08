@@ -1,8 +1,8 @@
 package com.healthcare.billing.service;
 
 import com.healthcare.billing.config.propertie.BillingProperties;
-import com.healthcare.billing.model.entity.invoice.Invoice;
 import com.healthcare.billing.model.entity.InvoiceItem;
+import com.healthcare.billing.model.entity.invoice.Invoice;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceStatus;
 import com.healthcare.billing.money.MoneyPolicy;
 import org.junit.jupiter.api.BeforeEach;
@@ -16,44 +16,55 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class InvoiceCalculatorTest {
 
+    private static final Long SERVICE_ID = 1L;
+
     private InvoiceItemCalculator itemCalculator;
     private InvoiceCalculator invoiceCalculator;
 
     @BeforeEach
     void setUp() {
-        BillingProperties properties = new BillingProperties("EUR", 7);
 
-        MoneyPolicy moneyPolicy = new MoneyPolicy(properties);
+        BillingProperties properties =                new BillingProperties("EUR", 7);
 
-        itemCalculator = new InvoiceItemCalculator(moneyPolicy);
+        MoneyPolicy moneyPolicy =                new MoneyPolicy(properties);
 
-        invoiceCalculator = new InvoiceCalculator(moneyPolicy);
+        itemCalculator =                new InvoiceItemCalculator(moneyPolicy);
+
+        invoiceCalculator =                new InvoiceCalculator(moneyPolicy);
     }
 
     @Test
     void shouldCalculateInvoiceWithDifferentDiscountAndTaxRates() {
 
-        InvoiceItem consultation = itemCalculator.calculate(
-                "Consultation",
-                BigDecimal.ONE,
-                new BigDecimal("100.00"),
-                new BigDecimal("0.10"),
-                new BigDecimal("0.19")
-        );
+        InvoiceItem consultation =
+                itemCalculator.calculate(
+                        1L,
+                        "Consultation",
+                        BigDecimal.ONE,
+                        new BigDecimal("100.00"),
+                        new BigDecimal("0.10"),
+                        new BigDecimal("0.19")
+                );
 
-        InvoiceItem laboratory = itemCalculator.calculate(
-                "Laboratory",
-                BigDecimal.ONE,
-                new BigDecimal("50.00"),
-                new BigDecimal("0.05"),
-                new BigDecimal("0.07")
-        );
+        InvoiceItem laboratory =
+                itemCalculator.calculate(
+                        2L,
+                        "Laboratory",
+                        BigDecimal.ONE,
+                        new BigDecimal("50.00"),
+                        new BigDecimal("0.05"),
+                        new BigDecimal("0.07")
+                );
 
-        Invoice invoice = invoiceCalculator.calculate(
-                1L,
-                10L,
-                List.of(consultation, laboratory)
-        );
+        Invoice invoice =
+                invoiceCalculator.calculate(
+                        1L,
+                        10L,
+                        List.of(
+                                consultation,
+                                laboratory
+                        )
+                );
 
         assertEquals(
                 0,
@@ -95,166 +106,167 @@ class InvoiceCalculatorTest {
     @Test
     void shouldCreateInvoiceAsDraft() {
 
-        InvoiceItem item = itemCalculator.calculate(
-                "Consultation",
-                BigDecimal.ONE,
-                new BigDecimal("100.00"),
-                BigDecimal.ZERO,
-                new BigDecimal("0.19")
-        );
+        Invoice invoice =
+                invoiceCalculator.calculate(
+                        1L,
+                        10L,
+                        List.of(createItem())
+                );
 
-        Invoice invoice = invoiceCalculator.calculate(
-                1L,
-                10L,
-                List.of(item)
+        assertEquals(
+                InvoiceStatus.DRAFT,
+                invoice.getStatus()
         );
-
-        assertEquals(InvoiceStatus.DRAFT, invoice.getStatus());
     }
 
     @Test
     void shouldNotAssignInvoiceNumberForDraft() {
 
-        InvoiceItem item = itemCalculator.calculate(
-                "Consultation",
-                BigDecimal.ONE,
-                new BigDecimal("100.00"),
-                BigDecimal.ZERO,
-                new BigDecimal("0.19")
-        );
+        Invoice invoice =
+                invoiceCalculator.calculate(
+                        1L,
+                        10L,
+                        List.of(createItem())
+                );
 
-        Invoice invoice = invoiceCalculator.calculate(
-                1L,
-                10L,
-                List.of(item)
+        assertNull(
+                invoice.getInvoiceNumber()
         );
-
-        assertNull(invoice.getInvoiceNumber());
     }
 
     @Test
     void shouldNotAssignIssuedDateForDraft() {
 
-        InvoiceItem item = itemCalculator.calculate(
-                "Consultation",
-                BigDecimal.ONE,
-                new BigDecimal("100.00"),
-                BigDecimal.ZERO,
-                new BigDecimal("0.19")
-        );
+        Invoice invoice =
+                invoiceCalculator.calculate(
+                        1L,
+                        10L,
+                        List.of(createItem())
+                );
 
-        Invoice invoice = invoiceCalculator.calculate(
-                1L,
-                10L,
-                List.of(item)
+        assertNull(
+                invoice.getIssuedDate()
         );
-
-        assertNull(invoice.getIssuedDate());
     }
 
     @Test
     void shouldNotAssignDueDateForDraft() {
 
-        InvoiceItem item = itemCalculator.calculate(
-                "Consultation",
-                BigDecimal.ONE,
-                new BigDecimal("100.00"),
-                BigDecimal.ZERO,
-                new BigDecimal("0.19")
-        );
+        Invoice invoice =
+                invoiceCalculator.calculate(
+                        1L,
+                        10L,
+                        List.of(createItem())
+                );
 
-        Invoice invoice = invoiceCalculator.calculate(
-                1L,
-                10L,
-                List.of(item)
+        assertNull(
+                invoice.getDueDate()
         );
-
-        assertNull(invoice.getDueDate());
     }
 
     @Test
     void shouldPreservePatientAndMedicalFacilityIds() {
 
-        InvoiceItem item = itemCalculator.calculate(
-                "Consultation",
-                BigDecimal.ONE,
-                new BigDecimal("100.00"),
-                BigDecimal.ZERO,
-                new BigDecimal("0.19")
-        );
+        Invoice invoice =
+                invoiceCalculator.calculate(
+                        25L,
+                        100L,
+                        List.of(createItem())
+                );
 
-        Invoice invoice = invoiceCalculator.calculate(
+        assertEquals(
                 25L,
+                invoice.getPatientId()
+        );
+
+        assertEquals(
                 100L,
-                List.of(item)
-        );
-
-        assertEquals(25L, invoice.getPatientId()
-        );
-
-        assertEquals(100L, invoice.getMedicalFacilityId()
+                invoice.getMedicalFacilityId()
         );
     }
 
     @Test
     void shouldRejectNullItems() {
 
-        assertThrows(IllegalArgumentException.class,
-                () -> invoiceCalculator.calculate(1L, 10L, null));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> invoiceCalculator.calculate(
+                        1L,
+                        10L,
+                        null
+                )
+        );
     }
 
     @Test
     void shouldRejectEmptyItems() {
 
-        assertThrows(IllegalArgumentException.class,
-                () -> invoiceCalculator.calculate(1L, 10L, List.of()));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> invoiceCalculator.calculate(
+                        1L,
+                        10L,
+                        List.of()
+                )
+        );
     }
 
     @Test
     void shouldRejectListContainingNull() {
 
-        List<InvoiceItem> items = new ArrayList<>();
+        List<InvoiceItem> items =
+                new ArrayList<>();
 
-        items.add(itemCalculator.calculate(
-                        "Consultation",
-                        BigDecimal.ONE,
-                        new BigDecimal("100.00"),
-                        BigDecimal.ZERO,
-                        new BigDecimal("0.19")
-                )
-        );
-
+        items.add(createItem());
         items.add(null);
 
-        assertThrows(IllegalArgumentException.class,
-                () -> invoiceCalculator.calculate(1L, 10L, items));
+        assertThrows(
+                IllegalArgumentException.class,
+                () -> invoiceCalculator.calculate(
+                        1L,
+                        10L,
+                        items
+                )
+        );
     }
 
     @Test
     void shouldStoreImmutableCopyOfItems() {
 
-        List<InvoiceItem> items = new ArrayList<>();
+        List<InvoiceItem> items =
+                new ArrayList<>();
 
-        items.add(itemCalculator.calculate(
-                        "Consultation",
-                        BigDecimal.ONE,
-                        new BigDecimal("100.00"),
-                        BigDecimal.ZERO,
-                        new BigDecimal("0.19")
-                )
-        );
+        items.add(createItem());
 
-        Invoice invoice = invoiceCalculator.calculate(
-                1L,
-                10L,
-                items
-        );
+        Invoice invoice =
+                invoiceCalculator.calculate(
+                        1L,
+                        10L,
+                        items
+                );
 
         items.clear();
 
-        assertEquals(1, invoice.getItems().size());
+        assertEquals(
+                1,
+                invoice.getItems().size()
+        );
 
-        assertThrows(UnsupportedOperationException.class,
-                () -> invoice.getItems().clear());
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> invoice.getItems().clear()
+        );
+    }
+
+    private InvoiceItem createItem() {
+
+        return itemCalculator.calculate(
+                SERVICE_ID,
+                "Consultation",
+                BigDecimal.ONE,
+                new BigDecimal("100.00"),
+                BigDecimal.ZERO,
+                new BigDecimal("0.19")
+        );
     }
 }

@@ -66,4 +66,18 @@ public class Invoice {
         this.issuedDate = issuedDate;
         this.dueDate = dueDate;
     }
+
+    void applyPersistenceData(
+            Long id,
+            String invoiceNumber,
+            InvoiceStatus status,
+            LocalDate issuedDate,
+            LocalDate dueDate
+    ) {
+        this.id = id;
+        this.invoiceNumber = invoiceNumber;
+        this.status = status;
+        this.issuedDate = issuedDate;
+        this.dueDate = dueDate;
+    }
 }

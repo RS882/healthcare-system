@@ -12,6 +12,8 @@ public class InvoiceItem {
 
     private Long id;
 
+    private Long serviceId;
+
     private String description;
 
     private BigDecimal quantity;

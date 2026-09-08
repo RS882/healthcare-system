@@ -1,12 +1,19 @@
 package com.healthcare.billing.service.interfaces;
 
-import com.healthcare.billing.model.entity.invoice.Invoice;
+import com.healthcare.billing.dto.invoice.CreateInvoiceRequest;
+import com.healthcare.billing.dto.invoice.InvoiceResponse;
 
 public interface InvoiceService {
 
-    Invoice issue(Invoice invoice);
+    InvoiceResponse create(CreateInvoiceRequest request);
 
-    Invoice cancel(Invoice invoice);
+    InvoiceResponse issue(Long invoiceId);
 
-    Invoice markAsPaid(Invoice invoice);
+    InvoiceResponse cancel(Long invoiceId);
+
+    InvoiceResponse markAsPaid(Long invoiceId);
+
+    InvoiceResponse getById(Long invoiceId);
+
+    InvoiceResponse getByInvoiceNumber(String invoiceNumber);
 }

@@ -10,6 +10,16 @@ public final class BillingValidation {
     private BillingValidation() {
     }
 
+    public static void validateId(Long id) {
+        if (id == null ) {
+            throw new IllegalArgumentException("Id must not be null");
+        }
+
+        if ( id < 1) {
+            throw new IllegalArgumentException("Id must not be positive");
+        }
+    }
+
     public static void validateDescription(String description) {
         if (!StringUtils.hasText(description)) {
             throw new IllegalArgumentException("Description cannot be empty");
