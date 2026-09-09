@@ -1,6 +1,8 @@
 package com.healthcare.billing.persistence.mapper;
 
 
+import com.healthcare.billing.exception.InvalidPersistedCurrencyException;
+import com.healthcare.billing.exception.InvoicePersistenceMappingException;
 import com.healthcare.billing.model.entity.InvoiceItem;
 import com.healthcare.billing.model.entity.invoice.Invoice;
 import com.healthcare.billing.model.entity.invoice.InvoiceReconstitutor;
@@ -9,6 +11,7 @@ import com.healthcare.billing.persistence.entity.InvoiceItemJpaEntity;
 import com.healthcare.billing.persistence.entity.InvoiceJpaEntity;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.Currency;
 import java.util.List;
@@ -25,7 +28,7 @@ public class InvoicePersistenceMapper {
             return null;
         }
 
-        Currency currency = Currency.getInstance(entity.getCurrency());
+        Currency currency = resolveCurrency(entity.getCurrency());
 
         List<InvoiceItem> items = toDomainItems(entity.getItems(), currency);
 
@@ -77,6 +80,10 @@ public class InvoicePersistenceMapper {
         entity.setIssuedDate(invoice.getIssuedDate());
         entity.setDueDate(invoice.getDueDate());
 
+        if (invoice.getItems() == null) {
+            throw new InvoicePersistenceMappingException("Invoice items must not be null");
+        }
+
         invoice.getItems()
                 .stream()
                 .map(this::toEntityItem)
@@ -105,7 +112,7 @@ public class InvoicePersistenceMapper {
     ) {
 
         if (entities == null) {
-            return null;
+            throw new InvoicePersistenceMappingException("Invoice item entities must not be null");
         }
 
         return entities.stream()
@@ -117,6 +124,10 @@ public class InvoicePersistenceMapper {
             InvoiceItemJpaEntity entity,
             Currency currency
     ) {
+
+        if (entity == null) {
+            throw new InvoicePersistenceMappingException("Invoice item persistence entity must not be null");
+        }
 
         return InvoiceItem.builder()
                 .id(entity.getId())
@@ -135,6 +146,10 @@ public class InvoicePersistenceMapper {
 
     private InvoiceItemJpaEntity toEntityItem(InvoiceItem item) {
 
+        if (item == null) {
+            throw new InvoicePersistenceMappingException("Invoice item must not be null");
+        }
+
         InvoiceItemJpaEntity entity = new InvoiceItemJpaEntity();
 
         entity.setId(item.getId());
@@ -146,13 +161,23 @@ public class InvoicePersistenceMapper {
         entity.setTaxRate(item.getTaxRate());
 
         entity.setNetAmount(item.getNetAmount().amount());
-
         entity.setDiscountAmount(item.getDiscountAmount().amount());
-
         entity.setTaxAmount(item.getTaxAmount().amount());
-
         entity.setTotalAmount(item.getTotalAmount().amount());
 
         return entity;
+    }
+
+    private Currency resolveCurrency(String currencyCode) {
+
+        if (!StringUtils.hasText(currencyCode)) {
+            throw new InvalidPersistedCurrencyException(currencyCode);
+        }
+
+        try {
+            return Currency.getInstance(currencyCode.strip());
+        } catch (IllegalArgumentException exception) {
+            throw new InvalidPersistedCurrencyException(currencyCode);
+        }
     }
 }

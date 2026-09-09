@@ -1,5 +1,9 @@
 package com.healthcare.billing.model.value;
 
+import com.healthcare.billing.exception.CurrencyMismatchException;
+import com.healthcare.billing.exception.MoneyValidationException;
+import org.springframework.util.StringUtils;
+
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Objects;
@@ -7,19 +11,14 @@ import java.util.Objects;
 public class Money {
 
     private final BigDecimal amount;
-
     private final Currency currency;
 
     private Money(BigDecimal amount, Currency currency) {
+        validateAmount(amount);
+        validateCurrency(currency);
 
-        this.amount = Objects.requireNonNull(
-                amount,
-                "Amount must not be null"
-        );
-        this.currency = Objects.requireNonNull(
-                currency,
-                "Currency must not be null"
-        );
+        this.amount = amount;
+        this.currency = currency;
     }
 
     public static Money of(BigDecimal amount, Currency currency) {
@@ -27,7 +26,15 @@ public class Money {
     }
 
     public static Money of(String amount, Currency currency) {
-        return new Money( new BigDecimal(amount), currency);
+        if (!StringUtils.hasText(amount)) {
+            throw new MoneyValidationException("Amount must not be null or blank");
+        }
+
+        try {
+            return new Money(new BigDecimal(amount.strip()), currency);
+        } catch (NumberFormatException exception) {
+            throw new MoneyValidationException("Invalid money amount: '%s'".formatted(amount));
+        }
     }
 
     public static Money zero(Currency currency) {
@@ -55,7 +62,6 @@ public class Money {
     }
 
     public Money add(Money other) {
-
         requireSameCurrency(other);
 
         return new Money(amount.add(other.amount), currency);
@@ -64,22 +70,28 @@ public class Money {
     public Money subtract(Money other) {
         requireSameCurrency(other);
 
-        return new Money(
-                amount.subtract(other.amount),
-                currency
-        );
+        return new Money(amount.subtract(other.amount), currency);
     }
 
     private void requireSameCurrency(Money other) {
-        Objects.requireNonNull(
-                other,
-                "Money must not be null"
-        );
+        if (other == null) {
+            throw new MoneyValidationException("Money must not be null");
+        }
 
         if (!currency.equals(other.currency)) {
-            throw new IllegalArgumentException(
-                    "Currencies must be the same"
-            );
+            throw new CurrencyMismatchException(currency, other.currency);
+        }
+    }
+
+    private static void validateAmount(BigDecimal amount) {
+        if (amount == null) {
+            throw new MoneyValidationException("Amount must not be null");
+        }
+    }
+
+    private static void validateCurrency(Currency currency) {
+        if (currency == null) {
+            throw new MoneyValidationException("Currency must not be null");
         }
     }
 

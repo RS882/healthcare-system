@@ -4,6 +4,7 @@ import com.healthcare.billing.model.entity.InvoiceItem;
 import com.healthcare.billing.model.entity.invoice.Invoice;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.money.MoneyPolicy;
+import com.healthcare.billing.validation.InvoiceValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -16,13 +17,14 @@ import java.util.function.Function;
 public class InvoiceCalculator {
 
     private final MoneyPolicy moneyPolicy;
+    private final InvoiceValidator validator;
 
     public Invoice calculate(
             Long patientId,
             Long medicalFacilityId,
             List<InvoiceItem> items
     ) {
-        validateItems(items);
+        validator.validateItems(items);
 
         Money netAmount = sum(items, InvoiceItem::getNetAmount);
 
@@ -53,20 +55,5 @@ public class InvoiceCalculator {
                         moneyPolicy.zero(),
                         Money::add
                 );
-    }
-
-    private void validateItems(List<InvoiceItem> items) {
-
-        if (items == null || items.isEmpty()) {
-            throw new IllegalArgumentException(
-                    "Invoice items must not be empty"
-            );
-        }
-
-        if (items.stream().anyMatch(Objects::isNull)) {
-            throw new IllegalArgumentException(
-                    "Invoice items must not contain null"
-            );
-        }
     }
 }

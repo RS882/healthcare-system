@@ -1,5 +1,6 @@
 package com.healthcare.billing.generator;
 
+import com.healthcare.billing.exception.InvoiceNumberGenerationException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -26,7 +27,7 @@ public class DatabaseInvoiceNumberGenerator
         );
 
         if (sequenceValue == null) {
-            throw new IllegalStateException("Failed to obtain next invoice number sequence value");
+            throw new InvoiceNumberGenerationException("Failed to obtain next invoice number sequence value");
         }
 
         int year = LocalDate.now(clock).getYear();

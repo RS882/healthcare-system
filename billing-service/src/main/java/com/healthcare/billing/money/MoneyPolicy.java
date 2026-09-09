@@ -1,7 +1,8 @@
 package com.healthcare.billing.money;
 
-
 import com.healthcare.billing.config.propertie.BillingProperties;
+import com.healthcare.billing.exception.InvalidBillingCurrencyException;
+import com.healthcare.billing.exception.MoneyValidationException;
 import com.healthcare.billing.model.value.Money;
 import org.springframework.stereotype.Component;
 
@@ -12,19 +13,18 @@ import java.util.Currency;
 @Component
 public class MoneyPolicy {
 
-    private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
+    private static final RoundingMode ROUNDING_MODE =
+            RoundingMode.HALF_UP;
 
     private final Currency currency;
 
     public MoneyPolicy(BillingProperties properties) {
-        this.currency = Currency.getInstance(properties.currency());
+        this.currency = resolveCurrency(properties.currency());
     }
 
     public Money moneyOf(BigDecimal amount) {
         if (amount == null) {
-            throw new IllegalArgumentException(
-                    "Money amount must not be null"
-            );
+            throw new MoneyValidationException("Money amount must not be null");
         }
 
         BigDecimal roundedAmount = amount.setScale(
@@ -41,5 +41,17 @@ public class MoneyPolicy {
 
     public Currency currency() {
         return currency;
+    }
+
+    private Currency resolveCurrency(String currencyCode) {
+        if (currencyCode == null || currencyCode.isBlank()) {
+            throw new InvalidBillingCurrencyException(currencyCode);
+        }
+
+        try {
+            return Currency.getInstance(currencyCode.strip());
+        } catch (IllegalArgumentException exception) {
+            throw new InvalidBillingCurrencyException(currencyCode);
+        }
     }
 }

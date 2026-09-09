@@ -5,6 +5,7 @@ import com.healthcare.billing.model.entity.InvoiceItem;
 import com.healthcare.billing.model.entity.invoice.Invoice;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceStatus;
 import com.healthcare.billing.money.MoneyPolicy;
+import com.healthcare.billing.validation.InvoiceValidator;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -24,13 +25,15 @@ class InvoiceCalculatorTest {
     @BeforeEach
     void setUp() {
 
-        BillingProperties properties =                new BillingProperties("EUR", 7);
+        BillingProperties properties = new BillingProperties("EUR", 7);
 
-        MoneyPolicy moneyPolicy =                new MoneyPolicy(properties);
+        InvoiceValidator validator = new InvoiceValidator();
 
-        itemCalculator =                new InvoiceItemCalculator(moneyPolicy);
+        MoneyPolicy moneyPolicy = new MoneyPolicy(properties);
 
-        invoiceCalculator =                new InvoiceCalculator(moneyPolicy);
+        itemCalculator = new InvoiceItemCalculator(moneyPolicy);
+
+        invoiceCalculator = new InvoiceCalculator(moneyPolicy, validator);
     }
 
     @Test

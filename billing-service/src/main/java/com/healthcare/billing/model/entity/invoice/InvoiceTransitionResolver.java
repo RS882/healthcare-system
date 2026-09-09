@@ -1,5 +1,7 @@
 package com.healthcare.billing.model.entity.invoice;
 
+import com.healthcare.billing.exception.InvalidInvoiceTransitionException;
+import com.healthcare.billing.exception.InvoiceStateMachineException;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceEvent;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceStatus;
 import org.springframework.stereotype.Component;
@@ -41,21 +43,27 @@ public class InvoiceTransitionResolver {
             InvoiceStatus currentState,
             InvoiceEvent event
     ) {
-        InvoiceStatus nextState = TRANSITIONS.get(
-                new StateEventKey(currentState, event)
-        );
+
+        validateResolveParams(currentState, event);
+
+        InvoiceStatus nextState = TRANSITIONS.get(new StateEventKey(currentState, event));
 
         if (nextState == null) {
-            throw new IllegalStateException(
-                    "Transition from %s by event %s is not allowed"
-                            .formatted(
-                                    currentState,
-                                    event
-                            )
-            );
+            throw new InvalidInvoiceTransitionException(currentState, event);
         }
 
         return nextState;
+    }
+
+    private void validateResolveParams(InvoiceStatus currentState,
+                                       InvoiceEvent event) {
+        if (currentState == null) {
+            throw new InvoiceStateMachineException("Current invoice state must not be null");
+        }
+
+        if (event == null) {
+            throw new InvoiceStateMachineException("Invoice event must not be null");
+        }
     }
 
     private record StateEventKey(

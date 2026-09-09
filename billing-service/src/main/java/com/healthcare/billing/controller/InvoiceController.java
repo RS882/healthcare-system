@@ -45,6 +45,6 @@ public class InvoiceController implements InvoiceAPI {
 
     @Override
     public ResponseEntity<InvoiceResponse> getByInvoiceNumber(String invoiceNumber) {
-        return ResponseEntity.ok(invoiceService.getByInvoiceNumber(invoiceNumber));
+        return ResponseEntity.ok(invoiceService.getByInvoiceNumber(invoiceNumber.strip()));
     }
 }

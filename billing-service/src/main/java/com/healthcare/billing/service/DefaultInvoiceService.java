@@ -36,48 +36,21 @@ public class DefaultInvoiceService implements InvoiceService {
     @Override
     public InvoiceResponse issue(Long invoiceId) {
 
-        Invoice invoice = invoiceStore.findById(invoiceId);
-
-        invoiceStateMachine.changeState(
-                invoice,
-                InvoiceEvent.ISSUE
-        );
-
-        invoiceStore.update(invoice);
-
-        return invoiceMapper.toResponse(invoice);
+        return changeState(invoiceId, InvoiceEvent.ISSUE);
     }
 
     @Transactional
     @Override
     public InvoiceResponse cancel(Long invoiceId) {
 
-        Invoice invoice = invoiceStore.findById(invoiceId);
-
-        invoiceStateMachine.changeState(
-                invoice,
-                InvoiceEvent.CANCEL
-        );
-
-        invoiceStore.update(invoice);
-
-        return invoiceMapper.toResponse(invoice);
+        return changeState(invoiceId, InvoiceEvent.CANCEL);
     }
 
     @Transactional
     @Override
     public InvoiceResponse markAsPaid(Long invoiceId) {
 
-        Invoice invoice = invoiceStore.findById(invoiceId);
-
-        invoiceStateMachine.changeState(
-                invoice,
-                InvoiceEvent.PAY
-        );
-
-        invoiceStore.update(invoice);
-
-        return invoiceMapper.toResponse(invoice);
+        return changeState(invoiceId, InvoiceEvent.PAY);
     }
 
     @Transactional(readOnly = true)
@@ -91,8 +64,17 @@ public class DefaultInvoiceService implements InvoiceService {
     @Override
     public InvoiceResponse getByInvoiceNumber(String invoiceNumber) {
 
-        return invoiceMapper.toResponse(
-                invoiceStore.findByInvoiceNumber(invoiceNumber)
+        return invoiceMapper.toResponse(invoiceStore.findByInvoiceNumber(invoiceNumber)
         );
+    }
+
+    private InvoiceResponse changeState(Long id, InvoiceEvent event) {
+        Invoice invoice = invoiceStore.findById(id);
+
+        invoiceStateMachine.changeState(invoice, event);
+
+        invoiceStore.update(invoice);
+
+        return invoiceMapper.toResponse(invoice);
     }
 }

@@ -1,9 +1,11 @@
 package com.healthcare.billing.model.entity.invoice;
 
 import com.healthcare.billing.config.propertie.BillingProperties;
+import com.healthcare.billing.exception.InvoiceNumberGenerationException;
 import com.healthcare.billing.generator.InvoiceNumberGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -23,8 +25,12 @@ public class InvoiceIssueAction {
 
         String invoiceNumber = invoiceNumberGenerator.nextNumber();
 
+        if (!StringUtils.hasText(invoiceNumber)) {
+            throw new InvoiceNumberGenerationException("Generated invoice number must not be null or blank");
+        }
+
         invoice.applyIssueData(
-                invoiceNumber,
+                invoiceNumber.strip(),
                 issuedDate,
                 dueDate
         );

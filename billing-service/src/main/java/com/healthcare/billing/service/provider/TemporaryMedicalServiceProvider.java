@@ -1,5 +1,7 @@
 package com.healthcare.billing.service.provider;
 
+import com.healthcare.billing.exception.MedicalServiceNotFoundException;
+import com.healthcare.billing.exception.MedicalServiceProviderException;
 import com.healthcare.billing.model.service.MedicalServiceData;
 import org.springframework.stereotype.Component;
 
@@ -131,11 +133,14 @@ public class TemporaryMedicalServiceProvider implements MedicalServiceProvider {
     @Override
     public MedicalServiceData getById(Long serviceId) {
 
+        if (serviceId == null || serviceId <= 0) {
+            throw new MedicalServiceProviderException("Medical service id must be greater than zero");
+        }
+
         MedicalServiceData service = SERVICES.get(serviceId);
 
         if (service == null) {
-            throw new IllegalArgumentException("Medical service with id %d not found".formatted(serviceId)
-            );
+            throw new MedicalServiceNotFoundException(serviceId);
         }
 
         return service;
@@ -145,7 +150,11 @@ public class TemporaryMedicalServiceProvider implements MedicalServiceProvider {
     public List<MedicalServiceData> getByIdList(List<Long> serviceIds) {
 
         if (serviceIds == null) {
-            throw new IllegalArgumentException("List of service Id cannot be null");
+            throw new MedicalServiceProviderException("Medical service id list must not be null");
+        }
+
+        if (serviceIds.stream().anyMatch(Objects::isNull)) {
+            throw new MedicalServiceProviderException("Medical service id list must not contain null");
         }
 
         if (serviceIds.isEmpty()) {

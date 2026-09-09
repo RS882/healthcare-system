@@ -1,5 +1,6 @@
 package com.healthcare.billing.persistence;
 
+import com.healthcare.billing.exception.InvoiceNotFoundException;
 import com.healthcare.billing.model.entity.invoice.Invoice;
 import com.healthcare.billing.persistence.entity.InvoiceJpaEntity;
 import com.healthcare.billing.persistence.mapper.InvoicePersistenceMapper;
@@ -19,9 +20,7 @@ public class JpaInvoiceStore implements InvoiceStore {
 
         InvoiceJpaEntity entity = invoiceJpaRepository
                 .findById(id)
-                .orElseThrow(
-                        () -> new IllegalArgumentException("Invoice with id %d not found".formatted(id))
-                );
+                .orElseThrow(() -> new InvoiceNotFoundException(id));
 
         return invoicePersistenceMapper.toDomain(entity);
     }
@@ -31,9 +30,7 @@ public class JpaInvoiceStore implements InvoiceStore {
 
         InvoiceJpaEntity entity = invoiceJpaRepository
                 .findByInvoiceNumber(invoiceNumber)
-                .orElseThrow(
-                        () -> new IllegalArgumentException("Invoice with number %s not found".formatted(invoiceNumber))
-                );
+                .orElseThrow(() -> new InvoiceNotFoundException(invoiceNumber));
 
         return invoicePersistenceMapper.toDomain(entity);
     }
@@ -53,9 +50,7 @@ public class JpaInvoiceStore implements InvoiceStore {
 
         InvoiceJpaEntity entity = invoiceJpaRepository
                 .findById(invoice.getId())
-                .orElseThrow(
-                        () -> new IllegalArgumentException("Invoice with id %d not found".formatted(invoice.getId()))
-                );
+                .orElseThrow(() -> new InvoiceNotFoundException(invoice.getId()));
 
         invoicePersistenceMapper.updateEntity(invoice, entity);
     }

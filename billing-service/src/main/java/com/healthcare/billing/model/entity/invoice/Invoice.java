@@ -1,10 +1,12 @@
 package com.healthcare.billing.model.entity.invoice;
 
+import com.healthcare.billing.exception.InvoiceValidationException;
 import com.healthcare.billing.model.entity.InvoiceItem;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceStatus;
 import com.healthcare.billing.model.value.Money;
 import lombok.Builder;
 import lombok.Getter;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -54,6 +56,8 @@ public class Invoice {
     }
 
     void applyStatus(InvoiceStatus status) {
+        validateStatus(status);
+
         this.status = status;
     }
 
@@ -62,6 +66,8 @@ public class Invoice {
             LocalDate issuedDate,
             LocalDate dueDate
     ) {
+        validateIssueData(invoiceNumber, issuedDate, dueDate);
+
         this.invoiceNumber = invoiceNumber.strip();
         this.issuedDate = issuedDate;
         this.dueDate = dueDate;
@@ -75,9 +81,51 @@ public class Invoice {
             LocalDate dueDate
     ) {
         this.id = id;
-        this.invoiceNumber = invoiceNumber;
+        this.invoiceNumber = StringUtils.hasText(invoiceNumber)
+                ? invoiceNumber.strip()
+                : null;
         this.status = status;
         this.issuedDate = issuedDate;
         this.dueDate = dueDate;
     }
+
+    private void validateStatus(InvoiceStatus status){
+        if (status == null) {
+            throw new InvoiceValidationException(
+                    "Invoice status must not be null"
+            );
+        }
+    }
+
+    private void validateIssueData(
+            String invoiceNumber,
+            LocalDate issuedDate,
+            LocalDate dueDate){
+
+        if (!StringUtils.hasText(invoiceNumber)) {
+            throw new InvoiceValidationException(
+                    "Invoice number must not be null or blank"
+            );
+        }
+
+        if (issuedDate == null) {
+            throw new InvoiceValidationException(
+                    "Issued date must not be null"
+            );
+        }
+
+        if (dueDate == null) {
+            throw new InvoiceValidationException(
+                    "Due date must not be null"
+            );
+        }
+
+        if (dueDate.isBefore(issuedDate)) {
+            throw new InvoiceValidationException(
+                    "Due date must not be before issued date"
+            );
+        }
+    }
+
+
 }
