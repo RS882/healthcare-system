@@ -3,10 +3,12 @@ package com.healthcare.billing.service;
 import com.healthcare.billing.dto.invoice.CreateInvoiceItemRequest;
 import com.healthcare.billing.dto.invoice.CreateInvoiceRequest;
 import com.healthcare.billing.dto.invoice.InvoiceResponse;
+import com.healthcare.billing.exception.InvalidInvoiceTransitionException;
 import com.healthcare.billing.mapper.InvoiceMapper;
 import com.healthcare.billing.model.entity.invoice.Invoice;
 import com.healthcare.billing.model.entity.invoice.InvoiceStateMachine;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceEvent;
+import com.healthcare.billing.model.entity.invoice.enums.InvoiceStatus;
 import com.healthcare.billing.persistence.InvoiceStore;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -15,6 +17,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 class DefaultInvoiceServiceTest {
@@ -156,6 +159,30 @@ class DefaultInvoiceServiceTest {
         verify(invoiceMapper).toResponse(invoice);
 
         assertSame(response, result);
+    }
+
+    @Test
+    void shouldNotUpdateOrMapResponseWhenStateTransitionFails() {
+
+        Long invoiceId = 1L;
+        Invoice invoice = createInvoice();
+
+        when(invoiceStore.findById(invoiceId)).thenReturn(invoice);
+
+        doThrow(new InvalidInvoiceTransitionException(
+                InvoiceStatus.DRAFT,
+                InvoiceEvent.PAY
+        )).when(invoiceStateMachine).changeState(invoice, InvoiceEvent.PAY);
+
+        assertThrows(
+                InvalidInvoiceTransitionException.class,
+                () -> invoiceService.markAsPaid(invoiceId)
+        );
+
+        verify(invoiceStore).findById(invoiceId);
+        verify(invoiceStateMachine).changeState(invoice, InvoiceEvent.PAY);
+        verify(invoiceStore, never()).update(any());
+        verifyNoInteractions(invoiceMapper);
     }
 
     @Test

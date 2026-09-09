@@ -1,6 +1,7 @@
 package com.healthcare.billing.service;
 
 import com.healthcare.billing.config.propertie.BillingProperties;
+import com.healthcare.billing.exception.BillingValidationException;
 import com.healthcare.billing.model.entity.InvoiceItem;
 import com.healthcare.billing.money.MoneyPolicy;
 import org.junit.jupiter.api.BeforeEach;
@@ -264,7 +265,7 @@ class InvoiceItemCalculatorTest {
     void shouldRejectNullServiceId() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                BillingValidationException.class,
                 () -> calculator.calculate(
                         null,
                         "Consultation",
@@ -280,7 +281,7 @@ class InvoiceItemCalculatorTest {
     void shouldRejectNonPositiveServiceId() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                BillingValidationException.class,
                 () -> calculator.calculate(
                         0L,
                         "Consultation",
@@ -296,7 +297,7 @@ class InvoiceItemCalculatorTest {
     void shouldRejectNullDescription() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                BillingValidationException.class,
                 () -> calculator.calculate(
                         SERVICE_ID,
                         null,
@@ -312,7 +313,7 @@ class InvoiceItemCalculatorTest {
     void shouldRejectBlankDescription() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                BillingValidationException.class,
                 () -> calculator.calculate(
                         SERVICE_ID,
                         "   ",
@@ -328,7 +329,7 @@ class InvoiceItemCalculatorTest {
     void shouldRejectZeroQuantity() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                BillingValidationException.class,
                 () -> calculator.calculate(
                         SERVICE_ID,
                         "Consultation",
@@ -344,7 +345,7 @@ class InvoiceItemCalculatorTest {
     void shouldRejectNegativeQuantity() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                BillingValidationException.class,
                 () -> calculator.calculate(
                         SERVICE_ID,
                         "Consultation",
@@ -360,7 +361,7 @@ class InvoiceItemCalculatorTest {
     void shouldRejectNegativeUnitPrice() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                BillingValidationException.class,
                 () -> calculator.calculate(
                         SERVICE_ID,
                         "Consultation",
@@ -376,7 +377,7 @@ class InvoiceItemCalculatorTest {
     void shouldRejectNegativeDiscountRate() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                BillingValidationException.class,
                 () -> calculator.calculate(
                         SERVICE_ID,
                         "Consultation",
@@ -392,7 +393,7 @@ class InvoiceItemCalculatorTest {
     void shouldRejectDiscountRateGreaterThanOne() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                BillingValidationException.class,
                 () -> calculator.calculate(
                         SERVICE_ID,
                         "Consultation",
@@ -408,7 +409,7 @@ class InvoiceItemCalculatorTest {
     void shouldRejectNegativeTaxRate() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                BillingValidationException.class,
                 () -> calculator.calculate(
                         SERVICE_ID,
                         "Consultation",
@@ -424,7 +425,7 @@ class InvoiceItemCalculatorTest {
     void shouldRejectTaxRateGreaterThanOne() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                BillingValidationException.class,
                 () -> calculator.calculate(
                         SERVICE_ID,
                         "Consultation",

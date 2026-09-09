@@ -1,6 +1,7 @@
 package com.healthcare.billing.service;
 
 import com.healthcare.billing.config.propertie.BillingProperties;
+import com.healthcare.billing.exception.InvoiceValidationException;
 import com.healthcare.billing.model.entity.InvoiceItem;
 import com.healthcare.billing.model.entity.invoice.Invoice;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceStatus;
@@ -192,7 +193,7 @@ class InvoiceCalculatorTest {
     void shouldRejectNullItems() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                InvoiceValidationException.class,
                 () -> invoiceCalculator.calculate(
                         1L,
                         10L,
@@ -205,7 +206,7 @@ class InvoiceCalculatorTest {
     void shouldRejectEmptyItems() {
 
         assertThrows(
-                IllegalArgumentException.class,
+                InvoiceValidationException.class,
                 () -> invoiceCalculator.calculate(
                         1L,
                         10L,
@@ -224,7 +225,7 @@ class InvoiceCalculatorTest {
         items.add(null);
 
         assertThrows(
-                IllegalArgumentException.class,
+                InvoiceValidationException.class,
                 () -> invoiceCalculator.calculate(
                         1L,
                         10L,

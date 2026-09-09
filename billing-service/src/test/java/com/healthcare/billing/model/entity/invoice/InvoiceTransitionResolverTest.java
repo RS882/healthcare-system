@@ -1,5 +1,7 @@
 package com.healthcare.billing.model.entity.invoice;
 
+import com.healthcare.billing.exception.InvalidInvoiceTransitionException;
+import com.healthcare.billing.exception.InvoiceStateMachineException;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceEvent;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceStatus;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,93 +21,96 @@ class InvoiceTransitionResolverTest {
 
     @Test
     void shouldResolveDraftToIssued() {
-
-        InvoiceStatus result = resolver.resolve(
-                InvoiceStatus.DRAFT,
-                InvoiceEvent.ISSUE
+        assertEquals(
+                InvoiceStatus.ISSUED,
+                resolver.resolve(InvoiceStatus.DRAFT, InvoiceEvent.ISSUE)
         );
-
-        assertEquals(InvoiceStatus.ISSUED, result);
     }
 
     @Test
     void shouldResolveDraftToCancelled() {
-
-        InvoiceStatus result = resolver.resolve(
-                InvoiceStatus.DRAFT,
-                InvoiceEvent.CANCEL
+        assertEquals(
+                InvoiceStatus.CANCELLED,
+                resolver.resolve(InvoiceStatus.DRAFT, InvoiceEvent.CANCEL)
         );
-
-        assertEquals(InvoiceStatus.CANCELLED, result);
     }
 
     @Test
     void shouldResolveIssuedToPaid() {
-
-        InvoiceStatus result = resolver.resolve(
-                InvoiceStatus.ISSUED,
-                InvoiceEvent.PAY
+        assertEquals(
+                InvoiceStatus.PAID,
+                resolver.resolve(InvoiceStatus.ISSUED, InvoiceEvent.PAY)
         );
-
-        assertEquals(InvoiceStatus.PAID, result);
     }
 
     @Test
     void shouldResolveIssuedToCancelled() {
-
-        InvoiceStatus result = resolver.resolve(
-                InvoiceStatus.ISSUED,
-                InvoiceEvent.CANCEL
+        assertEquals(
+                InvoiceStatus.CANCELLED,
+                resolver.resolve(InvoiceStatus.ISSUED, InvoiceEvent.CANCEL)
         );
+    }
 
-        assertEquals(InvoiceStatus.CANCELLED, result);
+    @Test
+    void shouldRejectNullCurrentState() {
+        assertThrows(
+                InvoiceStateMachineException.class,
+                () -> resolver.resolve(null, InvoiceEvent.ISSUE)
+        );
+    }
+
+    @Test
+    void shouldRejectNullEvent() {
+        assertThrows(
+                InvoiceStateMachineException.class,
+                () -> resolver.resolve(InvoiceStatus.DRAFT, null)
+        );
     }
 
     @Test
     void shouldRejectPaymentFromDraft() {
-
-        assertThrows(IllegalStateException.class,
-                () -> resolver.resolve(InvoiceStatus.DRAFT, InvoiceEvent.PAY)
-        );
+        assertForbidden(InvoiceStatus.DRAFT, InvoiceEvent.PAY);
     }
 
     @Test
     void shouldRejectIssueFromIssued() {
-
-        assertThrows(IllegalStateException.class,
-                () -> resolver.resolve(InvoiceStatus.ISSUED, InvoiceEvent.ISSUE)
-        );
+        assertForbidden(InvoiceStatus.ISSUED, InvoiceEvent.ISSUE);
     }
 
     @Test
     void shouldRejectIssueFromPaid() {
-
-        assertThrows(IllegalStateException.class,
-                () -> resolver.resolve(InvoiceStatus.PAID, InvoiceEvent.ISSUE)
-        );
+        assertForbidden(InvoiceStatus.PAID, InvoiceEvent.ISSUE);
     }
 
     @Test
     void shouldRejectPaymentFromPaid() {
-
-        assertThrows(IllegalStateException.class,
-                () -> resolver.resolve(InvoiceStatus.PAID, InvoiceEvent.PAY)
-        );
+        assertForbidden(InvoiceStatus.PAID, InvoiceEvent.PAY);
     }
 
     @Test
     void shouldRejectCancellationFromPaid() {
-
-        assertThrows(IllegalStateException.class,
-                () -> resolver.resolve(InvoiceStatus.PAID, InvoiceEvent.CANCEL)
-        );
+        assertForbidden(InvoiceStatus.PAID, InvoiceEvent.CANCEL);
     }
 
     @Test
-    void shouldRejectTransitionFromCancelled() {
+    void shouldRejectIssueFromCancelled() {
+        assertForbidden(InvoiceStatus.CANCELLED, InvoiceEvent.ISSUE);
+    }
 
-        assertThrows(IllegalStateException.class,
-                () -> resolver.resolve(InvoiceStatus.CANCELLED, InvoiceEvent.ISSUE)
+    @Test
+    void shouldRejectPaymentFromCancelled() {
+        assertForbidden(InvoiceStatus.CANCELLED, InvoiceEvent.PAY);
+    }
+
+    @Test
+    void shouldRejectCancellationFromCancelled() {
+        assertForbidden(InvoiceStatus.CANCELLED, InvoiceEvent.CANCEL);
+    }
+
+    private void assertForbidden(InvoiceStatus status, InvoiceEvent event) {
+        assertThrows(
+                InvalidInvoiceTransitionException.class,
+                () -> resolver.resolve(status, event)
         );
     }
 }

@@ -15,6 +15,9 @@ public enum ErrorCode {
 
     INVALID_INVOICE_TRANSITION("Invalid invoice state transition"),
 
+    INVALID_REQUEST_PARAMETER("Invalid request parameter"),
+    INVALID_REQUEST_BODY("Request body is invalid"),
+
     INVOICE_VALIDATION_ERROR("Invoice validation failed"),
     INVOICE_ITEM_VALIDATION_ERROR("Invoice item validation failed"),
     BILLING_VALIDATION_ERROR("Billing validation failed"),
