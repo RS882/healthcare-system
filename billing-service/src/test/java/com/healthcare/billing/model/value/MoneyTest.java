@@ -2,6 +2,8 @@ package com.healthcare.billing.model.value;
 
 import com.healthcare.billing.exception.CurrencyMismatchException;
 import com.healthcare.billing.exception.MoneyValidationException;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -9,6 +11,7 @@ import java.util.Currency;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class MoneyTest {
 
     private static final Currency EUR = Currency.getInstance("EUR");

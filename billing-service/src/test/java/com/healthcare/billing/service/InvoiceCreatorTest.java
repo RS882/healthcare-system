@@ -12,6 +12,8 @@ import com.healthcare.billing.model.service.MedicalServiceData;
 import com.healthcare.billing.money.MoneyPolicy;
 import com.healthcare.billing.service.provider.MedicalServiceProvider;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -24,6 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class InvoiceCreatorTest {
 
     private static final Currency EUR = Currency.getInstance("EUR");

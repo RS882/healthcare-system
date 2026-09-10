@@ -4,6 +4,8 @@ import com.healthcare.billing.exception.MedicalServiceNotFoundException;
 import com.healthcare.billing.exception.MedicalServiceProviderException;
 import com.healthcare.billing.model.service.MedicalServiceData;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -11,6 +13,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class TemporaryMedicalServiceProviderTest {
 
     private TemporaryMedicalServiceProvider provider;

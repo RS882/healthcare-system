@@ -3,6 +3,8 @@ package com.healthcare.billing.model.entity.invoice;
 import com.healthcare.billing.config.propertie.BillingProperties;
 import com.healthcare.billing.exception.InvoiceNumberGenerationException;
 import com.healthcare.billing.generator.InvoiceNumberGenerator;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 
 import java.time.Clock;
@@ -12,6 +14,7 @@ import java.time.ZoneId;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class InvoiceIssueActionTest {
 
     private static final String INVOICE_NUMBER = "INV-2026-000001";

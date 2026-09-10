@@ -9,6 +9,8 @@ import com.healthcare.billing.model.entity.invoice.transition_rule.InvoiceTransi
 import com.healthcare.billing.model.entity.invoice.transition_rule.InvoiceTransitionRuleProvider;
 import com.healthcare.billing.validation.InvoiceValidator;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.mockito.InOrder;
 
@@ -18,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class InvoiceStateMachineTest {
 
     private InvoiceTransitionRuleProvider ruleProvider;

@@ -5,11 +5,14 @@ import com.healthcare.billing.exception.InvoiceStateMachineException;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceEvent;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceStatus;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class InvoiceTransitionResolverTest {
 
     private InvoiceTransitionResolver resolver;

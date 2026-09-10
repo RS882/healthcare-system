@@ -1,6 +1,8 @@
 package com.healthcare.billing.generator;
 
 import com.healthcare.billing.exception.InvoiceNumberGenerationException;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -12,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class DatabaseInvoiceNumberGeneratorTest {
 
     private static final Clock FIXED_CLOCK =

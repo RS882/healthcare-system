@@ -10,8 +10,7 @@ import java.time.LocalDate;
 
 @Component
 @RequiredArgsConstructor
-public class DatabaseInvoiceNumberGenerator
-        implements InvoiceNumberGenerator {
+public class DatabaseInvoiceNumberGenerator implements InvoiceNumberGenerator {
 
     private static final String NEXT_SEQUENCE_VALUE_SQL = "SELECT nextval('invoice_number_seq')";
 

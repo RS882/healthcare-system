@@ -10,6 +10,8 @@ import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.persistence.entity.InvoiceItemJpaEntity;
 import com.healthcare.billing.persistence.entity.InvoiceJpaEntity;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -20,6 +22,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class InvoicePersistenceMapperTest {
 
     private static final Currency EUR = Currency.getInstance("EUR");

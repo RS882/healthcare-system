@@ -5,6 +5,8 @@ import com.healthcare.billing.exception.BillingValidationException;
 import com.healthcare.billing.model.entity.InvoiceItem;
 import com.healthcare.billing.money.MoneyPolicy;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -12,6 +14,7 @@ import java.util.Currency;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class InvoiceItemCalculatorTest {
 
     private static final Long SERVICE_ID = 1L;

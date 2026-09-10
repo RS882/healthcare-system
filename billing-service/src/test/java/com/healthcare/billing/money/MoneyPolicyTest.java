@@ -5,6 +5,8 @@ import com.healthcare.billing.exception.InvalidBillingCurrencyException;
 import com.healthcare.billing.exception.MoneyValidationException;
 import com.healthcare.billing.model.value.Money;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -13,6 +15,7 @@ import java.util.Currency;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class MoneyPolicyTest {
 
     private MoneyPolicy moneyPolicy;
