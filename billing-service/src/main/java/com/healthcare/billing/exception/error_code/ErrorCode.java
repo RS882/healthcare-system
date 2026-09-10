@@ -10,6 +10,9 @@ public enum ErrorCode {
 
     VALIDATION_ERROR("Validation failed"),
 
+    CURRENCY_NOMINAL_INDEX_ERROR("Index out of bounds"),
+    CURRENCY_NOMINAL_ERROR("Nominal is not correct"),
+
     INVOICE_NOT_FOUND("Invoice not found"),
     MEDICAL_SERVICE_NOT_FOUND("Medical service not found"),
 

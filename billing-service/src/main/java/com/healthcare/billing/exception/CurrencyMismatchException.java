@@ -23,4 +23,5 @@ public class CurrencyMismatchException extends RestException {
                 ErrorCode.CURRENCY_MISMATCH
         );
     }
+
 }

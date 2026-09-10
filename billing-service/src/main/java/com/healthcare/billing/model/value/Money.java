@@ -8,7 +8,7 @@ import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.Objects;
 
-public class Money {
+public class Money implements Comparable<Money> {
 
     private final BigDecimal amount;
     private final Currency currency;
@@ -122,5 +122,12 @@ public class Money {
         return amount.toPlainString()
                 + " "
                 + currency.getCurrencyCode();
+    }
+
+    @Override
+    public int compareTo(Money other) {
+        requireSameCurrency(other);
+
+        return amount.compareTo(other.amount);
     }
 }
