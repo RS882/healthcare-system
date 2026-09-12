@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.util.Currency;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
@@ -174,5 +175,14 @@ class MoneyTest {
         );
 
         assertEquals("Invalid money amount: 'abc'", exception.getMessage());
+    }
+
+    @Test
+    void should_treat_amounts_with_different_scale_as_numerically_equal() {
+        BigDecimal first = new BigDecimal("10.0");
+        BigDecimal second = new BigDecimal("10.00");
+
+        assertThat(first.equals(second)).isFalse();
+        assertThat(first.compareTo(second)).isZero();
     }
 }

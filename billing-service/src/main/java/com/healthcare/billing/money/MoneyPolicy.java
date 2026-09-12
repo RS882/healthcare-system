@@ -13,8 +13,7 @@ import java.util.Currency;
 @Component
 public class MoneyPolicy {
 
-    private static final RoundingMode ROUNDING_MODE =
-            RoundingMode.HALF_UP;
+    private static final RoundingMode ROUNDING_MODE = RoundingMode.HALF_UP;
 
     private final Currency currency;
 

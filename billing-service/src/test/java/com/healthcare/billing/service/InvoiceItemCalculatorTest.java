@@ -3,11 +3,15 @@ package com.healthcare.billing.service;
 import com.healthcare.billing.config.propertie.BillingProperties;
 import com.healthcare.billing.exception.BillingValidationException;
 import com.healthcare.billing.model.entity.InvoiceItem;
+import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.money.MoneyPolicy;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.math.BigDecimal;
 import java.util.Currency;
@@ -19,15 +23,17 @@ class InvoiceItemCalculatorTest {
 
     private static final Long SERVICE_ID = 1L;
 
+    private static final Currency EUR = Currency.getInstance("EUR");
+
     private InvoiceItemCalculator calculator;
 
     @BeforeEach
     void setUp() {
-        BillingProperties properties =                new BillingProperties("EUR", 7);
+        BillingProperties properties = new BillingProperties("EUR", 7);
 
-        MoneyPolicy moneyPolicy =                new MoneyPolicy(properties);
+        MoneyPolicy moneyPolicy = new MoneyPolicy(properties);
 
-        calculator =                new InvoiceItemCalculator(moneyPolicy);
+        calculator = new InvoiceItemCalculator(moneyPolicy);
     }
 
     @Test
@@ -438,5 +444,58 @@ class InvoiceItemCalculatorTest {
                         new BigDecimal("1.01")
                 )
         );
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "3, 0.335, 0.10, 0.19",
+            "7, 0.333, 0.07, 0.19",
+            "1.5, 12.345, 0.05, 0.19",
+            "2.75, 19.995, 0.15, 0.07",
+            "11, 0.095, 0.03, 0.19"
+    })
+    void should_keep_total_consistent_with_rounded_components(
+            String quantity,
+            String unitPrice,
+            String discountRate,
+            String taxRate
+    ) {
+        InvoiceItem item = calculator.calculate(
+                1L,
+                "Test service",
+                new BigDecimal(quantity),
+                new BigDecimal(unitPrice),
+                new BigDecimal(discountRate),
+                new BigDecimal(taxRate)
+        );
+
+        Money expectedTotal = item.getNetAmount()
+                .subtract(item.getDiscountAmount())
+                .add(item.getTaxAmount());
+
+        assertThat(item.getTotalAmount()).isEqualTo(expectedTotal);
+    }
+
+    @Test
+    void should_keep_total_consistent_after_rounding() {
+        InvoiceItem item = calculator.calculate(
+                1L,
+                "Test service",
+                new BigDecimal("1"),
+                new BigDecimal("0.005"),
+                new BigDecimal("0.07"),
+                new BigDecimal("0.07")
+        );
+
+        Money totalFromComponents = item.getNetAmount()
+                .subtract(item.getDiscountAmount())
+                .add(item.getTaxAmount());
+
+        assertThat(item.getNetAmount()).isEqualTo(Money.of("0.01", EUR));
+        assertThat(item.getDiscountAmount()).isEqualTo(Money.of("0.00", EUR));
+        assertThat(item.getTaxAmount()).isEqualTo(Money.of("0.00", EUR));
+        assertThat(item.getTotalAmount()).isEqualTo(Money.of("0.01", EUR));
+
+        assertThat(item.getTotalAmount()).isEqualTo(totalFromComponents);
     }
 }

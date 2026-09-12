@@ -1,6 +1,7 @@
 package com.healthcare.billing.service;
 
 import com.healthcare.billing.model.entity.InvoiceItem;
+import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.money.MoneyPolicy;
 import com.healthcare.billing.validation.BillingValidation;
 import lombok.RequiredArgsConstructor;
@@ -29,15 +30,15 @@ public class InvoiceItemCalculator {
         BillingValidation.validateDiscountRate(discountRate);
         BillingValidation.validateTaxRate(taxRate);
 
-        BigDecimal rawNetAmount = quantity.multiply(unitPrice);
+        Money netAmount = moneyPolicy.moneyOf(quantity.multiply(unitPrice));
 
-        BigDecimal rawDiscountAmount = rawNetAmount.multiply(discountRate);
+        Money discountAmount = moneyPolicy.moneyOf(netAmount.amount().multiply(discountRate));
 
-        BigDecimal rawTaxableAmount = rawNetAmount.subtract(rawDiscountAmount);
+        Money taxableAmount = netAmount.subtract(discountAmount);
 
-        BigDecimal rawTaxAmount = rawTaxableAmount.multiply(taxRate);
+        Money taxAmount = moneyPolicy.moneyOf(taxableAmount.amount().multiply(taxRate));
 
-        BigDecimal rawTotalAmount = rawTaxableAmount.add(rawTaxAmount);
+        Money totalAmount = taxableAmount.add(taxAmount);
 
         return InvoiceItem.builder()
                 .serviceId(serviceId)
@@ -46,10 +47,10 @@ public class InvoiceItemCalculator {
                 .unitPrice(unitPrice)
                 .discountRate(discountRate)
                 .taxRate(taxRate)
-                .netAmount(moneyPolicy.moneyOf(rawNetAmount))
-                .discountAmount(moneyPolicy.moneyOf(rawDiscountAmount))
-                .taxAmount(moneyPolicy.moneyOf(rawTaxAmount))
-                .totalAmount(moneyPolicy.moneyOf(rawTotalAmount))
+                .netAmount(netAmount)
+                .discountAmount(discountAmount)
+                .taxAmount(taxAmount)
+                .totalAmount(totalAmount)
                 .build();
     }
 }
