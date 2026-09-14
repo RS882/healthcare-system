@@ -22,6 +22,8 @@ public enum ErrorCode {
     INVALID_REQUEST_BODY("Request body is invalid"),
 
     INVOICE_VALIDATION_ERROR("Invoice validation failed"),
+    PAYMENT_VALIDATION_ERROR("Payment validation failed"),
+    PAYMENT_STATE_METHOD_ERROR("Method not available"),
     INVOICE_ITEM_VALIDATION_ERROR("Invoice item validation failed"),
     BILLING_VALIDATION_ERROR("Billing validation failed"),
     MONEY_VALIDATION_ERROR("Money validation failed"),
