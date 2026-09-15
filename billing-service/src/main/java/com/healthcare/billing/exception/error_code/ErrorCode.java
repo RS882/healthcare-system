@@ -26,6 +26,8 @@ public enum ErrorCode {
     PAYMENT_STATE_METHOD_ERROR("Method not available"),
     INVOICE_ITEM_VALIDATION_ERROR("Invoice item validation failed"),
     BILLING_VALIDATION_ERROR("Billing validation failed"),
+    PAYMENT_DETAILS_VALIDATION_ERROR("Payment details validation failed"),
+    CASH_PAYMENT_VALIDATION_ERROR("Cash payment validation failed"),
     MONEY_VALIDATION_ERROR("Money validation failed"),
     CURRENCY_MISMATCH("Currency mismatch"),
     INVALID_BILLING_CURRENCY("Invalid billing currency configuration"),

@@ -1,11 +1,11 @@
-package com.healthcare.billing.cash_change_calculator;
+package com.healthcare.billing.payment.payment_details.cash_payment.cash_change_calculator;
 
-import com.healthcare.billing.cash_change_calculator.enums.CurrencyDenominations;
 import com.healthcare.billing.exception.CashChangeCalculatorException;
 import com.healthcare.billing.exception.CurrencyMismatchException;
 import com.healthcare.billing.exception.UnsupportedCurrencyException;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.money.MoneyPolicy;
+import com.healthcare.billing.payment.payment_details.cash_payment.cash_change_calculator.enums.CurrencyDenominations;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

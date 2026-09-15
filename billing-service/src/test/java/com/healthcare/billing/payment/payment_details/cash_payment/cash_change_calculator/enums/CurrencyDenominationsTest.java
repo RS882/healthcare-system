@@ -1,8 +1,9 @@
-package com.healthcare.billing.cash_change_calculator.enums;
+package com.healthcare.billing.payment.payment_details.cash_payment.cash_change_calculator.enums;
 
 import com.healthcare.billing.exception.CurrencyNominalException;
 import com.healthcare.billing.exception.CurrencyNominalIndexException;
 import com.healthcare.billing.exception.UnsupportedCurrencyException;
+import com.healthcare.billing.payment.payment_details.cash_payment.cash_change_calculator.enums.CurrencyDenominations;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;

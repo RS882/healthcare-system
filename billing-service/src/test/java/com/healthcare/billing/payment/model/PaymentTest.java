@@ -45,7 +45,6 @@ class PaymentTest {
                 METHOD,
                 FIXED_CLOCK.instant()
         );
-
     }
 
     @Test

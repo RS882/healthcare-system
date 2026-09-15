@@ -1,4 +1,4 @@
-package com.healthcare.billing.cash_change_calculator.enums;
+package com.healthcare.billing.payment.payment_details.cash_payment.cash_change_calculator.enums;
 
 import com.healthcare.billing.exception.CurrencyNominalException;
 import com.healthcare.billing.exception.CurrencyNominalIndexException;
