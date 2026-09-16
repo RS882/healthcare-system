@@ -715,7 +715,6 @@ class PaymentTest {
         );
     }
 
-
     private void move_to_status(PaymentStatus status) {
         Instant firstEventTime = FIXED_CLOCK.instant().plusSeconds(26);
         Instant secondEventTime = FIXED_CLOCK.instant().plusSeconds(32);
