@@ -15,6 +15,7 @@ public enum ErrorCode {
 
     INVOICE_NOT_FOUND("Invoice not found"),
     MEDICAL_SERVICE_NOT_FOUND("Medical service not found"),
+    PAYMENT_NOT_FOUND("Payment not found"),
 
     INVALID_INVOICE_TRANSITION("Invalid invoice state transition"),
 
@@ -25,6 +26,7 @@ public enum ErrorCode {
     PAYMENT_VALIDATION_ERROR("Payment validation failed"),
     PAYMENT_RECONSTITUTION_ERROR("Payment reconstitution failed"),
     PAYMENT_MAPPER_ERROR("Payment mapper failed"),
+    PAYMENT_JPA_ADAPTER_ERROR("Payment JPA adapter failed"),
     PAYMENT_STATE_METHOD_ERROR("Method not available"),
     INVOICE_ITEM_VALIDATION_ERROR("Invoice item validation failed"),
     BILLING_VALIDATION_ERROR("Billing validation failed"),

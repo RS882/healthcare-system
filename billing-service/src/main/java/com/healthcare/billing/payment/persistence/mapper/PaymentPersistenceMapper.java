@@ -5,9 +5,11 @@ import com.healthcare.billing.exception.PaymentMapperException;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.payment.model.Payment;
 import com.healthcare.billing.payment.persistence.entity.PaymentEntity;
+import org.springframework.stereotype.Component;
 
 import java.util.Currency;
 
+@Component
 public class PaymentPersistenceMapper {
 
     public PaymentEntity toEntity(Payment payment) {
