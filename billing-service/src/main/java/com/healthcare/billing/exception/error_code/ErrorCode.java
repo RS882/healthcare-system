@@ -23,6 +23,8 @@ public enum ErrorCode {
 
     INVOICE_VALIDATION_ERROR("Invoice validation failed"),
     PAYMENT_VALIDATION_ERROR("Payment validation failed"),
+    PAYMENT_RECONSTITUTION_ERROR("Payment reconstitution failed"),
+    PAYMENT_MAPPER_ERROR("Payment mapper failed"),
     PAYMENT_STATE_METHOD_ERROR("Method not available"),
     INVOICE_ITEM_VALIDATION_ERROR("Invoice item validation failed"),
     BILLING_VALIDATION_ERROR("Billing validation failed"),
