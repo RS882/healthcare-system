@@ -8,7 +8,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 public abstract class AbstractPostgreSQLContainerTest extends AbstractIntegrationTest {
 
     protected static final PostgreSQLContainer<?> POSTGRES =
-            new PostgreSQLContainer<>("postgres:16-alpine")
+             new PostgreSQLContainer<>("postgres:17-alpine")
                     .withDatabaseName("billing_test")
                     .withUsername("test")
                     .withPassword("test");

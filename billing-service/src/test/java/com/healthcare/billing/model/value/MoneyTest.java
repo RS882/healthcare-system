@@ -5,11 +5,12 @@ import com.healthcare.billing.exception.MoneyValidationException;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.math.BigDecimal;
 import java.util.Currency;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
@@ -17,10 +18,18 @@ class MoneyTest {
 
     private static final Currency EUR = Currency.getInstance("EUR");
     private static final Currency USD = Currency.getInstance("USD");
+    private static final Currency JPY = Currency.getInstance("JPY");
 
-    @Test
-    void shouldCreateMoney() {
-        BigDecimal value = new BigDecimal("100");
+    @ParameterizedTest(name = "Test {index}: amount [{arguments}]")
+    @ValueSource(strings = {
+            "129",
+            "61.7",
+            "-4737.98",
+            "988.9000000",
+            "-981772.5100000000000"
+    })
+    void shouldCreateMoney(String amount) {
+        BigDecimal value = new BigDecimal(amount);
 
         Money money = Money.of(value, EUR);
 
@@ -28,13 +37,102 @@ class MoneyTest {
         assertEquals(EUR, money.currency());
     }
 
-    @Test
-    void shouldCreateMoneyFromStringAndStripInput() {
-        Money money = Money.of(" 10.50 ", EUR);
+    @ParameterizedTest(name = "Test {index}: amount [{arguments}]")
+    @ValueSource(strings = {
+            "129",
+            "746.0000000000000000"
+    })
+    void shouldCreateMoneyWhenCurrencyIsJPY(String amount) {
+        BigDecimal value = new BigDecimal(amount);
 
-        assertEquals(0, money.amount().compareTo(new BigDecimal("10.50")));
+        Money money = Money.of(value, JPY);
+
+        assertEquals(0, money.amount().compareTo(value));
+        assertEquals(JPY, money.currency());
+    }
+
+    @ParameterizedTest(name = "Test {index}: amount [{arguments}]")
+    @ValueSource(strings = {
+            "129 ",
+            " 746.0000000000000000"
+    })
+    void shouldCreateMoneyFromStringAndStripInputWhenCurrencyIsJPY(String amount) {
+        Money money = Money.of(amount, JPY);
+
+        assertEquals(0, money.amount().compareTo(new BigDecimal(amount.strip())));
+        assertEquals(JPY, money.currency());
+    }
+
+    @ParameterizedTest(name = "Test {index}: amount [{arguments}]")
+    @ValueSource(strings = {
+            "129",
+            " 10.50 ",
+            " 61.7",
+            "-4737.98",
+            "988.9000000 ",
+            " -981772.5100000000000"
+    })
+    void shouldCreateMoneyFromStringAndStripInput(String amount) {
+        Money money = Money.of(amount, EUR);
+
+        assertEquals(0, money.amount().compareTo(new BigDecimal(amount.strip())));
         assertEquals(EUR, money.currency());
     }
+
+    @ParameterizedTest(name = "Test {index}: amount [{arguments}]")
+    @ValueSource(strings = {
+            "584.872",
+            "584.8710",
+            "-123.456"
+    })
+    void should_reject_amount_with_too_many_fractional_digits(String amount) {
+        BigDecimal value = new BigDecimal(amount);
+
+        assertThrows(MoneyValidationException.class, () -> Money.of(value, EUR));
+    }
+
+    @ParameterizedTest(name = "Test {index}: amount [{arguments}]")
+    @ValueSource(strings = {
+            "584.872",
+            "584.8710",
+            "-123.456",
+            "61.7",
+            "-4737.98",
+            "988.9000000",
+            "-981772.5100000000000"
+    })
+    void should_reject_amount_with_too_many_fractional_digits_when_currency_JPY(String amount) {
+        BigDecimal value = new BigDecimal(amount);
+
+        assertThrows(MoneyValidationException.class, () -> Money.of(value, JPY));
+    }
+
+    @ParameterizedTest(name = "Test {index}: amount [{arguments}]")
+    @ValueSource(strings = {
+            "584.872",
+            "584.8710",
+            "-123.456",
+            "61.7",
+            "-4737.98",
+            "988.9000000",
+            "-981772.5100000000000"
+    })
+    void should_reject_string_amount_with_too_many_fractional_digits_when_currency_JPY(String amount) {
+
+        assertThrows(MoneyValidationException.class, () -> Money.of(amount, JPY));
+    }
+
+    @ParameterizedTest(name = "Test {index}: amount [{arguments}]")
+    @ValueSource(strings = {
+            "584.872",
+            " 584.8710",
+            "-123.456"
+    })
+    void should_reject_string_amount_with_too_many_fractional_digits(String amount) {
+
+        assertThrows(MoneyValidationException.class, () -> Money.of(amount, EUR));
+    }
+
 
     @Test
     void shouldConsiderAmountsWithDifferentScaleEqual() {
@@ -175,14 +273,5 @@ class MoneyTest {
         );
 
         assertEquals("Invalid money amount: 'abc'", exception.getMessage());
-    }
-
-    @Test
-    void should_treat_amounts_with_different_scale_as_numerically_equal() {
-        BigDecimal first = new BigDecimal("10.0");
-        BigDecimal second = new BigDecimal("10.00");
-
-        assertThat(first.equals(second)).isFalse();
-        assertThat(first.compareTo(second)).isZero();
     }
 }

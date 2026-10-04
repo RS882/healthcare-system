@@ -22,11 +22,13 @@ class MoneyPolicyTest {
 
     @BeforeEach
     void setUp() {
+
         moneyPolicy = new MoneyPolicy(new BillingProperties("EUR", 7));
     }
 
     @Test
     void shouldUseConfiguredCurrency() {
+
         assertEquals(Currency.getInstance("EUR"), moneyPolicy.currency());
     }
 
@@ -42,6 +44,15 @@ class MoneyPolicyTest {
         Money money = moneyPolicy.moneyOf(new BigDecimal("10.125"));
 
         assertEquals(0, money.amount().compareTo(new BigDecimal("10.13")));
+        assertEquals(Currency.getInstance("EUR"), money.currency());
+    }
+
+    @Test
+    void should_keep_amount_unchanged_when_fractional_digits_are_valid() {
+        Money money = moneyPolicy.moneyOf(new BigDecimal("10.12"));
+
+        assertEquals(0, money.amount().compareTo(new BigDecimal("10.12")));
+        assertEquals(Currency.getInstance("EUR"), money.currency());
     }
 
     @Test

@@ -18,6 +18,7 @@ public class MoneyPolicy {
     private final Currency currency;
 
     public MoneyPolicy(BillingProperties properties) {
+
         this.currency = resolveCurrency(properties.currency());
     }
 

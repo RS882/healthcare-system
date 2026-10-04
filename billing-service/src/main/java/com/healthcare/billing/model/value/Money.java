@@ -14,8 +14,8 @@ public class Money implements Comparable<Money> {
     private final Currency currency;
 
     private Money(BigDecimal amount, Currency currency) {
-        validateAmount(amount);
         validateCurrency(currency);
+        validateAmount(amount, currency);
 
         this.amount = amount;
         this.currency = currency;
@@ -83,9 +83,15 @@ public class Money implements Comparable<Money> {
         }
     }
 
-    private static void validateAmount(BigDecimal amount) {
+    private static void validateAmount(BigDecimal amount, Currency currency) {
         if (amount == null) {
             throw new MoneyValidationException("Amount must not be null");
+        }
+
+        BigDecimal strippedAmount = amount.stripTrailingZeros();
+
+        if (currency.getDefaultFractionDigits() < strippedAmount.scale()) {
+            throw new MoneyValidationException("Amount has more fractional digits than allowed for currency");
         }
     }
 
