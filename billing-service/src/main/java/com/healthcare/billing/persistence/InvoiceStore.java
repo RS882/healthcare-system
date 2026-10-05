@@ -11,4 +11,6 @@ public interface InvoiceStore {
     Invoice save(Invoice invoice);
 
     void update(Invoice invoice);
+
+    boolean existsById (Long id);
 }

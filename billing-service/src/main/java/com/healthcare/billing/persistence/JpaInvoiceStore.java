@@ -54,4 +54,10 @@ public class JpaInvoiceStore implements InvoiceStore {
 
         invoicePersistenceMapper.updateEntity(invoice, entity);
     }
+
+    @Override
+    public boolean existsById(Long id) {
+
+        return invoiceJpaRepository.existsById(id);
+    }
 }

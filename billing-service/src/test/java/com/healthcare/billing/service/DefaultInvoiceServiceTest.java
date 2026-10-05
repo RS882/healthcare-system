@@ -10,10 +10,11 @@ import com.healthcare.billing.model.entity.invoice.InvoiceStateMachine;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceEvent;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceStatus;
 import com.healthcare.billing.persistence.InvoiceStore;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DisplayNameGeneration;
-import org.junit.jupiter.api.DisplayNameGenerator;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -23,33 +24,24 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
 
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
+@DisplayName("Default invoice service tests: ")
+@ExtendWith(MockitoExtension.class)
 class DefaultInvoiceServiceTest {
 
+    @Mock
     private InvoiceStore invoiceStore;
+
+    @Mock
     private InvoiceStateMachine invoiceStateMachine;
+
+    @Mock
     private InvoiceMapper invoiceMapper;
+
+    @Mock
     private InvoiceCreator invoiceCreator;
 
+    @InjectMocks
     private DefaultInvoiceService invoiceService;
-
-    @BeforeEach
-    void setUp() {
-
-        invoiceStore = mock(InvoiceStore.class);
-
-        invoiceStateMachine = mock(InvoiceStateMachine.class);
-
-        invoiceMapper = mock(InvoiceMapper.class);
-
-        invoiceCreator = mock(InvoiceCreator.class);
-
-        invoiceService = new DefaultInvoiceService(
-                invoiceStore,
-                invoiceStateMachine,
-                invoiceMapper,
-                invoiceCreator
-        );
-    }
 
     @Test
     void shouldCreateAndSaveDraftInvoice() {
