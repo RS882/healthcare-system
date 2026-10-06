@@ -4,6 +4,7 @@ import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.payment.model.Payment;
 import com.healthcare.billing.payment.model.enums.PaymentMethod;
 import com.healthcare.billing.payment.model.enums.PaymentStatus;
+import com.healthcare.billing.payment.persistence.dto.AmountDto;
 import com.healthcare.billing.payment.persistence.entity.PaymentEntity;
 import com.healthcare.billing.payment.repository.PaymentRepository;
 import com.healthcare.billing.payment.resolver.PaymentStateResolver;
@@ -26,6 +27,8 @@ import java.time.ZoneId;
 import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -43,8 +46,9 @@ public class PaymentPersistenceIntegrationTest extends AbstractPostgreSQLContain
     private EntityManager entityManager;
 
     private static final Long INVOICE_ID = 12L;
-    private static final Currency CURRENCY = Currency.getInstance("EUR");
-    private static final Money AMOUNT = Money.of("328.29", CURRENCY);
+    private static final Currency CURRENCY_EUR = Currency.getInstance("EUR");
+    private static final Currency CURRENCY_USD = Currency.getInstance("USD");
+    private static final Money AMOUNT = Money.of("328.29", CURRENCY_EUR);
     private static final PaymentMethod METHOD = PaymentMethod.CARD;
     private static final ZoneId ZONE = ZoneId.of("Europe/Berlin");
     private static final Clock FIXED_CLOCK =
@@ -244,9 +248,296 @@ public class PaymentPersistenceIntegrationTest extends AbstractPostgreSQLContain
 
         assertEquals(paymentId, foundCanceledPayment.getId());
 
-        Money expectedAmount = Money.of(amount, CURRENCY);
+        Money expectedAmount = Money.of(amount, CURRENCY_EUR);
 
         assertEquals(0, expectedAmount.compareTo(foundCanceledPayment.getAmount()));
+    }
+
+    @Test
+    void should_return_paid_amount_when_completed_payments_exist() {
+
+        PaymentStateResolver resolver = new PaymentStateResolver();
+
+        String amount1 = "25.75";
+        String amount2 = "100.1";
+        String amount3 = "46.32000";
+
+        Payment payment1 = getCreatedPayment(INVOICE_ID, amount1);
+        Payment payment2 = getCreatedPayment(INVOICE_ID, amount2);
+        Payment payment3 = getCreatedPayment(INVOICE_ID, amount3);
+
+        Payment savedPayment1 = paymentRepository.save(payment1);
+        Payment savedPayment2 = paymentRepository.save(payment2);
+        Payment savedPayment3 = paymentRepository.save(payment3);
+        clearPersistenceContext();
+
+        savedPayment1.start(FIXED_CLOCK.instant().plusSeconds(3), resolver);
+        savedPayment2.start(FIXED_CLOCK.instant().plusSeconds(2), resolver);
+        savedPayment3.start(FIXED_CLOCK.instant().plusSeconds(1), resolver);
+        savedPayment1.complete(FIXED_CLOCK.instant().plusSeconds(6), resolver);
+        savedPayment2.complete(FIXED_CLOCK.instant().plusSeconds(5), resolver);
+        savedPayment3.complete(FIXED_CLOCK.instant().plusSeconds(4), resolver);
+        paymentRepository.save(savedPayment1);
+        paymentRepository.save(savedPayment2);
+        paymentRepository.save(savedPayment3);
+        clearPersistenceContext();
+
+        Money calculatedAmount = paymentRepository.calculatePaidAmount(INVOICE_ID);
+
+        BigDecimal totalAmount = new BigDecimal(amount1)
+                .add(new BigDecimal(amount2))
+                .add(new BigDecimal(amount3)
+                );
+
+        assertNotNull(calculatedAmount);
+        assertEquals(0, Money.of(totalAmount, CURRENCY_EUR).compareTo(calculatedAmount));
+    }
+
+    @Test
+    void should_include_only_completed_payments_in_paid_amount() {
+
+        PaymentStateResolver resolver = new PaymentStateResolver();
+
+        String amount1 = "25.75";
+        String amount2 = "100.1";
+        String amount3 = "46.32000";
+        String amount4 = "584.87000000";
+        String amount5 = "51.75";
+
+        Payment payment1 = getCreatedPayment(INVOICE_ID, amount1);
+        Payment payment2 = getCreatedPayment(INVOICE_ID, amount2);
+        Payment payment3 = getCreatedPayment(INVOICE_ID, amount3);
+        Payment payment4 = getCreatedPayment(INVOICE_ID, amount4);
+        Payment payment5 = getCreatedPayment(INVOICE_ID, amount5);
+
+        Payment savedPayment1 = paymentRepository.save(payment1);
+        Payment savedPayment2 = paymentRepository.save(payment2);
+        Payment savedPayment3 = paymentRepository.save(payment3);
+        Payment savedPayment4 = paymentRepository.save(payment4);
+        paymentRepository.save(payment5);
+        clearPersistenceContext();
+
+        savedPayment1.start(FIXED_CLOCK.instant().plusSeconds(3), resolver);
+
+        savedPayment2.cancel(FIXED_CLOCK.instant().plusSeconds(2), resolver);
+
+        savedPayment3.start(FIXED_CLOCK.instant().plusSeconds(1), resolver);
+        savedPayment4.start(FIXED_CLOCK.instant().plusSeconds(4), resolver);
+
+        savedPayment1.complete(FIXED_CLOCK.instant().plusSeconds(16), resolver);
+        savedPayment4.complete(FIXED_CLOCK.instant().plusSeconds(15), resolver);
+
+        paymentRepository.save(savedPayment1);
+        paymentRepository.save(savedPayment2);
+        paymentRepository.save(savedPayment3);
+        paymentRepository.save(savedPayment4);
+        clearPersistenceContext();
+
+        Money calculatedAmount = paymentRepository.calculatePaidAmount(INVOICE_ID);
+
+        BigDecimal totalCompletedAmount = new BigDecimal(amount1).add(new BigDecimal(amount4));
+
+        assertNotNull(calculatedAmount);
+        assertEquals(0, Money.of(totalCompletedAmount, CURRENCY_EUR).compareTo(calculatedAmount));
+    }
+
+    @Test
+    void should_include_only_payments_of_requested_invoice_in_paid_amount() {
+
+        PaymentStateResolver resolver = new PaymentStateResolver();
+
+        String amount1 = "25.75";
+        String amount2 = "100.1";
+        String amount3 = "46.32000";
+        Long otherInvoiceId = 9999L;
+
+        Payment payment1 = getCreatedPayment(INVOICE_ID, amount1);
+        Payment payment2 = getCreatedPayment(otherInvoiceId, amount2);
+        Payment payment3 = getCreatedPayment(INVOICE_ID, amount3);
+
+        Payment savedPayment1 = paymentRepository.save(payment1);
+        Payment savedPayment2 = paymentRepository.save(payment2);
+        Payment savedPayment3 = paymentRepository.save(payment3);
+        clearPersistenceContext();
+
+        savedPayment1.start(FIXED_CLOCK.instant().plusSeconds(3), resolver);
+        savedPayment2.start(FIXED_CLOCK.instant().plusSeconds(2), resolver);
+        savedPayment3.start(FIXED_CLOCK.instant().plusSeconds(1), resolver);
+        savedPayment1.complete(FIXED_CLOCK.instant().plusSeconds(6), resolver);
+        savedPayment2.complete(FIXED_CLOCK.instant().plusSeconds(5), resolver);
+        savedPayment3.complete(FIXED_CLOCK.instant().plusSeconds(4), resolver);
+        paymentRepository.save(savedPayment1);
+        paymentRepository.save(savedPayment2);
+        paymentRepository.save(savedPayment3);
+        clearPersistenceContext();
+
+        Money calculatedAmount = paymentRepository.calculatePaidAmount(INVOICE_ID);
+
+        BigDecimal totalAmount = new BigDecimal(amount1).add(new BigDecimal(amount3));
+
+        assertNotNull(calculatedAmount);
+        assertEquals(0, Money.of(totalAmount, CURRENCY_EUR).compareTo(calculatedAmount));
+    }
+
+    @Test
+    void should_return_zero_amount_when_payments_belong_to_other_invoice() {
+
+        PaymentStateResolver resolver = new PaymentStateResolver();
+
+        String amount1 = "25.75";
+        String amount2 = "100.1";
+        String amount3 = "46.32000";
+        Long otherInvoiceId = 9999L;
+
+        Payment payment1 = getCreatedPayment(otherInvoiceId, amount1);
+        Payment payment2 = getCreatedPayment(otherInvoiceId, amount2);
+        Payment payment3 = getCreatedPayment(otherInvoiceId, amount3);
+
+        Payment savedPayment1 = paymentRepository.save(payment1);
+        Payment savedPayment2 = paymentRepository.save(payment2);
+        Payment savedPayment3 = paymentRepository.save(payment3);
+        clearPersistenceContext();
+
+        savedPayment1.start(FIXED_CLOCK.instant().plusSeconds(3), resolver);
+        savedPayment2.start(FIXED_CLOCK.instant().plusSeconds(2), resolver);
+        savedPayment3.start(FIXED_CLOCK.instant().plusSeconds(1), resolver);
+        savedPayment1.complete(FIXED_CLOCK.instant().plusSeconds(6), resolver);
+        savedPayment2.complete(FIXED_CLOCK.instant().plusSeconds(5), resolver);
+        savedPayment3.complete(FIXED_CLOCK.instant().plusSeconds(4), resolver);
+        paymentRepository.save(savedPayment1);
+        paymentRepository.save(savedPayment2);
+        paymentRepository.save(savedPayment3);
+        clearPersistenceContext();
+
+        Money calculatedAmount = paymentRepository.calculatePaidAmount(INVOICE_ID);
+
+        assertNotNull(calculatedAmount);
+        assertEquals(0, Money.zero(CURRENCY_EUR).compareTo(calculatedAmount));
+    }
+
+    @Test
+    void should_return_amount_dto_list_when_payments_have_different_currencies() {
+        PaymentStateResolver resolver = new PaymentStateResolver();
+
+        String amount1 = "25.75";
+        String amount2 = "100.1";
+        String amount3 = "46.32000";
+
+        String amount4 = "584.87000000";
+        String amount5 = "51.75";
+
+        Payment payment1 = getCreatedPayment(INVOICE_ID, amount1);
+        Payment payment2 = getCreatedPayment(INVOICE_ID, amount2);
+        Payment payment3 = getCreatedPayment(INVOICE_ID, amount3);
+        Payment payment4 = new Payment(
+                INVOICE_ID,
+                Money.of(amount4, CURRENCY_USD),
+                METHOD,
+                FIXED_CLOCK.instant());
+
+        Payment payment5 = new Payment(
+                INVOICE_ID,
+                Money.of(amount5, CURRENCY_USD),
+                METHOD,
+                FIXED_CLOCK.instant());
+
+        Payment savedPayment1 = paymentRepository.save(payment1);
+        Payment savedPayment2 = paymentRepository.save(payment2);
+        Payment savedPayment3 = paymentRepository.save(payment3);
+        Payment savedPayment4 = paymentRepository.save(payment4);
+        Payment savedPayment5 = paymentRepository.save(payment5);
+        clearPersistenceContext();
+
+        savedPayment1.start(FIXED_CLOCK.instant().plusSeconds(3), resolver);
+        savedPayment2.start(FIXED_CLOCK.instant().plusSeconds(2), resolver);
+        savedPayment3.start(FIXED_CLOCK.instant().plusSeconds(1), resolver);
+        savedPayment4.start(FIXED_CLOCK.instant().plusSeconds(4), resolver);
+        savedPayment5.start(FIXED_CLOCK.instant().plusSeconds(5), resolver);
+
+        savedPayment1.complete(FIXED_CLOCK.instant().plusSeconds(16), resolver);
+        savedPayment2.complete(FIXED_CLOCK.instant().plusSeconds(12), resolver);
+        savedPayment3.complete(FIXED_CLOCK.instant().plusSeconds(14), resolver);
+        savedPayment4.complete(FIXED_CLOCK.instant().plusSeconds(15), resolver);
+        savedPayment5.complete(FIXED_CLOCK.instant().plusSeconds(18), resolver);
+
+        paymentRepository.save(savedPayment1);
+        paymentRepository.save(savedPayment2);
+        paymentRepository.save(savedPayment3);
+        paymentRepository.save(savedPayment4);
+        paymentRepository.save(savedPayment5);
+        clearPersistenceContext();
+
+        List<AmountDto> amountDtoList = jpaPaymentRepository
+                .calculatePaidAmountPerCurrency(INVOICE_ID,
+                        PaymentStatus.COMPLETED);
+
+        BigDecimal totalEurAmount = new BigDecimal(amount1)
+                .add(new BigDecimal(amount2))
+                .add(new BigDecimal(amount3));
+
+        BigDecimal totalUsdAmount = new BigDecimal(amount4)
+                .add(new BigDecimal(amount5));
+
+        assertNotNull(amountDtoList);
+        assertEquals(2, amountDtoList.size());
+
+        String eurCode = CURRENCY_EUR.getCurrencyCode();
+        String usdCode = CURRENCY_USD.getCurrencyCode();
+
+        Set<String> currencies = amountDtoList.stream()
+                .map(AmountDto::currency)
+                .map(String::strip)
+                .collect(Collectors.toSet());
+
+        assertEquals(Set.of(eurCode, usdCode), currencies);
+
+        amountDtoList.forEach(a -> {
+
+            if (usdCode.equals(a.currency())) {
+                assertEquals(0, totalUsdAmount.compareTo(a.amount()));
+            }
+            if (eurCode.equals(a.currency())) {
+                assertEquals(0, totalEurAmount.compareTo(a.amount()));
+            }
+        });
+    }
+
+    @Test
+    void should_return_empty_amount_dto_list_when_payments_belong_to_other_invoice() {
+
+        PaymentStateResolver resolver = new PaymentStateResolver();
+
+        String amount1 = "25.75";
+        String amount2 = "100.1";
+        String amount3 = "46.32000";
+        Long otherInvoiceId = 9999L;
+
+        Payment payment1 = getCreatedPayment(otherInvoiceId, amount1);
+        Payment payment2 = getCreatedPayment(otherInvoiceId, amount2);
+        Payment payment3 = getCreatedPayment(otherInvoiceId, amount3);
+
+        Payment savedPayment1 = paymentRepository.save(payment1);
+        Payment savedPayment2 = paymentRepository.save(payment2);
+        Payment savedPayment3 = paymentRepository.save(payment3);
+        clearPersistenceContext();
+
+        savedPayment1.start(FIXED_CLOCK.instant().plusSeconds(3), resolver);
+        savedPayment2.start(FIXED_CLOCK.instant().plusSeconds(2), resolver);
+        savedPayment3.start(FIXED_CLOCK.instant().plusSeconds(1), resolver);
+        savedPayment1.complete(FIXED_CLOCK.instant().plusSeconds(6), resolver);
+        savedPayment2.complete(FIXED_CLOCK.instant().plusSeconds(5), resolver);
+        savedPayment3.complete(FIXED_CLOCK.instant().plusSeconds(4), resolver);
+        paymentRepository.save(savedPayment1);
+        paymentRepository.save(savedPayment2);
+        paymentRepository.save(savedPayment3);
+        clearPersistenceContext();
+
+        List<AmountDto> amountDtoList = jpaPaymentRepository
+                .calculatePaidAmountPerCurrency(INVOICE_ID,
+                        PaymentStatus.COMPLETED);
+
+        assertNotNull(amountDtoList);
+        assertTrue(amountDtoList.isEmpty());
     }
 
     private PaymentEntity getEntityWithStatusCreated() {
@@ -255,7 +546,7 @@ public class PaymentPersistenceIntegrationTest extends AbstractPostgreSQLContain
 
         entity.setInvoiceId(INVOICE_ID);
         entity.setAmount(AMOUNT.amount());
-        entity.setCurrency(CURRENCY.getCurrencyCode());
+        entity.setCurrency(CURRENCY_EUR.getCurrencyCode());
         entity.setStatus(PaymentStatus.CREATED);
         entity.setMethod(METHOD);
         entity.setCreatedAt(FIXED_CLOCK.instant());
@@ -265,7 +556,7 @@ public class PaymentPersistenceIntegrationTest extends AbstractPostgreSQLContain
 
     private Payment getCreatedPayment(Long invoiceId, String amount) {
 
-        Money money = Money.of(amount, CURRENCY);
+        Money money = Money.of(amount, CURRENCY_EUR);
 
         return new Payment(
                 invoiceId,

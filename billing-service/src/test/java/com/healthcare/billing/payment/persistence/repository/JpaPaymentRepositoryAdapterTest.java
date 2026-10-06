@@ -2,22 +2,30 @@ package com.healthcare.billing.payment.persistence.repository;
 
 import com.healthcare.billing.exception.PaymentJpaAdapterException;
 import com.healthcare.billing.model.value.Money;
+import com.healthcare.billing.money.MoneyPolicy;
 import com.healthcare.billing.payment.model.Payment;
 import com.healthcare.billing.payment.model.enums.PaymentMethod;
 import com.healthcare.billing.payment.model.enums.PaymentStatus;
+import com.healthcare.billing.payment.persistence.dto.AmountDto;
 import com.healthcare.billing.payment.persistence.entity.PaymentEntity;
 import com.healthcare.billing.payment.persistence.mapper.PaymentPersistenceMapper;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.DisplayNameGeneration;
+import org.junit.jupiter.api.DisplayNameGenerator;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
@@ -37,6 +45,10 @@ class JpaPaymentRepositoryAdapterTest {
     @Mock
     private PaymentPersistenceMapper mapper;
 
+    @Mock
+    private MoneyPolicy moneyPolicy;
+
+    @InjectMocks
     private JpaPaymentRepositoryAdapter adapter;
 
     private static final Long ID = 73L;
@@ -44,15 +56,10 @@ class JpaPaymentRepositoryAdapterTest {
     private static final Currency CURRENCY = Currency.getInstance("EUR");
     private static final Money AMOUNT = Money.of("328.29", CURRENCY);
     private static final PaymentMethod METHOD = PaymentMethod.CARD;
+    private static final PaymentStatus STATUS_COMPLETED = PaymentStatus.COMPLETED;
     private static final ZoneId ZONE = ZoneId.of("Europe/Berlin");
     private static final Clock FIXED_CLOCK =
             Clock.fixed(Instant.parse("2026-09-04T10:00:00Z"), ZONE);
-
-    @BeforeEach
-    void setUp() {
-
-        adapter = new JpaPaymentRepositoryAdapter(repository, mapper);
-    }
 
     @Test
     void should_return_saved_payment_when_payment_is_saved() {
@@ -221,6 +228,179 @@ class JpaPaymentRepositoryAdapterTest {
         verifyNoInteractions(mapper);
     }
 
+    @Test
+    void should_return_paid_amount_when_completed_payments_exist() {
+
+        BigDecimal amount = new BigDecimal("49.8100");
+        String currency = " EUR ";
+
+        AmountDto dto = new AmountDto(amount, currency);
+
+        when(repository.calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED))
+                .thenReturn(List.of(dto));
+        when(moneyPolicy.moneyOf(amount)).thenReturn(Money.of(amount, CURRENCY));
+        when(moneyPolicy.currency()).thenReturn(CURRENCY);
+
+        Money result = adapter.calculatePaidAmount(INVOICE_ID);
+
+        assertNotNull(result);
+        assertEquals(0, amount.compareTo(result.amount()));
+        assertEquals(Currency.getInstance(currency.strip()), result.currency());
+
+        verify(repository).calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED);
+        verify(moneyPolicy).currency();
+        verify(moneyPolicy).moneyOf(amount);
+    }
+
+    @ParameterizedTest(name = "Test {index}: invoice id [{arguments}]")
+    @NullSource
+    @ValueSource(longs = {0L, -271L})
+    void should_throw_exception_when_invoice_id_is_invalid_upon_calculate_paid_amount(Long id) {
+
+        assertThrows(PaymentJpaAdapterException.class,
+                () -> adapter.calculatePaidAmount(id));
+
+        verifyNoInteractions(repository, moneyPolicy);
+    }
+
+    @Test
+    void should_return_exception_when_amount_dto_list_is_null() {
+
+        when(repository.calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED))
+                .thenReturn(null);
+
+        assertThrows(PaymentJpaAdapterException.class,
+                () -> adapter.calculatePaidAmount(INVOICE_ID));
+
+        verify(repository).calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED);
+        verifyNoInteractions(moneyPolicy);
+    }
+
+    @Test
+    void should_throw_exception_when_multiple_currencies_in_invoice() {
+
+        AmountDto dto1 = new AmountDto(new BigDecimal("49.8100"), "EUR");
+        AmountDto dto2 = new AmountDto(new BigDecimal("674.9"), "USD");
+
+        List<AmountDto> amountDtoList = List.of(dto1, dto2);
+
+        when(repository.calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED))
+                .thenReturn(amountDtoList);
+
+        assertThrows(PaymentJpaAdapterException.class,
+                () -> adapter.calculatePaidAmount(INVOICE_ID));
+
+        verify(repository).calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED);
+        verifyNoInteractions(moneyPolicy);
+    }
+
+    @Test
+    void should_return_zero_amount() {
+
+        when(repository.calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED))
+                .thenReturn(List.of());
+
+        when(moneyPolicy.zero()).thenReturn(Money.zero(CURRENCY));
+
+        Money result = adapter.calculatePaidAmount(INVOICE_ID);
+
+        assertNotNull(result);
+        assertEquals(0, result.amount().compareTo(BigDecimal.ZERO));
+        assertEquals(CURRENCY, result.currency());
+
+        verify(repository).calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED);
+        verify(moneyPolicy).zero();
+    }
+
+    @Test
+    void should_return_exception_when_amount_dto_is_null() {
+
+        when(repository.calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED))
+                .thenReturn(Collections.singletonList(null));
+
+        assertThrows(PaymentJpaAdapterException.class,
+                () -> adapter.calculatePaidAmount(INVOICE_ID));
+
+        verify(repository).calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED);
+        verifyNoInteractions(moneyPolicy);
+    }
+
+    @Test
+    void should_throw_exception_when_amount_is_null() {
+
+        AmountDto dto = new AmountDto(null, "EUR");
+
+        List<AmountDto> amountDtoList = List.of(dto);
+
+        when(repository.calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED))
+                .thenReturn(amountDtoList);
+
+        assertThrows(PaymentJpaAdapterException.class,
+                () -> adapter.calculatePaidAmount(INVOICE_ID));
+
+        verify(repository).calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED);
+        verifyNoInteractions(moneyPolicy);
+    }
+
+    @Test
+    void should_throw_exception_when_amount_is_negative() {
+
+        AmountDto dto = new AmountDto(new BigDecimal("-8277.98"), "EUR");
+
+        List<AmountDto> amountDtoList = List.of(dto);
+
+        when(repository.calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED))
+                .thenReturn(amountDtoList);
+
+        assertThrows(PaymentJpaAdapterException.class,
+                () -> adapter.calculatePaidAmount(INVOICE_ID));
+
+        verify(repository).calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED);
+        verifyNoInteractions(moneyPolicy);
+    }
+
+    @ParameterizedTest(name = "Test {index}: currency [{arguments}]")
+    @NullSource
+    @ValueSource(strings = {
+            "    ",
+            "diTek"
+    })
+    void should_throw_exception_when_currency_is_invalid(String currency) {
+
+        AmountDto dto = new AmountDto(new BigDecimal("67.12"), currency);
+
+        List<AmountDto> amountDtoList = List.of(dto);
+
+        when(repository.calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED))
+                .thenReturn(amountDtoList);
+
+        assertThrows(PaymentJpaAdapterException.class,
+                () -> adapter.calculatePaidAmount(INVOICE_ID));
+
+        verify(repository).calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED);
+        verifyNoInteractions(moneyPolicy);
+    }
+
+    @Test
+    void should_throw_exception_when_currencies_do_not_match() {
+
+        AmountDto dto = new AmountDto(new BigDecimal("67.12"), "USD");
+
+        List<AmountDto> amountDtoList = List.of(dto);
+
+        when(repository.calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED))
+                .thenReturn(amountDtoList);
+        when(moneyPolicy.currency()).thenReturn(CURRENCY);
+
+        assertThrows(PaymentJpaAdapterException.class,
+                () -> adapter.calculatePaidAmount(INVOICE_ID));
+
+        verify(repository).calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED);
+        verify(moneyPolicy).currency();
+        verify(moneyPolicy, never()).moneyOf(any());
+
+    }
+
     private PaymentEntity getEntityWithStatusCreated() {
 
         PaymentEntity entity = new PaymentEntity();
@@ -240,7 +420,7 @@ class JpaPaymentRepositoryAdapterTest {
 
         PaymentEntity entity = getEntityWithStatusCreated();
 
-        entity.setStatus(PaymentStatus.COMPLETED);
+        entity.setStatus(STATUS_COMPLETED);
         entity.setUpdatedAt(updatedAt);
         entity.setCompletedAt(updatedAt);
 
