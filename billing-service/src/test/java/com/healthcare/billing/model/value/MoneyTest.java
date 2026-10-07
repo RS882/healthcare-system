@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.math.BigDecimal;
@@ -273,5 +274,32 @@ class MoneyTest {
         );
 
         assertEquals("Invalid money amount: 'abc'", exception.getMessage());
+    }
+
+    @ParameterizedTest(name = "Test {index}: amount [{arguments}]")
+    @ValueSource(strings = {
+            "29817.9800 ",
+            " 0",
+            "-9287.8 "
+    })
+    void should_return_absolute_amount(String amount) {
+        Money money = Money.of(amount, EUR);
+
+        Money absMoney = money.abs();
+
+        assertNotNull(absMoney);
+        assertEquals(money.currency(), absMoney.currency());
+
+        if(money.isNegative()) {
+            assertEquals(Money.zero(EUR), absMoney.add(money));
+        }
+
+        if(money.isPositive()) {
+            assertEquals(0, money.compareTo(absMoney));
+        }
+
+        if(money.isZero()) {
+            assertEquals(Money.zero(EUR), absMoney);
+        }
     }
 }
