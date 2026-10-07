@@ -73,6 +73,10 @@ public class Money implements Comparable<Money> {
         return new Money(amount.subtract(other.amount), currency);
     }
 
+    public Money abs() {
+        return new Money(amount.abs(), currency);
+    }
+
     private void requireSameCurrency(Money other) {
         if (other == null) {
             throw new MoneyValidationException("Money must not be null");
