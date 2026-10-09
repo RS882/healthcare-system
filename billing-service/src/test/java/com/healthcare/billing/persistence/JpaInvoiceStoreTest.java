@@ -1,34 +1,39 @@
 package com.healthcare.billing.persistence;
 
 import com.healthcare.billing.exception.InvoiceNotFoundException;
+import com.healthcare.billing.exception.InvoiceValidationException;
 import com.healthcare.billing.model.entity.invoice.Invoice;
 import com.healthcare.billing.persistence.entity.InvoiceJpaEntity;
 import com.healthcare.billing.persistence.mapper.InvoicePersistenceMapper;
 import com.healthcare.billing.persistence.repository.InvoiceJpaRepository;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertSame;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
+@ExtendWith(MockitoExtension.class)
 class JpaInvoiceStoreTest {
 
+    @Mock
     private InvoiceJpaRepository repository;
-    private InvoicePersistenceMapper mapper;
-    private JpaInvoiceStore store;
 
-    @BeforeEach
-    void setUp() {
-        repository = mock(InvoiceJpaRepository.class);
-        mapper = mock(InvoicePersistenceMapper.class);
-        store = new JpaInvoiceStore(repository, mapper);
-    }
+    @Mock
+    private InvoicePersistenceMapper mapper;
+
+    @InjectMocks
+    private JpaInvoiceStore store;
 
     @Test
     void shouldFindInvoiceById() {
@@ -47,6 +52,21 @@ class JpaInvoiceStoreTest {
 
         assertThrows(InvoiceNotFoundException.class, () -> store.findById(1L));
         verifyNoInteractions(mapper);
+    }
+
+    @ParameterizedTest(name = "Test {index}: invoice id [{arguments}]")
+    @NullSource
+    @ValueSource(longs = {
+            0,
+            -172
+    })
+    void should_return_exception_when_invoice_id_is_negative_or_zero_or_null_upon_find_by_id(Long id) {
+
+        assertThrows(InvoiceValidationException.class,
+                () -> store.findById(id));
+
+        verifyNoInteractions(mapper, repository);
+
     }
 
     @Test
@@ -71,6 +91,21 @@ class JpaInvoiceStoreTest {
         );
     }
 
+    @ParameterizedTest(name = "Test {index}: invoice number [{arguments}]")
+    @NullSource
+    @ValueSource(strings = {
+            "",
+            "    "
+    })
+    void should_return_exception_when_invoice_number_is_null_or_empty(String invoiceNumber) {
+
+        assertThrows(InvoiceValidationException.class,
+                () -> store.findByInvoiceNumber(invoiceNumber));
+
+        verifyNoInteractions(mapper, repository);
+
+    }
+
     @Test
     void shouldSaveInvoice() {
         Invoice invoice = Invoice.builder().build();
@@ -84,6 +119,15 @@ class JpaInvoiceStoreTest {
 
         assertSame(savedInvoice, store.save(invoice));
         verify(repository).save(entity);
+    }
+
+    @Test
+    void should_return_exception_when_invoice_is_null_upon_save() {
+
+        assertThrows(InvoiceValidationException.class,
+                () -> store.save(null));
+
+        verifyNoInteractions(mapper, repository);
     }
 
     @Test
@@ -106,5 +150,73 @@ class JpaInvoiceStoreTest {
 
         assertThrows(InvoiceNotFoundException.class, () -> store.update(invoice));
         verify(mapper, never()).updateEntity(any(), any());
+    }
+
+    @Test
+    void should_return_exception_when_invoice_is_null_upon_update() {
+
+        assertThrows(InvoiceValidationException.class,
+                () -> store.update(null));
+
+        verifyNoInteractions(mapper, repository);
+    }
+
+    @ParameterizedTest(name = "Test {index}: invoice id [{arguments}]")
+    @NullSource
+    @ValueSource(longs = {
+            0,
+            -172
+    })
+    void should_return_exception_when_invoice_id_is_negative_or_zero_or_null_upon_update(Long id) {
+
+        Invoice invoice = mock(Invoice.class);
+        when(invoice.getId()).thenReturn(id);
+
+        assertThrows(InvoiceValidationException.class,
+                () -> store.update(invoice));
+
+        verifyNoInteractions(mapper, repository);
+
+    }
+
+    @Test
+    void should_return_true_when_invoice_is_existing() {
+        Long id = 3L;
+
+        when(repository.existsById(id)).thenReturn(true);
+
+        assertTrue(store.existsById(id));
+
+        verifyNoInteractions(mapper);
+
+        verify(repository).existsById(id);
+    }
+
+    @Test
+    void should_return_false_when_invoice_isnt_existing() {
+        Long id = 3L;
+
+        when(repository.existsById(id)).thenReturn(false);
+
+        assertFalse(store.existsById(id));
+
+        verifyNoInteractions(mapper);
+
+        verify(repository).existsById(id);
+    }
+
+    @ParameterizedTest(name = "Test {index}: invoice id [{arguments}]")
+    @NullSource
+    @ValueSource(longs = {
+            0,
+            -172
+    })
+    void should_return_exception_when_invoice_id_is_negative_or_zero_or_null_upon_exist_by_id(Long id) {
+
+        assertThrows(InvoiceValidationException.class,
+                () -> store.existsById(id));
+
+        verifyNoInteractions(mapper, repository);
+
     }
 }

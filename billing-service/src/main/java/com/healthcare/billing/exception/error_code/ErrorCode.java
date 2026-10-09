@@ -24,6 +24,7 @@ public enum ErrorCode {
 
     INVOICE_VALIDATION_ERROR("Invoice validation failed"),
     PAYMENT_VALIDATION_ERROR("Payment validation failed"),
+    PAYMENT_BALANCE_VALIDATION_ERROR("Payment balance validation failed"),
     PAYMENT_RECONSTITUTION_ERROR("Payment reconstitution failed"),
     PAYMENT_MAPPER_ERROR("Payment mapper failed"),
     PAYMENT_JPA_ADAPTER_ERROR("Payment JPA adapter failed"),
