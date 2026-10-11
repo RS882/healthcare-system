@@ -10,6 +10,7 @@ import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -29,12 +30,8 @@ class CashChangeCalculatorTest {
     @Mock
     private MoneyPolicy moneyPolicy;
 
+    @InjectMocks
     private CashChangeCalculator calculator;
-
-    @BeforeEach
-    void set_up() {
-        calculator = new CashChangeCalculator(moneyPolicy);
-    }
 
     @Test
     void should_calculate_change_using_highest_denominations_first() {
