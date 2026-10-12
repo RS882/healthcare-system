@@ -5,7 +5,7 @@ import com.healthcare.billing.exception.PaymentDetailsValidationException;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceStatus;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.payment.model.enums.PaymentStatus;
-import com.healthcare.billing.payment.payment_details.cash_payment.cash_change_calculator.ChangeBreakdown;
+import com.healthcare.billing.payment.payment_method_details.cash_payment.ChangeBreakdown;
 import com.healthcare.billing.payment.payment_method_details.CashPaymentMethodDetails;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;

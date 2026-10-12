@@ -3,7 +3,9 @@ package com.healthcare.billing.payment.resolver;
 import com.healthcare.billing.exception.PaymentValidationException;
 import com.healthcare.billing.payment.model.*;
 import com.healthcare.billing.payment.model.enums.PaymentStatus;
+import org.springframework.stereotype.Component;
 
+@Component
 public class PaymentStateResolver {
 
     private final PaymentState createdState = new CreatedPaymentState();

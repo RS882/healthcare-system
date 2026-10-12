@@ -33,6 +33,8 @@ public enum ErrorCode {
     BILLING_VALIDATION_ERROR("Billing validation failed"),
     PAYMENT_DETAILS_VALIDATION_ERROR("Payment details validation failed"),
     CASH_PAYMENT_VALIDATION_ERROR("Cash payment validation failed"),
+    CARD_PAYMENT_VALIDATION_ERROR("Card payment validation failed"),
+    BANK_TRANSFER_VALIDATION_ERROR("Bank transfer validation failed"),
     MONEY_VALIDATION_ERROR("Money validation failed"),
     CURRENCY_MISMATCH("Currency mismatch"),
     INVALID_BILLING_CURRENCY("Invalid billing currency configuration"),

@@ -2,21 +2,40 @@ package com.healthcare.billing.payment.validation;
 
 import com.healthcare.billing.exception.CashPaymentValidationException;
 import com.healthcare.billing.model.value.Money;
+import com.healthcare.billing.payment.command.CashPaymentCompletionCommand;
 import com.healthcare.billing.payment.model.Payment;
 import com.healthcare.billing.payment.model.enums.PaymentMethod;
 
 import java.util.Currency;
+import java.util.Objects;
 
-public class CashPaymentValidator {
 
-    public void validate(Payment payment, Money receivedAmount) {
+
+public final class CashPaymentValidator {
+
+    private CashPaymentValidator() {
+    }
+
+    public static void validate(Payment payment, CashPaymentCompletionCommand command) {
+
+        validateCommand(command);
 
         validatePayment(payment);
 
-        validateReceivedAmount(receivedAmount, payment);
+        if(!Objects.equals(payment.getId(), command.paymentId())) {
+            throw new CashPaymentValidationException("Payment id mismatch");
+        }
+
+        validateReceivedAmount(command.receivedAmount(), payment);
     }
 
-    private void validatePayment(Payment payment) {
+    private static void validateCommand(CashPaymentCompletionCommand command){
+        if(command == null){
+            throw new CashPaymentValidationException("Cash payment completion command is null");
+        }
+    }
+
+    private static void validatePayment(Payment payment) {
         if (payment == null) {
             throw new CashPaymentValidationException("Payment cannot be null");
         }
@@ -26,19 +45,7 @@ public class CashPaymentValidator {
         }
     }
 
-    private void validateReceivedAmount(Money receivedAmount, Payment payment) {
-
-        if (receivedAmount == null) {
-            throw new CashPaymentValidationException("Received amount cannot be null");
-        }
-
-        if (receivedAmount.isZero()) {
-            throw new CashPaymentValidationException("Received amount cannot be zero");
-        }
-
-        if (receivedAmount.isNegative()) {
-            throw new CashPaymentValidationException("Received amount cannot be negative");
-        }
+    private static void validateReceivedAmount(Money receivedAmount, Payment payment) {
 
         Currency receivedAmountCurrency = receivedAmount.currency();
         Currency paymentCurrency = payment.getAmount().currency();

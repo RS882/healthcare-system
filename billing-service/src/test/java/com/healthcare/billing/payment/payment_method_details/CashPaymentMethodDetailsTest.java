@@ -3,7 +3,7 @@ package com.healthcare.billing.payment.payment_method_details;
 import com.healthcare.billing.exception.CashPaymentValidationException;
 import com.healthcare.billing.exception.CurrencyMismatchException;
 import com.healthcare.billing.model.value.Money;
-import com.healthcare.billing.payment.payment_details.cash_payment.cash_change_calculator.ChangeBreakdown;
+import com.healthcare.billing.payment.payment_method_details.cash_payment.ChangeBreakdown;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;

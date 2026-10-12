@@ -1,4 +1,4 @@
-package com.healthcare.billing.payment.payment_details.cash_payment.cash_change_calculator;
+package com.healthcare.billing.payment.payment_method_details.cash_payment;
 
 import com.healthcare.billing.exception.CashPaymentValidationException;
 import com.healthcare.billing.model.value.Money;
