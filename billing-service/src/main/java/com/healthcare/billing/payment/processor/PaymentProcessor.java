@@ -9,4 +9,14 @@ public interface PaymentProcessor<
         D extends PaymentMethodDetails> {
 
     D process(Payment payment, C command);
+
+    Class<C> supportedCommandType();
+
+    default PaymentMethodDetails processChecked(
+            Payment payment,
+            PaymentCompletionCommand command
+    ) {
+        C typedCommand = supportedCommandType().cast(command);
+        return process(payment, typedCommand);
+    }
 }

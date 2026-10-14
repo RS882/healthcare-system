@@ -56,4 +56,9 @@ public class CashPaymentProcessor
             throw e;
         }
     }
+
+    @Override
+    public Class<CashPaymentCompletionCommand> supportedCommandType() {
+        return CashPaymentCompletionCommand.class;
+    }
 }
