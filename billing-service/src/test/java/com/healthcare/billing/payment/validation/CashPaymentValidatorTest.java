@@ -1,6 +1,7 @@
 package com.healthcare.billing.payment.validation;
 
 import com.healthcare.billing.exception.CashPaymentValidationException;
+import com.healthcare.billing.exception.PaymentValidationException;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.payment.command.CashPaymentCompletionCommand;
 import com.healthcare.billing.payment.model.Payment;
@@ -21,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 @DisplayNameGeneration(DisplayNameGenerator.ReplaceUnderscores.class)
 class CashPaymentValidatorTest {
 
-
     private static final Long INVOICE_ID = 12L;
     private static final Long PAYMENT_ID = 2L;
     private static final Currency EUR = Currency.getInstance("EUR");
@@ -34,11 +34,13 @@ class CashPaymentValidatorTest {
     private static final Clock FIXED_CLOCK =
             Clock.fixed(Instant.parse("2026-09-04T10:00:00Z"), ZONE);
 
+    private final CashPaymentValidator validator = new CashPaymentValidator();
+
     @Test
     void validation_must_be_successful() {
 
         assertDoesNotThrow(() ->
-                CashPaymentValidator.validate(
+                validator.validate(
                         createValidPayment(),
                         createValidCommand()
                 ));
@@ -53,7 +55,7 @@ class CashPaymentValidatorTest {
         );
 
         assertDoesNotThrow(
-                () -> CashPaymentValidator.validate(
+                () -> validator.validate(
                         createValidPayment(),
                         command
                 )
@@ -63,8 +65,8 @@ class CashPaymentValidatorTest {
     @Test
     void should_return_exception_when_command_is_null() {
 
-        assertThrows(CashPaymentValidationException.class,
-                () -> CashPaymentValidator.validate(
+        assertThrows(PaymentValidationException.class,
+                () -> validator.validate(
                         createValidPayment(),
                         null
                 ));
@@ -73,8 +75,8 @@ class CashPaymentValidatorTest {
     @Test
     void should_return_exception_when_payment_is_null() {
 
-        assertThrows(CashPaymentValidationException.class,
-                () -> CashPaymentValidator.validate(
+        assertThrows(PaymentValidationException.class,
+                () -> validator.validate(
                         null,
                         createValidCommand()
                 ));
@@ -94,8 +96,8 @@ class CashPaymentValidatorTest {
                 null
         );
 
-        assertThrows(CashPaymentValidationException.class,
-                () -> CashPaymentValidator.validate(
+        assertThrows(PaymentValidationException.class,
+                () -> validator.validate(
                         payment,
                         createValidCommand()
                 ));
@@ -108,7 +110,7 @@ class CashPaymentValidatorTest {
                 Money.of("376.98", USD));
 
         assertThrows(CashPaymentValidationException.class,
-                () -> CashPaymentValidator.validate(
+                () -> validator.validate(
                         createValidPayment(),
                         command
                 ));
@@ -121,7 +123,7 @@ class CashPaymentValidatorTest {
                 Money.of("21.98", EUR));
 
         assertThrows(CashPaymentValidationException.class,
-                () -> CashPaymentValidator.validate(
+                () -> validator.validate(
                         createValidPayment(),
                         command
                 ));
@@ -136,8 +138,8 @@ class CashPaymentValidatorTest {
         );
 
         assertThrows(
-                CashPaymentValidationException.class,
-                () -> CashPaymentValidator.validate(
+                PaymentValidationException.class,
+                () -> validator.validate(
                         createValidPayment(),
                         command
                 )

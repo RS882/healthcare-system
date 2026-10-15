@@ -2,6 +2,7 @@ package com.healthcare.billing.payment.processor;
 
 import com.healthcare.billing.exception.CashChangeCalculatorException;
 import com.healthcare.billing.exception.CashPaymentValidationException;
+import com.healthcare.billing.exception.PaymentValidationException;
 import com.healthcare.billing.exception.UnsupportedCurrencyException;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.payment.command.CashPaymentCompletionCommand;
@@ -12,6 +13,7 @@ import com.healthcare.billing.payment.payment_method_details.CashPaymentMethodDe
 import com.healthcare.billing.payment.payment_method_details.cash_payment.CashChangeCalculator;
 import com.healthcare.billing.payment.payment_method_details.cash_payment.ChangeBreakdown;
 import com.healthcare.billing.payment.resolver.PaymentStateResolver;
+import com.healthcare.billing.payment.validation.CashPaymentValidator;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -48,6 +50,9 @@ class CashPaymentProcessorTest {
     private CashPaymentProcessor processor;
 
     @Mock
+    private CashPaymentValidator validator;
+
+    @Mock
     private CashChangeCalculator calculator;
 
     @BeforeEach
@@ -67,7 +72,9 @@ class CashPaymentProcessorTest {
         processor = new CashPaymentProcessor(
                 calculator,
                 new PaymentStateResolver(),
-                FIXED_CLOCK);
+                FIXED_CLOCK,
+                validator);
+
     }
 
     @Test
@@ -77,9 +84,11 @@ class CashPaymentProcessorTest {
 
         ChangeBreakdown breakdown = createValidBreakdown();
 
+        CashPaymentCompletionCommand command = createValidCommand();
+
         when(calculator.calculate(AMOUNT, receivedAmount)).thenReturn(breakdown);
 
-        CashPaymentMethodDetails details = processor.process(payment, createValidCommand());
+        CashPaymentMethodDetails details = processor.process(payment, command);
 
         assertEquals(PaymentStatus.COMPLETED, payment.getStatus());
         assertEquals(FIXED_CLOCK.instant(), payment.getCompletedAt());
@@ -89,6 +98,7 @@ class CashPaymentProcessorTest {
         assertEquals(breakdown, details.changeBreakdown());
 
         verify(calculator).calculate(AMOUNT, receivedAmount);
+        verify(validator).validate(payment, command);
     }
 
     @Test
@@ -116,6 +126,7 @@ class CashPaymentProcessorTest {
         assertEquals(PaymentStatus.CANCELLED, payment.getStatus());
 
         verify(calculator).calculate(AMOUNT, receivedAmount);
+        verify(validator).validate(payment, command);
     }
 
     @Test
@@ -138,6 +149,7 @@ class CashPaymentProcessorTest {
         assertEquals(PaymentStatus.CANCELLED, payment.getStatus());
 
         verify(calculator).calculate(AMOUNT, receivedAmount);
+        verify(validator).validate(payment, command);
     }
 
     @Test
@@ -165,22 +177,27 @@ class CashPaymentProcessorTest {
         assertTrue(details.changeBreakdown().denominations().isEmpty());
 
         verify(calculator).calculate(AMOUNT, receivedAmount);
+        verify(validator).validate(payment, command);
     }
 
     @Test
-    void should_not_start_processing_when_payment_id_mismatches() {
+    void should_not_start_processing_when_validation_fails() {
 
         CashPaymentCompletionCommand command =
                 new CashPaymentCompletionCommand(999L, createValidReceivedAmount());
 
+        doThrow(PaymentValidationException.class).when(validator)
+                .validate(any(), any(CashPaymentCompletionCommand.class));
+
         assertThrows(
-                CashPaymentValidationException.class,
+                PaymentValidationException.class,
                 () -> processor.process(payment, command)
         );
 
         assertEquals(PaymentStatus.CREATED, payment.getStatus());
 
         verifyNoInteractions(calculator);
+        verify(validator).validate(payment, command);
     }
 
     private CashPaymentCompletionCommand createValidCommand() {

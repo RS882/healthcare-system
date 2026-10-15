@@ -23,6 +23,7 @@ public class CashPaymentProcessor
     private final CashChangeCalculator calculator;
     private final PaymentStateResolver resolver;
     private final Clock clock;
+    private final CashPaymentValidator validator;
 
     @Override
     public CashPaymentMethodDetails process(
@@ -30,7 +31,7 @@ public class CashPaymentProcessor
             CashPaymentCompletionCommand command
     ) {
 
-        CashPaymentValidator.validate(payment, command);
+        validator.validate(payment, command);
 
         payment.start(clock.instant(), resolver);
 

@@ -5,47 +5,27 @@ import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.payment.command.CashPaymentCompletionCommand;
 import com.healthcare.billing.payment.model.Payment;
 import com.healthcare.billing.payment.model.enums.PaymentMethod;
+import org.springframework.stereotype.Component;
 
 import java.util.Currency;
-import java.util.Objects;
 
+@Component
+public class CashPaymentValidator
+        extends AbstractPaymentValidator<CashPaymentCompletionCommand> {
 
-
-public final class CashPaymentValidator {
-
-    private CashPaymentValidator() {
-    }
-
-    public static void validate(Payment payment, CashPaymentCompletionCommand command) {
+    @Override
+    public void validate(Payment payment, CashPaymentCompletionCommand command) {
 
         validateCommand(command);
 
-        validatePayment(payment);
+        validatePayment(payment, PaymentMethod.CASH);
 
-        if(!Objects.equals(payment.getId(), command.paymentId())) {
-            throw new CashPaymentValidationException("Payment id mismatch");
-        }
+        validateIdForPaymentAndCommand(payment.getId(), command.paymentId());
 
         validateReceivedAmount(command.receivedAmount(), payment);
     }
 
-    private static void validateCommand(CashPaymentCompletionCommand command){
-        if(command == null){
-            throw new CashPaymentValidationException("Cash payment completion command is null");
-        }
-    }
-
-    private static void validatePayment(Payment payment) {
-        if (payment == null) {
-            throw new CashPaymentValidationException("Payment cannot be null");
-        }
-
-        if (payment.getMethod() != PaymentMethod.CASH) {
-            throw new CashPaymentValidationException("Payment method must be CASH for cash payment");
-        }
-    }
-
-    private static void validateReceivedAmount(Money receivedAmount, Payment payment) {
+    private void validateReceivedAmount(Money receivedAmount, Payment payment) {
 
         Currency receivedAmountCurrency = receivedAmount.currency();
         Currency paymentCurrency = payment.getAmount().currency();
