@@ -35,6 +35,7 @@ public enum ErrorCode {
     PAYMENT_DETAILS_VALIDATION_ERROR("Payment details validation failed"),
     CASH_PAYMENT_VALIDATION_ERROR("Cash payment validation failed"),
     CARD_PAYMENT_VALIDATION_ERROR("Card payment validation failed"),
+    CARD_PAYMENT_VERIFICATION_RESULT_ERROR("Card payment verification result is incorrect"),
     CARD_PAYMENT_GATEWAY_ERROR("Card payment gateway failed"),
     BANK_TRANSFER_VALIDATION_ERROR("Bank transfer validation failed"),
     MONEY_VALIDATION_ERROR("Money validation failed"),

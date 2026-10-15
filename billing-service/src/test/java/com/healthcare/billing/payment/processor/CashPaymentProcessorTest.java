@@ -5,6 +5,7 @@ import com.healthcare.billing.exception.CashPaymentValidationException;
 import com.healthcare.billing.exception.PaymentValidationException;
 import com.healthcare.billing.exception.UnsupportedCurrencyException;
 import com.healthcare.billing.model.value.Money;
+import com.healthcare.billing.payment.command.CardPaymentCompletionCommand;
 import com.healthcare.billing.payment.command.CashPaymentCompletionCommand;
 import com.healthcare.billing.payment.model.Payment;
 import com.healthcare.billing.payment.model.enums.PaymentMethod;
@@ -198,6 +199,14 @@ class CashPaymentProcessorTest {
 
         verifyNoInteractions(calculator);
         verify(validator).validate(payment, command);
+    }
+
+    @Test
+    void should_return_supported_command_type() {
+
+        Class<?> result = processor.supportedCommandType();
+
+        assertEquals(CashPaymentCompletionCommand.class, result);
     }
 
     private CashPaymentCompletionCommand createValidCommand() {
