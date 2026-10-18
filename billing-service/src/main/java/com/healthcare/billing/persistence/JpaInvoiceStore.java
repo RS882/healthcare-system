@@ -80,6 +80,7 @@ public class JpaInvoiceStore implements InvoiceStore {
     }
 
     @Override
+    @Transactional(propagation = Propagation.MANDATORY)
     public void update(Invoice invoice) {
 
         validateInvoice(invoice);
