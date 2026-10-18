@@ -1,5 +1,6 @@
 package com.healthcare.billing.persistence;
 
+import com.healthcare.billing.config.propertie.BillingInvoiceTimeoutProperties;
 import com.healthcare.billing.exception.InvoiceNotFoundException;
 import com.healthcare.billing.exception.InvoiceValidationException;
 import com.healthcare.billing.model.entity.invoice.Invoice;
@@ -16,6 +17,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.Optional;
 
@@ -31,6 +33,12 @@ class JpaInvoiceStoreTest {
 
     @Mock
     private InvoicePersistenceMapper mapper;
+
+    @Mock
+    private JdbcTemplate jdbcTemplate;
+
+    @Mock
+    private BillingInvoiceTimeoutProperties billingInvoiceTimeoutProperties;
 
     @InjectMocks
     private JpaInvoiceStore store;
@@ -218,5 +226,38 @@ class JpaInvoiceStoreTest {
 
         verifyNoInteractions(mapper, repository);
 
+    }
+
+    @Test
+    void should_find_invoice_by_id_with_lock() {
+        InvoiceJpaEntity entity = new InvoiceJpaEntity();
+        Invoice invoice = Invoice.builder().build();
+        when(repository.findByIdWithLock(1L)).thenReturn(Optional.of(entity));
+        when(mapper.toDomain(entity)).thenReturn(invoice);
+
+        assertSame(invoice, store.findByIdWithBlock(1L));
+        verify(mapper).toDomain(entity);
+    }
+
+    @Test
+    void should_throw_when_invoice_by_with_lock_id_not_found() {
+        when(repository.findByIdWithLock(1L)).thenReturn(Optional.empty());
+
+        assertThrows(InvoiceNotFoundException.class, () -> store.findByIdWithBlock(1L));
+        verifyNoInteractions(mapper);
+    }
+
+    @ParameterizedTest(name = "Test {index}: invoice id [{arguments}]")
+    @NullSource
+    @ValueSource(longs = {
+            0,
+            -172
+    })
+    void should_return_exception_when_invoice_id_is_incorrect_upon_find_by_id_with_lock(Long id) {
+
+        assertThrows(InvoiceValidationException.class,
+                () -> store.findByIdWithBlock(id));
+
+        verifyNoInteractions(mapper, repository);
     }
 }

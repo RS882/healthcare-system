@@ -6,6 +6,8 @@ public interface InvoiceStore {
 
     Invoice findById(Long id);
 
+    Invoice findByIdWithBlock(Long id);
+
     Invoice findByInvoiceNumber(String invoiceNumber);
 
     Invoice save(Invoice invoice);

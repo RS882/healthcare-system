@@ -26,3 +26,5 @@ eureka:
 billing:
   currency: EUR
   payment-term-days: 7
+  invoice:
+    lock-timeout-ms: 2000
