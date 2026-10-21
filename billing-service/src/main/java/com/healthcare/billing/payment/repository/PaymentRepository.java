@@ -15,4 +15,6 @@ public interface PaymentRepository {
     List<Payment> findByInvoiceId(Long invoiceId);
 
     Money calculatePaidAmount(Long invoiceId);
+
+    void update(Payment payment);
 }

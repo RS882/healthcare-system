@@ -1,6 +1,7 @@
 package com.healthcare.billing.payment.persistence.repository;
 
 import com.healthcare.billing.exception.PaymentJpaAdapterException;
+import com.healthcare.billing.exception.PaymentNotFoundException;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.money.MoneyPolicy;
 import com.healthcare.billing.payment.model.Payment;
@@ -11,10 +12,13 @@ import com.healthcare.billing.payment.persistence.mapper.PaymentPersistenceMappe
 import com.healthcare.billing.payment.repository.PaymentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.Currency;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Repository
@@ -79,6 +83,49 @@ public class JpaPaymentRepositoryAdapter implements PaymentRepository {
         validateAmountDto(amountDto);
 
         return moneyPolicy.moneyOf(amountDto.amount());
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void update(Payment payment) {
+
+        validatePayment(payment);
+
+        Long paymentId = payment.getId();
+
+        validateId(paymentId, "Payment ID");
+
+        PaymentEntity entity = jpaPaymentRepository.findById(paymentId)
+                .orElseThrow(() -> new PaymentNotFoundException(paymentId));
+
+        validatePaymentImmutableFields(payment, entity);
+
+        mapper.updateEntity(payment, entity);
+    }
+
+    private void validatePaymentImmutableFields(Payment payment, PaymentEntity entity) {
+
+        if (!Objects.equals(payment.getId(), entity.getId())) {
+            throw new PaymentJpaAdapterException("Payment ID and payment entity ID do not match");
+        }
+        if (!Objects.equals(payment.getInvoiceId(), entity.getInvoiceId())) {
+            throw new PaymentJpaAdapterException("Invoice IDs do not match");
+        }
+        if (payment.getAmount().amount().compareTo(entity.getAmount()) != 0) {
+            throw new PaymentJpaAdapterException("Amount do not match");
+        }
+        if (!Objects.equals(
+                payment.getAmount().currency().getCurrencyCode(),
+                entity.getCurrency()
+        )) {
+            throw new PaymentJpaAdapterException("Currency code do not match");
+        }
+        if (payment.getMethod() != entity.getMethod()) {
+            throw new PaymentJpaAdapterException("Method code do not match");
+        }
+        if (!Objects.equals(payment.getCreatedAt(), entity.getCreatedAt())) {
+            throw new PaymentJpaAdapterException("Created at do not match");
+        }
     }
 
     private void validateAmountDto(AmountDto amountDto) {

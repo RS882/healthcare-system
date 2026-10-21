@@ -14,9 +14,7 @@ public class PaymentPersistenceMapper {
 
     public PaymentEntity toEntity(Payment payment) {
 
-        if (payment == null) {
-            throw new PaymentMapperException("Payment cannot be null");
-        }
+        validatePayment(payment);
 
         PaymentEntity paymentEntity = new PaymentEntity();
 
@@ -35,9 +33,7 @@ public class PaymentPersistenceMapper {
 
     public Payment toDomain(PaymentEntity entity) {
 
-        if (entity == null) {
-            throw new PaymentMapperException("Payment entity cannot be null");
-        }
+        validatePaymentEntity(entity);
 
         Currency currency = resolveCurrency(entity.getCurrency());
 
@@ -53,6 +49,15 @@ public class PaymentPersistenceMapper {
         );
     }
 
+    public void updateEntity(Payment payment, PaymentEntity entity) {
+
+        validatePayment(payment);
+        validatePaymentEntity(entity);
+
+        entity.setStatus(payment.getStatus());
+        entity.setUpdatedAt(payment.getUpdatedAt());
+        entity.setCompletedAt(payment.getCompletedAt());
+    }
 
     private Currency resolveCurrency(String currencyCode) {
 
@@ -64,6 +69,18 @@ public class PaymentPersistenceMapper {
             return Currency.getInstance(currencyCode.strip());
         } catch (IllegalArgumentException exception) {
             throw new InvalidPersistedCurrencyException(currencyCode);
+        }
+    }
+
+    private void validatePaymentEntity(PaymentEntity entity) {
+        if (entity == null) {
+            throw new PaymentMapperException("Payment entity cannot be null");
+        }
+    }
+
+    private void validatePayment(Payment payment) {
+        if (payment == null) {
+            throw new PaymentMapperException("Payment cannot be null");
         }
     }
 }

@@ -154,6 +154,7 @@ public class InvoiceUpdateTransactionIntegrationTest
     void update_should_not_persist_changes_after_exception() {
 
         Invoice savedInvoice = getSavedInvoice();
+        String exceptionMessage = "Simulated failure after invoice update";
 
         Long invoiceId = savedInvoice.getId();
         String invoiceNumber = savedInvoice.getInvoiceNumber();
@@ -178,14 +179,14 @@ public class InvoiceUpdateTransactionIntegrationTest
                             assertNotNull(savedInvoice.getIssuedDate());
                             assertNotNull(savedInvoice.getDueDate());
 
-                            throw new IllegalStateException("Simulated failure after invoice update");
+                            throw new IllegalStateException(exceptionMessage);
 
                         }
                 )
         );
 
         assertEquals(
-                "Simulated failure after invoice update",
+                exceptionMessage,
                 exception.getMessage()
         );
 

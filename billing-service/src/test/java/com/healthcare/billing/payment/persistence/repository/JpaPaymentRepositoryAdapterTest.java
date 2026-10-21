@@ -1,6 +1,7 @@
 package com.healthcare.billing.payment.persistence.repository;
 
 import com.healthcare.billing.exception.PaymentJpaAdapterException;
+import com.healthcare.billing.exception.PaymentNotFoundException;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.money.MoneyPolicy;
 import com.healthcare.billing.payment.model.Payment;
@@ -15,6 +16,8 @@ import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
@@ -29,7 +32,9 @@ import java.util.Collections;
 import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
+import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
@@ -53,8 +58,9 @@ class JpaPaymentRepositoryAdapterTest {
 
     private static final Long ID = 73L;
     private static final Long INVOICE_ID = 12L;
-    private static final Currency CURRENCY = Currency.getInstance("EUR");
-    private static final Money AMOUNT = Money.of("328.29", CURRENCY);
+    private static final Currency EUR = Currency.getInstance("EUR");
+    private static final Currency USD = Currency.getInstance("USD");
+    private static final Money AMOUNT = Money.of("328.29", EUR);
     private static final PaymentMethod METHOD = PaymentMethod.CARD;
     private static final PaymentStatus STATUS_COMPLETED = PaymentStatus.COMPLETED;
     private static final ZoneId ZONE = ZoneId.of("Europe/Berlin");
@@ -238,8 +244,8 @@ class JpaPaymentRepositoryAdapterTest {
 
         when(repository.calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED))
                 .thenReturn(List.of(dto));
-        when(moneyPolicy.moneyOf(amount)).thenReturn(Money.of(amount, CURRENCY));
-        when(moneyPolicy.currency()).thenReturn(CURRENCY);
+        when(moneyPolicy.moneyOf(amount)).thenReturn(Money.of(amount, EUR));
+        when(moneyPolicy.currency()).thenReturn(EUR);
 
         Money result = adapter.calculatePaidAmount(INVOICE_ID);
 
@@ -300,13 +306,13 @@ class JpaPaymentRepositoryAdapterTest {
         when(repository.calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED))
                 .thenReturn(List.of());
 
-        when(moneyPolicy.zero()).thenReturn(Money.zero(CURRENCY));
+        when(moneyPolicy.zero()).thenReturn(Money.zero(EUR));
 
         Money result = adapter.calculatePaidAmount(INVOICE_ID);
 
         assertNotNull(result);
         assertEquals(0, result.amount().compareTo(BigDecimal.ZERO));
-        assertEquals(CURRENCY, result.currency());
+        assertEquals(EUR, result.currency());
 
         verify(repository).calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED);
         verify(moneyPolicy).zero();
@@ -390,7 +396,7 @@ class JpaPaymentRepositoryAdapterTest {
 
         when(repository.calculatePaidAmountPerCurrency(INVOICE_ID, STATUS_COMPLETED))
                 .thenReturn(amountDtoList);
-        when(moneyPolicy.currency()).thenReturn(CURRENCY);
+        when(moneyPolicy.currency()).thenReturn(EUR);
 
         assertThrows(PaymentJpaAdapterException.class,
                 () -> adapter.calculatePaidAmount(INVOICE_ID));
@@ -401,6 +407,194 @@ class JpaPaymentRepositoryAdapterTest {
 
     }
 
+    @Test
+    void update_should_update_existing_payment() {
+
+        Instant completedAt = FIXED_CLOCK.instant().plusSeconds(3);
+
+        PaymentStatus status = PaymentStatus.COMPLETED;
+
+        Payment payment = getReconstitutedPayment(
+                ID,
+                status,
+                completedAt,
+                completedAt
+        );
+
+        PaymentEntity entity = getEntityWithStatusCreated();
+
+        when(repository.findById(ID)).thenReturn(Optional.of(entity));
+
+        adapter.update(payment);
+
+        verify(repository).findById(ID);
+        verify(mapper).updateEntity(payment, entity);
+        verifyNoMoreInteractions(repository, mapper);
+    }
+
+    @Test
+    void update_should_reject_null_payment() {
+
+        assertThrows(PaymentJpaAdapterException.class,
+                () -> adapter.update(null)
+        );
+
+        verifyNoInteractions(repository, mapper);
+    }
+
+    @Test
+    void update_should_reject_null_id() {
+
+        Payment payment = getCreatedPayment();
+
+        assertThrows(PaymentJpaAdapterException.class,
+                () -> adapter.update(payment)
+        );
+
+        verifyNoInteractions(repository, mapper);
+    }
+
+    @ParameterizedTest(name = "Test {index}: payment id [{arguments}]")
+    @ValueSource(longs = {
+            0L,
+            -1L,
+            -192828L
+    })
+    void update_should_reject_invalid_id(Long paymentId) {
+
+        Payment payment = mock(Payment.class);
+
+        when(payment.getId()).thenReturn(paymentId);
+
+        assertThrows(PaymentJpaAdapterException.class,
+                () -> adapter.update(payment)
+        );
+
+        verifyNoInteractions(repository, mapper);
+    }
+
+    @Test
+    void update_should_throw_when_payment_not_found() {
+
+        Instant completedAt = FIXED_CLOCK.instant().plusSeconds(3);
+
+        PaymentStatus status = PaymentStatus.COMPLETED;
+
+        Payment payment = getReconstitutedPayment(
+                ID,
+                status,
+                completedAt,
+                completedAt
+        );
+
+        when(repository.findById(ID)).thenReturn(Optional.empty());
+
+        assertThrows(PaymentNotFoundException.class,
+                () -> adapter.update(payment));
+
+        verify(repository).findById(ID);
+        verifyNoMoreInteractions(repository);
+        verifyNoInteractions(mapper);
+    }
+
+    @ParameterizedTest(name = "Test {index}:  Payment entity   [{arguments}]")
+    @MethodSource("incorrectPaymentEntity")
+    void update_should_reject_payment_fields_mismatch(PaymentEntity entity) {
+
+        Payment payment = Payment.reconstitute(
+                ID,
+                INVOICE_ID,
+                AMOUNT,
+                METHOD,
+                PaymentStatus.CREATED,
+                FIXED_CLOCK.instant(),
+                null,
+                null
+        );
+
+        when(repository.findById(ID)).thenReturn(Optional.of(entity));
+
+        assertThrows(PaymentJpaAdapterException.class,
+                () -> adapter.update(payment));
+
+        verify(repository).findById(ID);
+        verifyNoMoreInteractions(repository);
+        verifyNoInteractions(mapper);
+    }
+
+    private static Stream<Arguments> incorrectPaymentEntity() {
+        return Stream.of(
+                Arguments.of(
+                        getEntity(
+                                9999L,
+                                AMOUNT.amount().toString(),
+                                EUR,
+                                METHOD,
+                                FIXED_CLOCK.instant()
+                        )
+                ),
+                Arguments.of(
+                        getEntity(
+                                INVOICE_ID,
+                                "999999999",
+                                EUR,
+                                METHOD,
+                                FIXED_CLOCK.instant()
+                        )
+                ),
+                Arguments.of(
+                        getEntity(
+                                INVOICE_ID,
+                                AMOUNT.amount().toString(),
+                                USD,
+                                METHOD,
+                                FIXED_CLOCK.instant()
+                        )
+                ),
+                Arguments.of(
+                        getEntity(
+                                INVOICE_ID,
+                                AMOUNT.amount().toString(),
+                                EUR,
+                                PaymentMethod.BANK_TRANSFER,
+                                FIXED_CLOCK.instant()
+                        )
+                ),
+                Arguments.of(
+                        getEntity(
+                                INVOICE_ID,
+                                AMOUNT.amount().toString(),
+                                EUR,
+                                METHOD,
+                                FIXED_CLOCK.instant().plusSeconds(12)
+                        )
+                )
+        );
+    }
+
+    private static PaymentEntity getEntity(
+            Long invoiceId,
+            String amount,
+            Currency currency,
+            PaymentMethod method,
+            Instant createdAt
+    ) {
+        PaymentEntity entity = new PaymentEntity();
+
+        entity.setId(ID);
+        entity.setStatus(PaymentStatus.COMPLETED);
+        entity.setUpdatedAt(FIXED_CLOCK.instant().plusSeconds(300));
+        entity.setCompletedAt(FIXED_CLOCK.instant().plusSeconds(300));
+
+        entity.setInvoiceId(invoiceId);
+        entity.setAmount(new BigDecimal(amount));
+        entity.setCurrency(currency.getCurrencyCode());
+        entity.setMethod(method);
+        entity.setCreatedAt(createdAt);
+
+        return entity;
+    }
+
     private PaymentEntity getEntityWithStatusCreated() {
 
         PaymentEntity entity = new PaymentEntity();
@@ -408,7 +602,7 @@ class JpaPaymentRepositoryAdapterTest {
         entity.setId(ID);
         entity.setInvoiceId(INVOICE_ID);
         entity.setAmount(AMOUNT.amount());
-        entity.setCurrency(CURRENCY.getCurrencyCode());
+        entity.setCurrency(EUR.getCurrencyCode());
         entity.setStatus(PaymentStatus.CREATED);
         entity.setMethod(METHOD);
         entity.setCreatedAt(FIXED_CLOCK.instant());
@@ -461,3 +655,10 @@ class JpaPaymentRepositoryAdapterTest {
                 FIXED_CLOCK.instant());
     }
 }
+
+
+//PA-06	update_should_reject_invoice_id_mismatch()	Несовпадение Invoice ID
+//PA-07	update_should_reject_amount_mismatch()	Несовпадение суммы
+//PA-08	update_should_reject_currency_mismatch()	Несовпадение валюты
+//PA-09	update_should_reject_method_mismatch()	Несовпадение метода оплаты
+//PA-10	update_should_reject_created_at_mismatch()	Несовпадение времени создания

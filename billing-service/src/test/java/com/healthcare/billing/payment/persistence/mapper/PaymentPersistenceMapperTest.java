@@ -8,6 +8,7 @@ import com.healthcare.billing.payment.model.Payment;
 import com.healthcare.billing.payment.model.enums.PaymentMethod;
 import com.healthcare.billing.payment.model.enums.PaymentStatus;
 import com.healthcare.billing.payment.persistence.entity.PaymentEntity;
+import com.healthcare.billing.payment.resolver.PaymentStateResolver;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.NullSource;
@@ -192,6 +193,50 @@ class PaymentPersistenceMapperTest {
         assertEquals(payment.getCreatedAt(), reconstitutedPayment.getCreatedAt());
         assertEquals(payment.getUpdatedAt(), reconstitutedPayment.getUpdatedAt());
         assertEquals(payment.getCompletedAt(), reconstitutedPayment.getCompletedAt());
+    }
+
+    @Test
+    void updateEntity_should_update_entity() {
+
+        PaymentStateResolver resolver = new PaymentStateResolver();
+
+        Payment payment = getCreatedPayment();
+        PaymentEntity entity = getEntityWithStatusCreated();
+
+        Instant startUpdatedAt = FIXED_CLOCK.instant().plusSeconds(2);
+        Instant completedAt = FIXED_CLOCK.instant().plusSeconds(3);
+
+        payment.start(startUpdatedAt, resolver);
+        payment.complete(completedAt, resolver);
+
+        mapper.updateEntity(payment, entity);
+
+        assertEquals(PaymentStatus.COMPLETED, entity.getStatus());
+        assertEquals(completedAt, entity.getUpdatedAt());
+        assertEquals(completedAt, entity.getCompletedAt());
+
+        assertEquals(ID, entity.getId());
+        assertEquals(INVOICE_ID, entity.getInvoiceId());
+        assertEquals(CURRENCY.getCurrencyCode(), entity.getCurrency());
+        assertEquals(AMOUNT.amount(), entity.getAmount());
+        assertEquals(METHOD, entity.getMethod());
+        assertEquals(FIXED_CLOCK.instant(), entity.getCreatedAt());
+    }
+
+    @Test
+    void updateEntity_should_reject_null_payment() {
+        PaymentEntity entity = getEntityWithStatusCreated();
+
+        assertThrows(PaymentMapperException.class,
+                () -> mapper.updateEntity(null, entity));
+    }
+
+    @Test
+    void updateEntity_should_reject_null_entity() {
+        Payment payment = getCreatedPayment();
+
+        assertThrows(PaymentMapperException.class,
+                () -> mapper.updateEntity(payment, null));
     }
 
     private PaymentEntity getEntityWithStatusCreated() {
