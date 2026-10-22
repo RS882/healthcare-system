@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/changes/001-create-invoice-tables.sql
   - include:
       file: db/changelog/changes/002-create-payment-tables.sql
+  - include:
+      file: db/changelog/changes/003-create-card-payment-details.sql

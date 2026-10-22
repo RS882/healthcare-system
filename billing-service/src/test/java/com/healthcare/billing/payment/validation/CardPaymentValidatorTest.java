@@ -6,6 +6,7 @@ import com.healthcare.billing.payment.command.CardPaymentCompletionCommand;
 import com.healthcare.billing.payment.model.Payment;
 import com.healthcare.billing.payment.model.enums.PaymentMethod;
 import com.healthcare.billing.payment.model.enums.PaymentStatus;
+import com.healthcare.billing.payment.payment_method_details.card_payment.enums.CardPaymentProvider;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ class CardPaymentValidatorTest {
     private static final Long INVOICE_ID = 12L;
     private static final Long PAYMENT_ID = 2L;
     private static final String PROVIDER_TRANSACTION_ID = "Test provider transaction ID  ";
+    private static final CardPaymentProvider PROVIDER = CardPaymentProvider.STRIPE;
     private static final Currency EUR = Currency.getInstance("EUR");
     private static final Money AMOUNT = Money.of("328.29", EUR);
 
@@ -91,7 +93,8 @@ class CardPaymentValidatorTest {
 
         CardPaymentCompletionCommand command = new CardPaymentCompletionCommand(
                 999L,
-                PROVIDER_TRANSACTION_ID
+                PROVIDER_TRANSACTION_ID,
+                PROVIDER
         );
 
         assertThrows(
@@ -117,6 +120,6 @@ class CardPaymentValidatorTest {
     }
 
     private CardPaymentCompletionCommand createValidCommand() {
-        return new CardPaymentCompletionCommand(PAYMENT_ID, PROVIDER_TRANSACTION_ID);
+        return new CardPaymentCompletionCommand(PAYMENT_ID, PROVIDER_TRANSACTION_ID, PROVIDER);
     }
 }

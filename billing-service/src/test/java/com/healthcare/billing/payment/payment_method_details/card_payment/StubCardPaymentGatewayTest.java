@@ -2,7 +2,9 @@ package com.healthcare.billing.payment.payment_method_details.card_payment;
 
 import com.healthcare.billing.exception.CardPaymentGatewayException;
 import com.healthcare.billing.exception.CardPaymentServerUnavailableException;
+import com.healthcare.billing.exception.CardPaymentValidationException;
 import com.healthcare.billing.model.value.Money;
+import com.healthcare.billing.payment.payment_method_details.card_payment.enums.CardPaymentProvider;
 import com.healthcare.billing.payment.payment_method_details.card_payment.enums.CardPaymentVerificationStatus;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -26,15 +28,18 @@ class StubCardPaymentGatewayTest {
 
     private final StubCardPaymentGateway gateway = new StubCardPaymentGateway();
 
+    private static final CardPaymentProvider ADYEN = CardPaymentProvider.ADYEN;
+    private static final CardPaymentProvider STRIPE = CardPaymentProvider.STRIPE;
 
     @ParameterizedTest(name = "Test {index}: transaction data[{arguments}]")
     @MethodSource("transactionData")
     void should_return_card_payment_verification_result(
             String id,
+            CardPaymentProvider provider,
             CardPaymentVerificationStatus status,
             Money amount) {
 
-        CardPaymentVerificationResult result = gateway.verifyTransaction(id);
+        CardPaymentVerificationResult result = gateway.verifyTransaction(id, provider);
 
         assertNotNull(result);
         assertEquals(id, result.providerTransactionId());
@@ -52,7 +57,7 @@ class StubCardPaymentGatewayTest {
     void should_return_exception_when_provider_transaction_id_is_incorrect(String providerTransactionId) {
 
         assertThrows(CardPaymentGatewayException.class,
-                () -> gateway.verifyTransaction(providerTransactionId));
+                () -> gateway.verifyTransaction(providerTransactionId, STRIPE));
     }
 
 
@@ -62,7 +67,7 @@ class StubCardPaymentGatewayTest {
         String providerTransactionId = "UNKNOWN_TRANSACTION_ID";
 
         assertThrows(CardPaymentGatewayException.class,
-                () -> gateway.verifyTransaction(providerTransactionId));
+                () -> gateway.verifyTransaction(providerTransactionId, STRIPE));
 
     }
 
@@ -72,24 +77,33 @@ class StubCardPaymentGatewayTest {
         String providerTransactionId = "ERROR_ID#4";
 
         assertThrows(CardPaymentServerUnavailableException.class,
-                () -> gateway.verifyTransaction(providerTransactionId));
+                () -> gateway.verifyTransaction(providerTransactionId, STRIPE));
 
+    }
+
+    @Test
+    void should_return_exception_when_provider_is_null() {
+        assertThrows(CardPaymentGatewayException.class,
+                () -> gateway.verifyTransaction("SUCCEEDED_ID#1", null));
     }
 
     private static Stream<Arguments> transactionData() {
         return Stream.of(
                 Arguments.of(
                         "SUCCEEDED_ID#1",
+                        ADYEN,
                         CardPaymentVerificationStatus.SUCCEEDED,
                         Money.of("256.91", EUR)
                 ),
                 Arguments.of(
                         "PENDING_ID#2",
+                        STRIPE,
                         CardPaymentVerificationStatus.PENDING,
                         Money.of("10.5", EUR)
                 ),
                 Arguments.of(
                         "FAILED_ID#3",
+                        ADYEN,
                         CardPaymentVerificationStatus.FAILED,
                         Money.of("870.28", EUR)
                 )

@@ -2,6 +2,8 @@ package com.healthcare.billing.payment.command;
 
 import com.healthcare.billing.exception.CardPaymentValidationException;
 import com.healthcare.billing.exception.PaymentValidationException;
+import com.healthcare.billing.payment.payment_method_details.CardPaymentMethodDetails;
+import com.healthcare.billing.payment.payment_method_details.card_payment.enums.CardPaymentProvider;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
@@ -19,13 +21,15 @@ class CardPaymentCompletionCommandTest {
 
         Long paymentId = 34L;
         String providerTransactionId = "  iw2199uansdaui&&y1         ";
+        CardPaymentProvider provider = CardPaymentProvider.STRIPE;
 
         CardPaymentCompletionCommand result =
-                new CardPaymentCompletionCommand(paymentId, providerTransactionId);
+                new CardPaymentCompletionCommand(paymentId, providerTransactionId, provider);
 
         assertNotNull(result);
         assertEquals(paymentId, result.paymentId());
         assertEquals(providerTransactionId, result.providerTransactionId());
+        assertEquals(provider, result.provider());
     }
 
     @ParameterizedTest(name = "Test {index}: payment id [{arguments}]")
@@ -40,7 +44,9 @@ class CardPaymentCompletionCommandTest {
 
         assertThrows(PaymentValidationException.class,
                 () -> new CardPaymentCompletionCommand(
-                        paymentId, providerTransactionId
+                        paymentId,
+                        providerTransactionId,
+                        CardPaymentProvider.STRIPE
                 ));
     }
 
@@ -57,7 +63,19 @@ class CardPaymentCompletionCommandTest {
 
         assertThrows(CardPaymentValidationException.class,
                 () -> new CardPaymentCompletionCommand(
-                        paymentId, providerTransactionId
+                        paymentId,
+                        providerTransactionId,
+                        CardPaymentProvider.STRIPE
+                ));
+    }
+
+    @Test
+    void should_return_exception_when_provider_is_null() {
+        assertThrows(CardPaymentValidationException.class,
+                () -> new CardPaymentCompletionCommand(
+                        34L,
+                        "providerTransactionId",
+                        null
                 ));
     }
 }

@@ -32,15 +32,19 @@ public class CardPaymentProcessor
 
         validator.validate(payment, command);
 
-        CardPaymentVerificationResult result =
-                paymentGateway.verifyTransaction(command.providerTransactionId());
+        CardPaymentVerificationResult result = paymentGateway.verifyTransaction(
+                command.providerTransactionId(),
+                command.provider()
+        );
 
         validatePaymentVerificationResult(result, payment, command);
 
         validateCardPaymentVerificationStatus(result.status());
 
-        CardPaymentMethodDetails details =
-                new CardPaymentMethodDetails(result.providerTransactionId());
+        CardPaymentMethodDetails details = new CardPaymentMethodDetails(
+                result.providerTransactionId(),
+                result.provider()
+        );
 
         payment.start(clock.instant(), resolver);
 
@@ -78,6 +82,9 @@ public class CardPaymentProcessor
 
         if (!result.providerTransactionId().equals(command.providerTransactionId())) {
             throw new CardPaymentVerificationResultException("Payment provider transaction id mismatch");
+        }
+        if (result.provider() != command.provider()) {
+            throw new CardPaymentVerificationResultException("Payment provider mismatch");
         }
     }
 }

@@ -2,6 +2,7 @@ package com.healthcare.billing.payment.payment_method_details.card_payment;
 
 import com.healthcare.billing.exception.CardPaymentValidationException;
 import com.healthcare.billing.model.value.Money;
+import com.healthcare.billing.payment.payment_method_details.card_payment.enums.CardPaymentProvider;
 import com.healthcare.billing.payment.payment_method_details.card_payment.enums.CardPaymentVerificationStatus;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -19,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class CardPaymentVerificationResultTest {
 
     private static final String ID = "  osiuy&8-tesy ";
+    private static final CardPaymentProvider PROVIDER = CardPaymentProvider.ADYEN;
     private static final CardPaymentVerificationStatus STATUS = CardPaymentVerificationStatus.PENDING;
     private static final Currency EUR = Currency.getInstance("EUR");
     private static final Money AMOUNT = Money.of("34.91", EUR);
@@ -32,7 +34,7 @@ class CardPaymentVerificationResultTest {
     void should_return_correct_result(CardPaymentVerificationStatus status) {
 
         CardPaymentVerificationResult result =
-                new CardPaymentVerificationResult(ID, status, AMOUNT);
+                new CardPaymentVerificationResult(ID, PROVIDER, status, AMOUNT);
 
         assertNotNull(result);
         assertEquals(ID, result.providerTransactionId());
@@ -49,34 +51,40 @@ class CardPaymentVerificationResultTest {
     void should_return_exception_when_id_is_incorrect(String id) {
 
         assertThrows(CardPaymentValidationException.class,
-                () -> new CardPaymentVerificationResult(id, STATUS, AMOUNT));
+                () -> new CardPaymentVerificationResult(id, PROVIDER, STATUS, AMOUNT));
     }
 
     @Test
     void should_return_exception_when_status_is_null() {
 
         assertThrows(CardPaymentValidationException.class,
-                () -> new CardPaymentVerificationResult(ID, null, AMOUNT));
+                () -> new CardPaymentVerificationResult(ID, PROVIDER, null, AMOUNT));
     }
 
     @Test
     void should_return_exception_when_amount_is_null() {
 
         assertThrows(CardPaymentValidationException.class,
-                () -> new CardPaymentVerificationResult(ID, STATUS, null));
+                () -> new CardPaymentVerificationResult(ID, PROVIDER, STATUS, null));
     }
 
     @Test
     void should_return_exception_when_amount_is_zero() {
 
         assertThrows(CardPaymentValidationException.class,
-                () -> new CardPaymentVerificationResult(ID, STATUS, Money.zero(EUR)));
+                () -> new CardPaymentVerificationResult(ID, PROVIDER, STATUS, Money.zero(EUR)));
     }
 
     @Test
     void should_return_exception_when_amount_is_negative() {
 
         assertThrows(CardPaymentValidationException.class,
-                () -> new CardPaymentVerificationResult(ID, STATUS, Money.of("-37.9", EUR)));
+                () -> new CardPaymentVerificationResult(ID, PROVIDER, STATUS, Money.of("-37.9", EUR)));
+    }
+
+    @Test
+    void should_return_exception_when_provider_is_null() {
+        assertThrows(CardPaymentValidationException.class,
+                () -> new CardPaymentVerificationResult(ID, null, STATUS, AMOUNT));
     }
 }

@@ -11,6 +11,7 @@ import com.healthcare.billing.payment.model.enums.PaymentStatus;
 import com.healthcare.billing.payment.payment_method_details.CardPaymentMethodDetails;
 import com.healthcare.billing.payment.payment_method_details.card_payment.CardPaymentGateway;
 import com.healthcare.billing.payment.payment_method_details.card_payment.CardPaymentVerificationResult;
+import com.healthcare.billing.payment.payment_method_details.card_payment.enums.CardPaymentProvider;
 import com.healthcare.billing.payment.payment_method_details.card_payment.enums.CardPaymentVerificationStatus;
 import com.healthcare.billing.payment.resolver.PaymentStateResolver;
 import com.healthcare.billing.payment.validation.CardPaymentValidator;
@@ -39,6 +40,7 @@ class CardPaymentProcessorTest {
     private static final Long PAYMENT_ID = 2L;
 
     private static final String PROVIDER_TRANSACTION_ID = "Test provider transaction ID  ";
+    private static final CardPaymentProvider PROVIDER = CardPaymentProvider.STRIPE;
     private static final Currency EUR = Currency.getInstance("EUR");
     private static final Currency USD = Currency.getInstance("USD");
     private static final Money AMOUNT = Money.of("328.29", EUR);
@@ -87,10 +89,11 @@ class CardPaymentProcessorTest {
         CardPaymentVerificationResult result =
                 new CardPaymentVerificationResult(
                         PROVIDER_TRANSACTION_ID,
+                        PROVIDER,
                         CardPaymentVerificationStatus.SUCCEEDED,
                         AMOUNT);
 
-        when(paymentGateway.verifyTransaction(PROVIDER_TRANSACTION_ID)).thenReturn(result);
+        when(paymentGateway.verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER)).thenReturn(result);
 
         CardPaymentMethodDetails details = processor.process(payment, command);
 
@@ -99,8 +102,9 @@ class CardPaymentProcessorTest {
 
         assertNotNull(details);
         assertEquals(PROVIDER_TRANSACTION_ID, details.providerTransactionId());
+        assertEquals(PROVIDER, details.provider());
 
-        verify(paymentGateway).verifyTransaction(PROVIDER_TRANSACTION_ID);
+        verify(paymentGateway).verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER);
         verify(validator).validate(payment, command);
     }
 
@@ -109,14 +113,14 @@ class CardPaymentProcessorTest {
 
         CardPaymentCompletionCommand command = createValidCommand();
 
-        when(paymentGateway.verifyTransaction(PROVIDER_TRANSACTION_ID)).thenReturn(null);
+        when(paymentGateway.verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER)).thenReturn(null);
 
         assertThrows(CardPaymentVerificationResultException.class,
                 () -> processor.process(payment, command));
 
         assertEquals(PaymentStatus.CREATED, payment.getStatus());
 
-        verify(paymentGateway).verifyTransaction(PROVIDER_TRANSACTION_ID);
+        verify(paymentGateway).verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER);
         verify(validator).validate(payment, command);
     }
 
@@ -128,17 +132,18 @@ class CardPaymentProcessorTest {
         CardPaymentVerificationResult result =
                 new CardPaymentVerificationResult(
                         PROVIDER_TRANSACTION_ID,
+                        PROVIDER,
                         CardPaymentVerificationStatus.SUCCEEDED,
                         Money.of("15.97", EUR));
 
-        when(paymentGateway.verifyTransaction(PROVIDER_TRANSACTION_ID)).thenReturn(result);
+        when(paymentGateway.verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER)).thenReturn(result);
 
         assertThrows(CardPaymentVerificationResultException.class,
                 () -> processor.process(payment, command));
 
         assertEquals(PaymentStatus.CREATED, payment.getStatus());
 
-        verify(paymentGateway).verifyTransaction(PROVIDER_TRANSACTION_ID);
+        verify(paymentGateway).verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER);
         verify(validator).validate(payment, command);
     }
 
@@ -150,17 +155,18 @@ class CardPaymentProcessorTest {
         CardPaymentVerificationResult result =
                 new CardPaymentVerificationResult(
                         PROVIDER_TRANSACTION_ID,
+                        PROVIDER,
                         CardPaymentVerificationStatus.SUCCEEDED,
                         Money.of(AMOUNT.amount(), USD));
 
-        when(paymentGateway.verifyTransaction(PROVIDER_TRANSACTION_ID)).thenReturn(result);
+        when(paymentGateway.verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER)).thenReturn(result);
 
         assertThrows(CardPaymentVerificationResultException.class,
                 () -> processor.process(payment, command));
 
         assertEquals(PaymentStatus.CREATED, payment.getStatus());
 
-        verify(paymentGateway).verifyTransaction(PROVIDER_TRANSACTION_ID);
+        verify(paymentGateway).verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER);
         verify(validator).validate(payment, command);
     }
 
@@ -172,17 +178,18 @@ class CardPaymentProcessorTest {
         CardPaymentVerificationResult result =
                 new CardPaymentVerificationResult(
                         "WRONG_PROVIDER_TRANSACTION_ID",
+                        PROVIDER,
                         CardPaymentVerificationStatus.SUCCEEDED,
                         AMOUNT);
 
-        when(paymentGateway.verifyTransaction(PROVIDER_TRANSACTION_ID)).thenReturn(result);
+        when(paymentGateway.verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER)).thenReturn(result);
 
         assertThrows(CardPaymentVerificationResultException.class,
                 () -> processor.process(payment, command));
 
         assertEquals(PaymentStatus.CREATED, payment.getStatus());
 
-        verify(paymentGateway).verifyTransaction(PROVIDER_TRANSACTION_ID);
+        verify(paymentGateway).verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER);
         verify(validator).validate(payment, command);
     }
 
@@ -197,17 +204,18 @@ class CardPaymentProcessorTest {
         CardPaymentVerificationResult result =
                 new CardPaymentVerificationResult(
                         PROVIDER_TRANSACTION_ID,
+                        PROVIDER,
                         status,
                         AMOUNT);
 
-        when(paymentGateway.verifyTransaction(PROVIDER_TRANSACTION_ID)).thenReturn(result);
+        when(paymentGateway.verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER)).thenReturn(result);
 
         assertThrows(CardPaymentVerificationResultException.class,
                 () -> processor.process(payment, command));
 
         assertEquals(PaymentStatus.CREATED, payment.getStatus());
 
-        verify(paymentGateway).verifyTransaction(PROVIDER_TRANSACTION_ID);
+        verify(paymentGateway).verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER);
         verify(validator).validate(payment, command);
     }
 
@@ -215,7 +223,7 @@ class CardPaymentProcessorTest {
     void should_not_start_processing_when_validation_fails() {
 
         CardPaymentCompletionCommand command =
-                new CardPaymentCompletionCommand(9999L, PROVIDER_TRANSACTION_ID);
+                new CardPaymentCompletionCommand(9999L, PROVIDER_TRANSACTION_ID,  PROVIDER);
 
         doThrow(PaymentValidationException.class).when(validator)
                 .validate(any(), any(CardPaymentCompletionCommand.class));
@@ -233,9 +241,9 @@ class CardPaymentProcessorTest {
     void should_return_exception_when_gateway_is_unavailable() {
 
         CardPaymentCompletionCommand command =
-                new CardPaymentCompletionCommand(PAYMENT_ID, PROVIDER_TRANSACTION_ID);
+                new CardPaymentCompletionCommand(PAYMENT_ID, PROVIDER_TRANSACTION_ID,  PROVIDER);
 
-        when(paymentGateway.verifyTransaction(PROVIDER_TRANSACTION_ID))
+        when(paymentGateway.verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER))
                 .thenThrow(CardPaymentServerUnavailableException.class);
 
         assertThrows(CardPaymentServerUnavailableException.class,
@@ -243,7 +251,7 @@ class CardPaymentProcessorTest {
 
         assertEquals(PaymentStatus.CREATED, payment.getStatus());
 
-        verify(paymentGateway).verifyTransaction(PROVIDER_TRANSACTION_ID);
+        verify(paymentGateway).verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER);
         verify(validator).validate(payment, command);
     }
 
@@ -255,7 +263,30 @@ class CardPaymentProcessorTest {
         assertEquals(CardPaymentCompletionCommand.class, result);
     }
 
+    @Test
+    void should_return_exception_when_provider_do_not_match() {
+        CardPaymentCompletionCommand command = createValidCommand();
+
+        CardPaymentVerificationResult result =
+                new CardPaymentVerificationResult(
+                        PROVIDER_TRANSACTION_ID,
+                        CardPaymentProvider.ADYEN,
+                        CardPaymentVerificationStatus.SUCCEEDED,
+                        AMOUNT);
+
+        when(paymentGateway.verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER)).thenReturn(result);
+
+        assertThrows(CardPaymentVerificationResultException.class,
+                () -> processor.process(payment, command));
+
+        assertEquals(PaymentStatus.CREATED, payment.getStatus());
+
+        verify(paymentGateway).verifyTransaction(PROVIDER_TRANSACTION_ID,  PROVIDER);
+        verify(validator).validate(payment, command);
+
+    }
+
     private CardPaymentCompletionCommand createValidCommand() {
-        return new CardPaymentCompletionCommand(PAYMENT_ID, PROVIDER_TRANSACTION_ID);
+        return new CardPaymentCompletionCommand(PAYMENT_ID, PROVIDER_TRANSACTION_ID,  PROVIDER);
     }
 }

@@ -7,6 +7,7 @@ import com.healthcare.billing.payment.command.CashPaymentCompletionCommand;
 import com.healthcare.billing.payment.model.Payment;
 import com.healthcare.billing.payment.payment_method_details.CashPaymentMethodDetails;
 import com.healthcare.billing.payment.payment_method_details.PaymentMethodDetails;
+import com.healthcare.billing.payment.payment_method_details.card_payment.enums.CardPaymentProvider;
 import com.healthcare.billing.payment.processor.PaymentProcessor;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -103,7 +104,8 @@ class DefaultPaymentProcessorDispatcherTest {
         CardPaymentCompletionCommand command =
                 new CardPaymentCompletionCommand(
                         2L,
-                        "card-transaction-123"
+                        "card-transaction-123",
+                        CardPaymentProvider.ADYEN
                 );
 
         DefaultPaymentProcessorDispatcher dispatcher = createValidDispatcher();
