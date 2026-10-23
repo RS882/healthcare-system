@@ -28,6 +28,7 @@ public enum ErrorCode {
     PAYMENT_RECONSTITUTION_ERROR("Payment reconstitution failed"),
     PAYMENT_MAPPER_ERROR("Payment mapper failed"),
     PAYMENT_JPA_ADAPTER_ERROR("Payment JPA adapter failed"),
+    PAYMENT_DETAILS_JPA_ADAPTER_ERROR("Payment details JPA adapter failed"),
     PAYMENT_STATE_METHOD_ERROR("Method not available"),
     INVOICE_ITEM_VALIDATION_ERROR("Invoice item validation failed"),
     BILLING_VALIDATION_ERROR("Billing validation failed"),

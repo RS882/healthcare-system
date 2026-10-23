@@ -5,4 +5,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 interface JpaCardPaymentDetailsRepository
         extends JpaRepository<CardPaymentDetailsEntity, Long> {
+
 }
