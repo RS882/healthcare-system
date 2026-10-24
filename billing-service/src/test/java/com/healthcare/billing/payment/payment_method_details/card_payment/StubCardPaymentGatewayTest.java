@@ -2,7 +2,6 @@ package com.healthcare.billing.payment.payment_method_details.card_payment;
 
 import com.healthcare.billing.exception.CardPaymentGatewayException;
 import com.healthcare.billing.exception.CardPaymentServerUnavailableException;
-import com.healthcare.billing.exception.CardPaymentValidationException;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.payment.payment_method_details.card_payment.enums.CardPaymentProvider;
 import com.healthcare.billing.payment.payment_method_details.card_payment.enums.CardPaymentVerificationStatus;
@@ -16,7 +15,6 @@ import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.Currency;
-import java.util.UUID;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;

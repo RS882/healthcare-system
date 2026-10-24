@@ -6,7 +6,6 @@ import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.payment.model.Payment;
 import com.healthcare.billing.payment.model.enums.PaymentMethod;
 import com.healthcare.billing.payment.model.enums.PaymentStatus;
-import com.healthcare.billing.payment.persistence.entity.PaymentEntity;
 import com.healthcare.billing.payment.repository.PaymentRepository;
 import com.healthcare.billing.payment.resolver.PaymentStateResolver;
 import com.healthcare.billing.test_container.AbstractPostgreSQLContainerTest;
@@ -45,7 +44,6 @@ class PaymentUpdateTransactionIntegrationTest
     @Autowired
     private PaymentRepository paymentRepository;
 
-    private static final Long ID = 73L;
     private static final Long INVOICE_ID = 12L;
     private static final Currency CURRENCY = Currency.getInstance("EUR");
     private static final Money AMOUNT = Money.of("328.29", CURRENCY);
