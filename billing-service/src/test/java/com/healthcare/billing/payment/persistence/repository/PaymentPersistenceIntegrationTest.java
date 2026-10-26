@@ -45,6 +45,9 @@ public class PaymentPersistenceIntegrationTest extends AbstractPostgreSQLContain
     private PaymentRepository paymentRepository;
 
     @Autowired
+    private JpaCardPaymentDetailsRepository  jpaCardPaymentDetailsRepository;
+
+    @Autowired
     private EntityManager entityManager;
 
     private static final Long INVOICE_ID = 12L;
@@ -59,6 +62,7 @@ public class PaymentPersistenceIntegrationTest extends AbstractPostgreSQLContain
     @BeforeEach
     void setUp() {
 
+        jpaCardPaymentDetailsRepository.deleteAll();
         jpaPaymentRepository.deleteAll();
         jpaPaymentRepository.flush();
     }

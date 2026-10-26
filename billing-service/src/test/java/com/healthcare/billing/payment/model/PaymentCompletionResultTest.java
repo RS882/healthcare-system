@@ -191,24 +191,8 @@ class PaymentCompletionResultTest {
 
     private CashPaymentMethodDetails getCashPaymentMethodDetails() {
 
-        Money receivedAmount = Money.of("100.00", EUR);
-
-        Money change = Money.of("25.82", EUR);
-
-        Map<String, Long> denominations = new LinkedHashMap<>();
-
-        denominations.put("20 EUR", 1L);
-        denominations.put("5 EUR", 1L);
-        denominations.put("50 cent", 1L);
-        denominations.put("20 cent", 1L);
-        denominations.put("10 cent", 1L);
-        denominations.put("2 cent", 1L);
-
-        ChangeBreakdown changeBreakdown = new ChangeBreakdown(change, denominations);
-
         return new CashPaymentMethodDetails(
-                receivedAmount,
-                changeBreakdown
+                Money.of("100.00", EUR)
         );
     }
 }

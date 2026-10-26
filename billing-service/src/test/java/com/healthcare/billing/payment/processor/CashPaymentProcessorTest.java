@@ -1,18 +1,13 @@
 package com.healthcare.billing.payment.processor;
 
-import com.healthcare.billing.exception.CashChangeCalculatorException;
-import com.healthcare.billing.exception.CashPaymentValidationException;
 import com.healthcare.billing.exception.PaymentValidationException;
 import com.healthcare.billing.exception.UnsupportedCurrencyException;
 import com.healthcare.billing.model.value.Money;
-import com.healthcare.billing.payment.command.CardPaymentCompletionCommand;
 import com.healthcare.billing.payment.command.CashPaymentCompletionCommand;
 import com.healthcare.billing.payment.model.Payment;
 import com.healthcare.billing.payment.model.enums.PaymentMethod;
 import com.healthcare.billing.payment.model.enums.PaymentStatus;
 import com.healthcare.billing.payment.payment_method_details.CashPaymentMethodDetails;
-import com.healthcare.billing.payment.payment_method_details.cash_payment.CashChangeCalculator;
-import com.healthcare.billing.payment.payment_method_details.cash_payment.ChangeBreakdown;
 import com.healthcare.billing.payment.resolver.PaymentStateResolver;
 import com.healthcare.billing.payment.validation.CashPaymentValidator;
 import org.junit.jupiter.api.*;
@@ -53,9 +48,6 @@ class CashPaymentProcessorTest {
     @Mock
     private CashPaymentValidator validator;
 
-    @Mock
-    private CashChangeCalculator calculator;
-
     @BeforeEach
     void setUp() {
 
@@ -71,7 +63,6 @@ class CashPaymentProcessorTest {
         );
 
         processor = new CashPaymentProcessor(
-                calculator,
                 new PaymentStateResolver(),
                 FIXED_CLOCK,
                 validator);
@@ -83,11 +74,7 @@ class CashPaymentProcessorTest {
 
         Money receivedAmount = createValidReceivedAmount();
 
-        ChangeBreakdown breakdown = createValidBreakdown();
-
         CashPaymentCompletionCommand command = createValidCommand();
-
-        when(calculator.calculate(AMOUNT, receivedAmount)).thenReturn(breakdown);
 
         CashPaymentMethodDetails details = processor.process(payment, command);
 
@@ -96,60 +83,7 @@ class CashPaymentProcessorTest {
 
         assertNotNull(details);
         assertEquals(receivedAmount, details.receivedAmount());
-        assertEquals(breakdown, details.changeBreakdown());
 
-        verify(calculator).calculate(AMOUNT, receivedAmount);
-        verify(validator).validate(payment, command);
-    }
-
-    @Test
-    void should_cancel_payment_when_change_calculation_fails() {
-
-        CashPaymentCompletionCommand command = createValidCommand();
-
-        Money receivedAmount = command.receivedAmount();
-
-        CashChangeCalculatorException expected =
-                new CashChangeCalculatorException("Error");
-
-        doThrow(expected)
-                .when(calculator)
-                .calculate(AMOUNT, receivedAmount);
-
-        CashChangeCalculatorException actual =
-                assertThrows(
-                        CashChangeCalculatorException.class,
-                        () -> processor.process(payment, command)
-                );
-
-        assertSame(expected, actual);
-
-        assertEquals(PaymentStatus.CANCELLED, payment.getStatus());
-
-        verify(calculator).calculate(AMOUNT, receivedAmount);
-        verify(validator).validate(payment, command);
-    }
-
-    @Test
-    void should_cancel_payment_when_currency_is_unsupported() {
-
-        CashPaymentCompletionCommand command = createValidCommand();
-
-        Money receivedAmount = command.receivedAmount();
-
-        UnsupportedCurrencyException expected = new UnsupportedCurrencyException("Error");
-
-        doThrow(expected)
-                .when(calculator).calculate(AMOUNT, receivedAmount);
-
-        UnsupportedCurrencyException actual = assertThrows(UnsupportedCurrencyException.class,
-                () -> processor.process(payment, command));
-
-        assertSame(expected, actual);
-
-        assertEquals(PaymentStatus.CANCELLED, payment.getStatus());
-
-        verify(calculator).calculate(AMOUNT, receivedAmount);
         verify(validator).validate(payment, command);
     }
 
@@ -163,21 +97,13 @@ class CashPaymentProcessorTest {
         Money changedAmount = Money.zero(CURRENCY);
         Map<String, Long> denominations = new LinkedHashMap<>();
 
-        ChangeBreakdown breakdown = new ChangeBreakdown(changedAmount, denominations);
-
-        when(calculator.calculate(AMOUNT, receivedAmount)).thenReturn(breakdown);
 
         CashPaymentMethodDetails details = processor.process(payment, command);
 
         assertEquals(PaymentStatus.COMPLETED, payment.getStatus());
         assertNotNull(details);
-        assertNotNull(details.changeBreakdown());
         assertEquals(receivedAmount, details.receivedAmount());
-        assertEquals(breakdown, details.changeBreakdown());
-        assertTrue(details.changeBreakdown().change().isZero());
-        assertTrue(details.changeBreakdown().denominations().isEmpty());
 
-        verify(calculator).calculate(AMOUNT, receivedAmount);
         verify(validator).validate(payment, command);
     }
 
@@ -197,7 +123,6 @@ class CashPaymentProcessorTest {
 
         assertEquals(PaymentStatus.CREATED, payment.getStatus());
 
-        verifyNoInteractions(calculator);
         verify(validator).validate(payment, command);
     }
 
@@ -217,17 +142,4 @@ class CashPaymentProcessorTest {
         return Money.of("350.00", CURRENCY);
     }
 
-    private ChangeBreakdown createValidBreakdown() {
-
-        Money changedAmount = Money.of("21.71", CURRENCY);
-        Map<String, Long> denominations = new LinkedHashMap<>();
-
-        denominations.put("20 EUR", 1L);
-        denominations.put("1 EUR", 1L);
-        denominations.put("50 cent", 1L);
-        denominations.put("20 cent", 1L);
-        denominations.put("1 cent", 1L);
-
-        return new ChangeBreakdown(changedAmount, denominations);
-    }
 }

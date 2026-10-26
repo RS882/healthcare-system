@@ -44,6 +44,9 @@ class PaymentUpdateTransactionIntegrationTest
     @Autowired
     private PaymentRepository paymentRepository;
 
+    @Autowired
+    private JpaCardPaymentDetailsRepository  jpaCardPaymentDetailsRepository;
+
     private static final Long INVOICE_ID = 12L;
     private static final Currency CURRENCY = Currency.getInstance("EUR");
     private static final Money AMOUNT = Money.of("328.29", CURRENCY);
@@ -56,6 +59,7 @@ class PaymentUpdateTransactionIntegrationTest
     void setUp() {
 
         transactionTemplate = new TransactionTemplate(transactionManager);
+        jpaCardPaymentDetailsRepository.deleteAll();
         jpaPaymentRepository.deleteAll();
     }
 

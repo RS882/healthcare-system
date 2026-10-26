@@ -37,7 +37,6 @@ public class CardPaymentDetailsMapper {
         if (details == null) {
             throw new PaymentDetailsValidationException("Card payment method details is null");
         }
-
     }
 
     private void validateEntity(CardPaymentDetailsEntity entity) {
@@ -45,7 +44,6 @@ public class CardPaymentDetailsMapper {
         if (entity == null) {
             throw new PaymentDetailsValidationException("Card payment details entity is null");
         }
-
     }
 
     private void validateId(Long paymentId) {

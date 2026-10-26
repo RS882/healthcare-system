@@ -1,13 +1,11 @@
 package com.healthcare.billing.payment.processor;
 
-import com.healthcare.billing.exception.CashChangeCalculatorException;
 import com.healthcare.billing.exception.UnsupportedCurrencyException;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.payment.command.CashPaymentCompletionCommand;
 import com.healthcare.billing.payment.model.Payment;
 import com.healthcare.billing.payment.payment_method_details.CashPaymentMethodDetails;
 import com.healthcare.billing.payment.payment_method_details.cash_payment.CashChangeCalculator;
-import com.healthcare.billing.payment.payment_method_details.cash_payment.ChangeBreakdown;
 import com.healthcare.billing.payment.resolver.PaymentStateResolver;
 import com.healthcare.billing.payment.validation.CashPaymentValidator;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +18,6 @@ import java.time.Clock;
 public class CashPaymentProcessor
         implements PaymentProcessor<CashPaymentCompletionCommand, CashPaymentMethodDetails> {
 
-    private final CashChangeCalculator calculator;
     private final PaymentStateResolver resolver;
     private final Clock clock;
     private final CashPaymentValidator validator;
@@ -39,18 +36,14 @@ public class CashPaymentProcessor
 
             Money receivedAmount = command.receivedAmount();
 
-            ChangeBreakdown breakdown = calculator.calculate(payment.getAmount(), receivedAmount);
-
-            CashPaymentMethodDetails details = new CashPaymentMethodDetails(
-                    receivedAmount,
-                    breakdown);
+            CashPaymentMethodDetails details =
+                    new CashPaymentMethodDetails(receivedAmount);
 
             payment.complete(clock.instant(), resolver);
 
             return details;
 
-        } catch (CashChangeCalculatorException |
-                 UnsupportedCurrencyException e) {
+        } catch (UnsupportedCurrencyException e) {
 
             payment.cancel(clock.instant(), resolver);
 
@@ -60,6 +53,7 @@ public class CashPaymentProcessor
 
     @Override
     public Class<CashPaymentCompletionCommand> supportedCommandType() {
+
         return CashPaymentCompletionCommand.class;
     }
 }

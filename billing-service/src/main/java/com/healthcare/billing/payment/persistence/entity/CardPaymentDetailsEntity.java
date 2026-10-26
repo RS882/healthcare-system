@@ -2,6 +2,7 @@ package com.healthcare.billing.payment.persistence.entity;
 
 import com.healthcare.billing.payment.payment_method_details.card_payment.enums.CardPaymentProvider;
 import jakarta.persistence.*;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,7 +10,7 @@ import lombok.NoArgsConstructor;
 @Entity
 @Table(name = "card_payment_details")
 @Getter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 public class CardPaymentDetailsEntity {
 
