@@ -1,9 +1,11 @@
 package com.healthcare.billing.payment.payment_method_details.card_payment;
 
 import com.healthcare.billing.exception.CardPaymentValidationException;
+import com.healthcare.billing.exception.CashPaymentValidationException;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.payment.payment_method_details.card_payment.enums.CardPaymentProvider;
 import com.healthcare.billing.payment.payment_method_details.card_payment.enums.CardPaymentVerificationStatus;
+import com.healthcare.billing.validation.MoneyValidation;
 import org.springframework.util.StringUtils;
 
 public record CardPaymentVerificationResult(
@@ -35,12 +37,11 @@ public record CardPaymentVerificationResult(
     }
 
     private static void validateAmount(Money amount) {
-        if (amount == null) {
-            throw new CardPaymentValidationException("Amount cannot be null");
-        }
-        if (!amount.isPositive()) {
-            throw new CardPaymentValidationException("Amount cannot be negative or zero");
-        }
+
+        MoneyValidation.validatePositive(
+                amount,
+                "Amount",
+                CardPaymentValidationException::new);
     }
 
     private static void validateProvider(CardPaymentProvider provider) {

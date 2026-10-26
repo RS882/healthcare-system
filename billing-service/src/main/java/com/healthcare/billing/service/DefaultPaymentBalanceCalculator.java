@@ -4,6 +4,7 @@ import com.healthcare.billing.exception.MoneyValidationException;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.payment.model.PaymentBalance;
 import com.healthcare.billing.service.interfaces.PaymentBalanceCalculator;
+import com.healthcare.billing.validation.MoneyValidation;
 import lombok.Getter;
 import org.springframework.stereotype.Service;
 
@@ -41,13 +42,7 @@ public class DefaultPaymentBalanceCalculator implements PaymentBalanceCalculator
 
     private void validateAmount(Money amount, AmountType type) {
 
-        if (amount == null) {
-            throw new MoneyValidationException("%s is null".formatted(type.getTypeOfAmount()));
-        }
-
-        if (amount.isNegative()) {
-            throw new MoneyValidationException("%s is negative".formatted(type.getTypeOfAmount()));
-        }
+        MoneyValidation.validateNonNegative(amount, type.getTypeOfAmount(), MoneyValidationException::new);
 
         if (type == AmountType.INVOICE_TOTAL && amount.isZero()) {
             throw new MoneyValidationException("%s must be greater than zero".formatted(type.getTypeOfAmount()));

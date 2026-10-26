@@ -1,7 +1,5 @@
 package com.healthcare.billing.payment.model;
 
-import com.healthcare.billing.exception.InvoiceValidationException;
-import com.healthcare.billing.exception.PaymentDetailsValidationException;
 import com.healthcare.billing.exception.PaymentReconstitutionException;
 import com.healthcare.billing.exception.PaymentValidationException;
 import com.healthcare.billing.model.value.Money;
@@ -9,6 +7,7 @@ import com.healthcare.billing.payment.model.enums.PaymentMethod;
 import com.healthcare.billing.payment.model.enums.PaymentStatus;
 import com.healthcare.billing.payment.resolver.PaymentStateResolver;
 import com.healthcare.billing.validation.IdValidation;
+import com.healthcare.billing.validation.MoneyValidation;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -167,17 +166,11 @@ public class Payment {
 
         IdValidation.validateId(invoiceId, "Invoice id", PaymentReconstitutionException::new);
 
-        if (amount == null) {
-            throw new PaymentReconstitutionException("Amount cannot be null");
-        }
-
-        if (amount.isZero()) {
-            throw new PaymentReconstitutionException("Amount cannot be zero");
-        }
-
-        if (amount.isNegative()) {
-            throw new PaymentReconstitutionException("Amount cannot be negative");
-        }
+        MoneyValidation.validatePositive(
+                amount,
+                "Amount",
+                PaymentReconstitutionException::new
+        );
 
         if (method == null) {
             throw new PaymentReconstitutionException("Method cannot be null");
@@ -261,17 +254,7 @@ public class Payment {
     ) {
         IdValidation.validateId(invoiceId, "Invoice id", PaymentValidationException::new);
 
-        if (amount == null) {
-            throw new PaymentValidationException("Amount cannot be null");
-        }
-
-        if (amount.isZero()) {
-            throw new PaymentValidationException("Amount cannot be zero");
-        }
-
-        if (amount.isNegative()) {
-            throw new PaymentValidationException("Amount cannot be negative");
-        }
+        MoneyValidation.validatePositive(amount, "Amount", PaymentValidationException::new);
 
         if (method == null) {
             throw new PaymentValidationException("Method cannot be null");

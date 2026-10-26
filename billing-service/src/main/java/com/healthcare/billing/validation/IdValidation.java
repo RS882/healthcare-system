@@ -6,15 +6,19 @@ import com.healthcare.billing.exception.RestException;
 import java.util.Objects;
 import java.util.function.Function;
 
-public final class IdValidation {
+import static com.healthcare.billing.validation.ValidationNameFormatter.capitalizeName;
+
+public final class IdValidation  {
 
     private IdValidation() {
     }
 
+    private static final String DEFAULT_NAME = "Id";
+
     public static boolean isValid(Long id) {
+
         return id != null && id > 0;
     }
-
 
     public static void validateId(
             Long id,
@@ -26,23 +30,11 @@ public final class IdValidation {
 
             Objects.requireNonNull(exceptionFactory, "Exception factory must not be null");
 
-            String errorMessage = "%s is invalid.".formatted(capitalizeName(idName));
+            String errorMessage = "%s is invalid.".formatted(
+                    capitalizeName(idName, DEFAULT_NAME)
+            );
 
             throw exceptionFactory.apply(errorMessage);
         }
     }
-
-    private static String capitalizeName(String name) {
-
-        String defaultName = "Id";
-
-        if (name == null || name.isBlank()) {
-            return defaultName;
-        }
-
-        String stripName = name.strip();
-
-        return stripName.substring(0, 1).toUpperCase() + stripName.substring(1);
-    }
-
 }

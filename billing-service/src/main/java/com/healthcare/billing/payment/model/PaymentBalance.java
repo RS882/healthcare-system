@@ -2,6 +2,7 @@ package com.healthcare.billing.payment.model;
 
 import com.healthcare.billing.exception.PaymentBalanceValidationException;
 import com.healthcare.billing.model.value.Money;
+import com.healthcare.billing.validation.MoneyValidation;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -31,16 +32,10 @@ public record PaymentBalance(
 
     private static void validateAmount(Money amount, AmountType amountType) {
 
-        String typeOfAmount = amountType.getType();
-
-        if (amount == null) {
-            throw new PaymentBalanceValidationException(
-                    "%s must not be null".formatted(typeOfAmount)
-            );
-        }
-        if (amount.isNegative()) {
-            throw new PaymentBalanceValidationException("%s must not be negative".formatted(typeOfAmount));
-        }
+        MoneyValidation.validateNonNegative(
+                amount,
+                amountType.getType(),
+                PaymentBalanceValidationException::new);
     }
 
     @Getter

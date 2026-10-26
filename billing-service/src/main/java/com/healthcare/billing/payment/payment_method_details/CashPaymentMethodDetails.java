@@ -2,6 +2,7 @@ package com.healthcare.billing.payment.payment_method_details;
 
 import com.healthcare.billing.exception.CashPaymentValidationException;
 import com.healthcare.billing.model.value.Money;
+import com.healthcare.billing.validation.MoneyValidation;
 
 public record CashPaymentMethodDetails(
         Money receivedAmount
@@ -9,18 +10,9 @@ public record CashPaymentMethodDetails(
 
     public CashPaymentMethodDetails {
 
-        validatePaymentMethodDetails(receivedAmount);
-
-    }
-
-    private static void validatePaymentMethodDetails(Money receivedAmount) {
-
-        if (receivedAmount == null) {
-            throw new CashPaymentValidationException("Received amount cannot be null");
-        }
-
-        if (!receivedAmount.isPositive()) {
-            throw new CashPaymentValidationException("Received amount must be positive");
-        }
+        MoneyValidation.validatePositive(
+                receivedAmount,
+                "Received amount",
+                CashPaymentValidationException::new );
     }
 }

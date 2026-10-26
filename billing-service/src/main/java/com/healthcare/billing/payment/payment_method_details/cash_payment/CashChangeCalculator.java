@@ -6,6 +6,7 @@ import com.healthcare.billing.exception.UnsupportedCurrencyException;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.money.MoneyPolicy;
 import com.healthcare.billing.payment.payment_method_details.cash_payment.enums.CurrencyDenominations;
+import com.healthcare.billing.validation.MoneyValidation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -95,14 +96,10 @@ public class CashChangeCalculator {
 
     private void validateAmount(Money amount, Currency currentCurrency) {
 
-        if (amount == null) {
-            throw new CashChangeCalculatorException("Amount must not be null");
-        }
+        MoneyValidation.validatePositive(amount, "Amount", CashChangeCalculatorException::new);
 
-        if (!amount.isPositive()) {
-            throw new CashChangeCalculatorException("Amount must be greater than zero");
-        }
         Currency amountCurrency = amount.currency();
+
         if (!currentCurrency.equals(amountCurrency)) {
             throw new CurrencyMismatchException(currentCurrency, amountCurrency);
         }

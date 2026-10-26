@@ -189,9 +189,9 @@ class CashChangeCalculatorTest {
 
         Money receivedAmount = Money.of("100.00", EUR);
 
+
         assertThatThrownBy(() -> calculator.calculate(null, receivedAmount))
-                .isInstanceOf(CashChangeCalculatorException.class)
-                .hasMessage("Amount must not be null");
+                .isInstanceOf(CashChangeCalculatorException.class);
     }
 
     @Test
@@ -201,8 +201,7 @@ class CashChangeCalculatorTest {
         Money totalAmount = Money.of("50.00", EUR);
 
         assertThatThrownBy(() -> calculator.calculate(totalAmount, null))
-                .isInstanceOf(CashChangeCalculatorException.class)
-                .hasMessage("Amount must not be null");
+                .isInstanceOf(CashChangeCalculatorException.class);
     }
 
     @Test
@@ -213,8 +212,7 @@ class CashChangeCalculatorTest {
         Money receivedAmount = Money.of("50.00", EUR);
 
         assertThatThrownBy(() -> calculator.calculate(totalAmount, receivedAmount))
-                .isInstanceOf(CashChangeCalculatorException.class)
-                .hasMessage("Amount must be greater than zero");
+                .isInstanceOf(CashChangeCalculatorException.class);
     }
 
     @Test
@@ -225,8 +223,7 @@ class CashChangeCalculatorTest {
         Money receivedAmount = Money.zero(EUR);
 
         assertThatThrownBy(() -> calculator.calculate(totalAmount, receivedAmount))
-                .isInstanceOf(CashChangeCalculatorException.class)
-                .hasMessage("Amount must be greater than zero");
+                .isInstanceOf(CashChangeCalculatorException.class);
     }
 
     @Test

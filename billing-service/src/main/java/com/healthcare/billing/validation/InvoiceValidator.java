@@ -50,37 +50,17 @@ public class InvoiceValidator {
         Money taxAmount = invoice.getTaxAmount();
         Money totalAmount = invoice.getTotalAmount();
 
-        if (netAmount == null) {
-            throw new InvoiceValidationException("Net amount must not be null");
-        }
+        validateAmount(netAmount, "Net amount");
+        validateAmount(discountAmount, "Discount amount");
+        validateAmount(taxAmount, "Tax amount");
+        validateAmount(totalAmount, "Total amount");
+    }
 
-        if (discountAmount == null) {
-            throw new InvoiceValidationException("Discount amount must not be null");
-        }
-
-        if (taxAmount == null) {
-            throw new InvoiceValidationException("Tax amount must not be null");
-        }
-
-        if (totalAmount == null) {
-            throw new InvoiceValidationException("Total amount must not be null");
-        }
-
-        if (discountAmount.isNegative()) {
-            throw new InvoiceValidationException("Discount amount must not be negative");
-        }
-
-        if (taxAmount.isNegative()) {
-            throw new InvoiceValidationException("Tax amount must not be negative");
-        }
-
-        if (totalAmount.isNegative()) {
-            throw new InvoiceValidationException("Total amount must not be negative");
-        }
-
-        if (netAmount.isNegative()) {
-            throw new InvoiceValidationException("Net amount must not be negative");
-        }
+    private void validateAmount(Money amount, String amountName) {
+        MoneyValidation.validateNonNegative(
+                amount,
+                amountName,
+                InvoiceValidationException::new);
     }
 
     private void validateAmountConsistency(Invoice invoice) {
