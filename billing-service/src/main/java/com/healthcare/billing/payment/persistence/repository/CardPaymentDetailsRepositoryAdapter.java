@@ -1,9 +1,11 @@
 package com.healthcare.billing.payment.persistence.repository;
 
 import com.healthcare.billing.exception.PaymentDetailsJpaAdapterException;
+import com.healthcare.billing.exception.PaymentValidationException;
 import com.healthcare.billing.payment.payment_method_details.CardPaymentMethodDetails;
 import com.healthcare.billing.payment.persistence.entity.CardPaymentDetailsEntity;
 import com.healthcare.billing.payment.persistence.mapper.CardPaymentDetailsMapper;
+import com.healthcare.billing.validation.IdValidation;
 import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
@@ -49,11 +51,8 @@ public class CardPaymentDetailsRepositoryAdapter {
     }
 
     private void validateId(Long paymentId) {
-        if (paymentId == null) {
-            throw new PaymentDetailsJpaAdapterException("Payment ID is null");
-        }
-        if (paymentId < 1L) {
-            throw new PaymentDetailsJpaAdapterException("Payment ID must be positive");
-        }
+
+        IdValidation.validateId(paymentId, "Payment id", PaymentDetailsJpaAdapterException::new);
+
     }
 }

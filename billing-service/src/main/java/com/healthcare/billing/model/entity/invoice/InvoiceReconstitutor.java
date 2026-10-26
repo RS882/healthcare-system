@@ -4,6 +4,7 @@ import com.healthcare.billing.exception.InvoicePersistenceMappingException;
 import com.healthcare.billing.model.entity.InvoiceItem;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceStatus;
 import com.healthcare.billing.model.value.Money;
+import com.healthcare.billing.validation.IdValidation;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
@@ -63,9 +64,11 @@ public class InvoiceReconstitutor {
             LocalDate issuedDate,
             LocalDate dueDate
     ) {
-        if (id == null || id <= 0) {
-            throw new InvoicePersistenceMappingException("Persisted invoice id must be greater than zero");
-        }
+
+        IdValidation.validateId(
+                id,
+                "Persisted invoice id",
+                InvoicePersistenceMappingException::new);
 
         if (status == null) {
             throw new InvoicePersistenceMappingException("Persisted invoice status must not be null");

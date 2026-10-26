@@ -3,6 +3,7 @@ package com.healthcare.billing.service.provider;
 import com.healthcare.billing.exception.MedicalServiceNotFoundException;
 import com.healthcare.billing.exception.MedicalServiceProviderException;
 import com.healthcare.billing.model.service.MedicalServiceData;
+import com.healthcare.billing.validation.IdValidation;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -133,9 +134,11 @@ public class TemporaryMedicalServiceProvider implements MedicalServiceProvider {
     @Override
     public MedicalServiceData getById(Long serviceId) {
 
-        if (serviceId == null || serviceId <= 0) {
-            throw new MedicalServiceProviderException("Medical service id must be greater than zero");
-        }
+        IdValidation.validateId(
+                serviceId,
+                "Medical service id",
+                MedicalServiceProviderException::new
+                );
 
         MedicalServiceData service = SERVICES.get(serviceId);
 

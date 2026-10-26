@@ -21,31 +21,17 @@ public class InvoiceValidator {
 
     public void validateForIssue(Invoice invoice) {
         validateInvoice(invoice);
-        validateParties(invoice.getPatientId(), invoice.getMedicalFacilityId());
+        validateId(invoice.getPatientId(), "Patient id");
+        validateId(invoice.getMedicalFacilityId(), "Medical facility id");
         validateItems(invoice.getItems());
         validateAmounts(invoice);
         validateAmountConsistency(invoice);
     }
 
-    private void validateParties(
-            Long patientId,
-            Long medicalFacilityId
-    ) {
-        if (patientId == null) {
-            throw new InvoiceValidationException("Patient id must not be null");
-        }
+    private void validateId(Long id, String idName) {
 
-        if (patientId <= 0) {
-            throw new InvoiceValidationException("Patient id must be greater than zero");
-        }
+        IdValidation.validateId(id, idName, InvoiceValidationException::new);
 
-        if (medicalFacilityId == null) {
-            throw new InvoiceValidationException("Medical facility id must not be null");
-        }
-
-        if (medicalFacilityId <= 0) {
-            throw new InvoiceValidationException("Medical facility id must be greater than zero");
-        }
     }
 
     public void validateItems(List<InvoiceItem> items) {

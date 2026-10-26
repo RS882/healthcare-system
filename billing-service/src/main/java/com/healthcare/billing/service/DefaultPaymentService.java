@@ -9,6 +9,7 @@ import com.healthcare.billing.payment.model.enums.PaymentMethod;
 import com.healthcare.billing.payment.repository.PaymentRepository;
 import com.healthcare.billing.persistence.InvoiceStore;
 import com.healthcare.billing.service.interfaces.PaymentService;
+import com.healthcare.billing.validation.IdValidation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -68,11 +69,8 @@ public class DefaultPaymentService implements PaymentService {
     }
 
     private void validateId(Long id, String fieldName) {
-        if (id == null) {
-            throw new PaymentValidationException("%s cannot be null".formatted(fieldName));
-        }
-        if (id <= 0) {
-            throw new PaymentValidationException("%s must be greater than zero".formatted(fieldName));
-        }
+
+        IdValidation.validateId(id, fieldName , PaymentValidationException::new);
+
     }
 }

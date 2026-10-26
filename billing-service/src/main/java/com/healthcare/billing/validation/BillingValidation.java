@@ -11,13 +11,9 @@ public final class BillingValidation {
     }
 
     public static void validateId(Long id) {
-        if (id == null) {
-            throw new BillingValidationException("Id must not be null");
-        }
 
-        if (id < 1) {
-            throw new BillingValidationException("Id must be greater than zero");
-        }
+        IdValidation.validateId(id, null, BillingValidationException::new);
+
     }
 
     public static void validateDescription(String description) {

@@ -2,6 +2,7 @@ package com.healthcare.billing.service;
 
 import com.healthcare.billing.exception.InvoiceValidationException;
 import com.healthcare.billing.exception.PaymentBalanceValidationException;
+import com.healthcare.billing.exception.PaymentJpaAdapterException;
 import com.healthcare.billing.model.entity.invoice.Invoice;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.payment.model.InvoicePaymentSummary;
@@ -11,6 +12,7 @@ import com.healthcare.billing.payment.repository.PaymentRepository;
 import com.healthcare.billing.persistence.InvoiceStore;
 import com.healthcare.billing.service.interfaces.InvoicePaymentQueryService;
 import com.healthcare.billing.service.interfaces.PaymentBalanceCalculator;
+import com.healthcare.billing.validation.IdValidation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -82,11 +84,11 @@ public class DefaultInvoicePaymentQueryService implements InvoicePaymentQuerySer
     }
 
     private void validateId(Long id) {
-        if (id == null) {
-            throw new InvoiceValidationException("Invoice id cannot be null");
-        }
-        if (id <= 0) {
-            throw new InvoiceValidationException("Invoice id must be greater than zero");
-        }
+
+        IdValidation.validateId(
+                id,
+                "Invoice id",
+                InvoiceValidationException::new
+        );
     }
 }

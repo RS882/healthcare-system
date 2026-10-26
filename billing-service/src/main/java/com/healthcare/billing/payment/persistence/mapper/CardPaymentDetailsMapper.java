@@ -1,8 +1,10 @@
 package com.healthcare.billing.payment.persistence.mapper;
 
+import com.healthcare.billing.exception.PaymentDetailsJpaAdapterException;
 import com.healthcare.billing.exception.PaymentDetailsValidationException;
 import com.healthcare.billing.payment.payment_method_details.CardPaymentMethodDetails;
 import com.healthcare.billing.payment.persistence.entity.CardPaymentDetailsEntity;
+import com.healthcare.billing.validation.IdValidation;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -47,11 +49,8 @@ public class CardPaymentDetailsMapper {
     }
 
     private void validateId(Long paymentId) {
-        if (paymentId == null) {
-            throw new PaymentDetailsValidationException("Payment ID is null");
-        }
-        if (paymentId < 1L) {
-            throw new PaymentDetailsValidationException("Payment ID must be positive");
-        }
+
+        IdValidation.validateId(paymentId, "Payment id", PaymentDetailsValidationException::new);
+
     }
 }

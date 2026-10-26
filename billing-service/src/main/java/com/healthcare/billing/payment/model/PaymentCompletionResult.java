@@ -2,9 +2,11 @@ package com.healthcare.billing.payment.model;
 
 import com.healthcare.billing.exception.InvoiceValidationException;
 import com.healthcare.billing.exception.PaymentDetailsValidationException;
+import com.healthcare.billing.exception.PaymentReconstitutionException;
 import com.healthcare.billing.model.entity.invoice.enums.InvoiceStatus;
 import com.healthcare.billing.payment.model.enums.PaymentStatus;
 import com.healthcare.billing.payment.payment_method_details.PaymentMethodDetails;
+import com.healthcare.billing.validation.IdValidation;
 import lombok.Getter;
 
 import java.time.Instant;
@@ -33,16 +35,9 @@ public record PaymentCompletionResult<T extends PaymentMethodDetails>(
     }
 
     private static void validateId(Long id, IdType idType) {
-        if (id == null) {
-            throw new PaymentDetailsValidationException(
-                    "%s id cannot be null".formatted(idType.getValue())
-            );
-        }
-        if (id <= 0) {
-            throw new PaymentDetailsValidationException(
-                    "%s id must be greater than zero".formatted(idType.getValue())
-            );
-        }
+
+        IdValidation.validateId(id, idType.getValue(), PaymentDetailsValidationException::new);
+
     }
 
     private static void validatePaymentStatus(PaymentStatus paymentStatus) {

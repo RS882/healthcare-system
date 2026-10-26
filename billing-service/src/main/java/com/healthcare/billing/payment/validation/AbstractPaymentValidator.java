@@ -4,6 +4,7 @@ import com.healthcare.billing.exception.PaymentValidationException;
 import com.healthcare.billing.payment.command.PaymentCompletionCommand;
 import com.healthcare.billing.payment.model.Payment;
 import com.healthcare.billing.payment.model.enums.PaymentMethod;
+import com.healthcare.billing.validation.IdValidation;
 
 import java.util.Objects;
 
@@ -11,9 +12,9 @@ public abstract class AbstractPaymentValidator<T extends PaymentCompletionComman
 
     protected static void validateIdForPaymentAndCommand(Long paymentId, Long commandPaymentId) {
 
-        if (paymentId == null || commandPaymentId == null) {
-            throw new PaymentValidationException("Payment id cannot be null");
-        }
+        IdValidation.validateId(paymentId, "Payment id", PaymentValidationException::new);
+
+        IdValidation.validateId(commandPaymentId, "Payment id", PaymentValidationException::new);
 
         if (!Objects.equals(paymentId, commandPaymentId)) {
             throw new PaymentValidationException("Payment id mismatch");

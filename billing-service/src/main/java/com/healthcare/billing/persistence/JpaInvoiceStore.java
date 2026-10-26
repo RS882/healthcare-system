@@ -7,6 +7,7 @@ import com.healthcare.billing.model.entity.invoice.Invoice;
 import com.healthcare.billing.persistence.entity.InvoiceJpaEntity;
 import com.healthcare.billing.persistence.mapper.InvoicePersistenceMapper;
 import com.healthcare.billing.persistence.repository.InvoiceJpaRepository;
+import com.healthcare.billing.validation.IdValidation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -105,12 +106,8 @@ public class JpaInvoiceStore implements InvoiceStore {
     }
 
     private void validateId(Long id) {
-        if (id == null) {
-            throw new InvoiceValidationException("Invoice id cannot be null");
-        }
-        if (id <= 0) {
-            throw new InvoiceValidationException("Invoice id must be greater than zero");
-        }
+
+        IdValidation.validateId(id, "Invoice id", InvoiceValidationException::new);
     }
 
     private void validateInvoiceNumber(String invoiceNumber) {

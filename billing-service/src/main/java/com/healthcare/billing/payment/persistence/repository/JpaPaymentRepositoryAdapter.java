@@ -10,6 +10,7 @@ import com.healthcare.billing.payment.persistence.dto.AmountDto;
 import com.healthcare.billing.payment.persistence.entity.PaymentEntity;
 import com.healthcare.billing.payment.persistence.mapper.PaymentPersistenceMapper;
 import com.healthcare.billing.payment.repository.PaymentRepository;
+import com.healthcare.billing.validation.IdValidation;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
@@ -189,11 +190,11 @@ public class JpaPaymentRepositoryAdapter implements PaymentRepository {
     }
 
     private void validateId(Long id, String fieldName) {
-        if (id == null) {
-            throw new PaymentJpaAdapterException("%s cannot be null".formatted(fieldName));
-        }
-        if (id <= 0) {
-            throw new PaymentJpaAdapterException("%s must be greater than zero".formatted(fieldName));
-        }
+
+        IdValidation.validateId(
+                id,
+                fieldName,
+                PaymentJpaAdapterException::new
+        );
     }
 }

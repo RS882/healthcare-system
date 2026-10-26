@@ -1,11 +1,14 @@
 package com.healthcare.billing.payment.model;
 
+import com.healthcare.billing.exception.InvoiceValidationException;
+import com.healthcare.billing.exception.PaymentDetailsValidationException;
 import com.healthcare.billing.exception.PaymentReconstitutionException;
 import com.healthcare.billing.exception.PaymentValidationException;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.payment.model.enums.PaymentMethod;
 import com.healthcare.billing.payment.model.enums.PaymentStatus;
 import com.healthcare.billing.payment.resolver.PaymentStateResolver;
+import com.healthcare.billing.validation.IdValidation;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -160,21 +163,9 @@ public class Payment {
             Instant completedAt
     ) {
 
-        if (id == null) {
-            throw new PaymentReconstitutionException("Id cannot be null");
-        }
+        IdValidation.validateId(id, "Id", PaymentReconstitutionException::new);
 
-        if (id <= 0) {
-            throw new PaymentReconstitutionException("Id must be greater than zero");
-        }
-
-        if (invoiceId == null) {
-            throw new PaymentReconstitutionException("Invoice id cannot be null");
-        }
-
-        if (invoiceId <= 0) {
-            throw new PaymentReconstitutionException("Invoice id must be greater than zero");
-        }
+        IdValidation.validateId(invoiceId, "Invoice id", PaymentReconstitutionException::new);
 
         if (amount == null) {
             throw new PaymentReconstitutionException("Amount cannot be null");
@@ -268,14 +259,7 @@ public class Payment {
             Money amount,
             PaymentMethod method
     ) {
-
-        if (invoiceId == null) {
-            throw new PaymentValidationException("Invoice id cannot be null");
-        }
-
-        if (invoiceId <= 0) {
-            throw new PaymentValidationException("Invoice id must be greater than zero");
-        }
+        IdValidation.validateId(invoiceId, "Invoice id", PaymentValidationException::new);
 
         if (amount == null) {
             throw new PaymentValidationException("Amount cannot be null");

@@ -5,6 +5,7 @@ import com.healthcare.billing.exception.PaymentDetailsValidationException;
 import com.healthcare.billing.model.value.Money;
 import com.healthcare.billing.payment.payment_method_details.CashPaymentMethodDetails;
 import com.healthcare.billing.payment.persistence.entity.CashPaymentDetailsEntity;
+import com.healthcare.billing.validation.IdValidation;
 import org.springframework.stereotype.Component;
 
 import java.util.Currency;
@@ -68,11 +69,11 @@ public class CashPaymentDetailsMapper {
     }
 
     private void validateId(Long paymentId) {
-        if (paymentId == null) {
-            throw new PaymentDetailsValidationException("Payment ID is null");
-        }
-        if (paymentId < 1L) {
-            throw new PaymentDetailsValidationException("Payment ID must be positive");
+
+        if (!IdValidation.isValid(paymentId)) {
+            throw new PaymentDetailsValidationException(
+                    "Payment ID is invalid. Provided value: %s".formatted(paymentId)
+            );
         }
     }
 }
