@@ -1,7 +1,6 @@
 package com.healthcare.billing.payment.persistence.repository;
 
 import com.healthcare.billing.exception.PaymentDetailsJpaAdapterException;
-import com.healthcare.billing.exception.PaymentValidationException;
 import com.healthcare.billing.payment.payment_method_details.CardPaymentMethodDetails;
 import com.healthcare.billing.payment.persistence.entity.CardPaymentDetailsEntity;
 import com.healthcare.billing.payment.persistence.mapper.CardPaymentDetailsMapper;

@@ -77,7 +77,8 @@ class CardPaymentDetailsRepositoryAdapterTest {
     @NullSource
     @ValueSource(longs = {
             0L,
-            -726L
+            -726L,
+            Long.MIN_VALUE
     })
     void save_should_reject_null_or_invalid_payment_id(Long id) {
 
@@ -133,7 +134,8 @@ class CardPaymentDetailsRepositoryAdapterTest {
     @NullSource
     @ValueSource(longs = {
             0L,
-            -726L
+            -726L,
+            Long.MIN_VALUE
     })
     void findByPaymentId_should_reject_invalid_id(Long id) {
 
