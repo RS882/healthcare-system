@@ -2,6 +2,7 @@ package com.healthcare.billing.payment.payment_method_details;
 
 import com.healthcare.billing.exception.CashPaymentValidationException;
 import com.healthcare.billing.model.value.Money;
+import com.healthcare.billing.payment.model.enums.PaymentMethod;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
 import org.junit.jupiter.api.Test;
@@ -51,4 +52,14 @@ class CashPaymentMethodDetailsTest {
                 () -> new CashPaymentMethodDetails(null));
     }
 
+    @Test
+    void should_return_payment_method_CASH() {
+
+        Money receivedAmount = Money.of("100.00", EUR);
+
+        CashPaymentMethodDetails details =
+                new CashPaymentMethodDetails(receivedAmount);
+
+        assertEquals(PaymentMethod.CASH, details.getPaymentMethod());
+    }
 }

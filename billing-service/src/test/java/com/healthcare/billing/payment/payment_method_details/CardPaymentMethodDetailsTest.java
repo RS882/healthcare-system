@@ -1,6 +1,7 @@
 package com.healthcare.billing.payment.payment_method_details;
 
 import com.healthcare.billing.exception.CardPaymentValidationException;
+import com.healthcare.billing.payment.model.enums.PaymentMethod;
 import com.healthcare.billing.payment.payment_method_details.card_payment.enums.CardPaymentProvider;
 import org.junit.jupiter.api.DisplayNameGeneration;
 import org.junit.jupiter.api.DisplayNameGenerator;
@@ -43,5 +44,17 @@ class CardPaymentMethodDetailsTest {
     void should_return_exception_when_provider_is_null() {
         assertThrows(CardPaymentValidationException.class,
                 () -> new CardPaymentMethodDetails("Uyyds^7", null));
+    }
+
+    @Test
+    void should_return_payment_method_CARD() {
+
+        CardPaymentMethodDetails details =
+                new CardPaymentMethodDetails(
+                        "test provider transaction id",
+                        CardPaymentProvider.STRIPE
+                );
+
+        assertEquals(PaymentMethod.CARD, details.getPaymentMethod());
     }
 }

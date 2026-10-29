@@ -2,6 +2,7 @@ package com.healthcare.billing.payment.payment_method_details;
 
 import com.healthcare.billing.exception.CashPaymentValidationException;
 import com.healthcare.billing.model.value.Money;
+import com.healthcare.billing.payment.model.enums.PaymentMethod;
 import com.healthcare.billing.validation.MoneyValidation;
 
 public record CashPaymentMethodDetails(
@@ -14,5 +15,10 @@ public record CashPaymentMethodDetails(
                 receivedAmount,
                 "Received amount",
                 CashPaymentValidationException::new );
+    }
+
+    @Override
+    public PaymentMethod getPaymentMethod() {
+        return PaymentMethod.CASH;
     }
 }
